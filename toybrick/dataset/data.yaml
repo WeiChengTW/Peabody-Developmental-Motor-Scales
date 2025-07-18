@@ -1,0 +1,13 @@
+train: ../train/images
+val: ../valid/images
+test: ../test/images
+
+nc: 1
+names: ['cube']
+
+roboflow:
+  workspace: uuriglass
+  project: toybrick-seg
+  version: 1
+  license: CC BY 4.0
+  url: https://universe.roboflow.com/uuriglass/toybrick-seg/dataset/1
