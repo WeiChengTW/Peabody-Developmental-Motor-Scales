@@ -5,6 +5,7 @@ from PaperDetector_HSV import PaperDetector_HSV
 from PaperDetector_edge import PaperDetector_edges
 from ShapeAnalyzer import ShapeAnalyzer
 from graph_yolov8.Analyze_graphics import Analyze_graphics
+from DEL_IMG import reset_result_dir
 import os
 
 
@@ -16,6 +17,8 @@ def PS():
 
 
 if __name__ == "__main__":
+    # reset_result_dir()
+
     img_mode = "dir"  # 'PrtSc' or 'image' or 'dir'
     paper_detector_mode = "edge"  # HSV or edge
     if img_mode == "PrtSc":
@@ -83,5 +86,5 @@ if __name__ == "__main__":
             print("\n開始圖形分析...")
             segmenter = Analyze_graphics()
             # 重置result資料夾（可選）
-            segmenter.reset_dir()
+            # segmenter.reset_dir()
             segmenter.infer_and_draw(thresh_img_path)

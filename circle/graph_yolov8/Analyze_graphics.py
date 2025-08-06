@@ -86,7 +86,9 @@ class Analyze_graphics:
 
         # 獲取圖像檔名（不含路徑和副檔名）
         image_name = os.path.splitext(os.path.basename(image_path))[0]
-
+        # 只取檔名 . 以前的部分
+        image_name = image_name.split(".")[0]
+        # print(f"處理圖像: {image_name}")
         # 創建result資料夾和各類別子資料夾
         if save_results:
             result_dir = "result"
@@ -164,7 +166,10 @@ class Analyze_graphics:
 
                     # 保存到對應類別的資料夾
                     category_dir = os.path.join(result_dir, category)
+                    # 保留原始檔名（如 98_1.jpg）作為部分新檔名
+
                     filename = f"{image_name}_{category}_{detection_index:03d}_conf{confidence:.2f}.jpg"
+
                     save_path = os.path.join(category_dir, filename)
                     cv2.imwrite(save_path, resized_image)
                     detection_index += 1
@@ -215,11 +220,11 @@ class Analyze_graphics:
 
 
 if __name__ == "__main__":
-    image_path = r"test_img\img1_thresh.jpg"
+    image_path = r"test_img\10_1.jpg_thresh.jpg"
 
     segmenter = Analyze_graphics()
 
     # 重置result資料夾（可選）
-    segmenter.reset_dir()
+    # segmenter.reset_dir()
 
-    # segmenter.infer_and_draw(image_path)
+    segmenter.infer_and_draw(image_path)

@@ -3,11 +3,11 @@ val: ../valid/images
 test: ../test/images
 
 nc: 5
-names: ['Circle', 'Cross', 'Diamond', 'Square', 'Triangle']
+names: ["circle", "cross", "diamond", "rectangle", "triangle"]
 
 roboflow:
   workspace: uuriglass
-  project: graph-yjyi5
-  version: 2
+  project: crayon-graph-v843m
+  version: 1
   license: CC BY 4.0
-  url: https://universe.roboflow.com/uuriglass/graph-yjyi5/dataset/2
+  url: https://universe.roboflow.com/uuriglass/crayon-graph-v843m/dataset/1

@@ -10,7 +10,8 @@ def draw_edges_on_images(image_folder, pattern="img*.png"):
     # 取得所有符合條件的圖片檔案
     image_paths = sorted(glob.glob(os.path.join(image_folder, pattern)))
     for img_path in image_paths:
-        cm_per_pixel, _, _ = get_cm_per_pixel(img_path, cm_length=16, show=False)
+        # cm_per_pixel, _, _ = get_cm_per_pixel(img_path, cm_length=16, show=False)
+        cm_per_pixel = 0.015694
         print(f"像素與公分比例: 1 px = {cm_per_pixel:.2f} cm")
         img = cv2.imread(img_path, cv2.IMREAD_GRAYSCALE)
         if img is None:
@@ -147,7 +148,7 @@ def draw_edges_on_images(image_folder, pattern="img*.png"):
 
 
 if __name__ == "__main__":
-    floder = "."
-    # path = "img10.png"
+    folder = "paper"
+    # path = "paper\img5.png"
     path = "img*.png"
-    draw_edges_on_images(floder, path)
+    draw_edges_on_images(folder, path)
