@@ -137,15 +137,16 @@ class PaperDetector_edges:
     def save_results(self):
         # if self.result is not None:
         #     cv2.imwrite(f"{self.image_path}detected_paper.jpg", self.result)
-        name = self.image_path.split("/")[-1].split(".")[0]
+        name = self.image_path.split("\\")[-1].split(".")[0]
+        result_path = f"extracted\{name}_extracted_paper.jpg"
         if self.paper_region is not None:
-            cv2.imwrite(f"{name}_extracted_paper.jpg", self.paper_region)
-        print(f"結果已儲存為 '{name}_extracted_paper.jpg'")
-        return f"{name}_extracted_paper.jpg"
+            cv2.imwrite(result_path, self.paper_region)
+        print(f"結果已儲存為 '{result_path}'")
+        return result_path
 
 
 if __name__ == "__main__":
-    image_path = r"test_img\img6.jpg"
+    image_path = r"raw\1_1.jpg"
     detector = PaperDetector_edges(image_path)
     detector.detect_paper_by_color()
     if detector.original is not None:
