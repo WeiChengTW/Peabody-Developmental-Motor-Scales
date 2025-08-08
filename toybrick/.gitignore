@@ -1,0 +1,11 @@
+*
+
+!main/
+!main/**
+!model/
+!model/**
+# !dataset/
+# !dataset/**
+!__pycache__/
+!__pycache__/**
+!.gitignore
