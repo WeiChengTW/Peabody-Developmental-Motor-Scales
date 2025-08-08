@@ -2,12 +2,12 @@ train: ../train/images
 val: ../valid/images
 test: ../test/images
 
-nc: 1
-names: ['cube']
+nc: 2
+names: ['base', 'cube']
 
 roboflow:
   workspace: uuriglass
   project: toybrick-seg
-  version: 1
+  version: 4
   license: CC BY 4.0
-  url: https://universe.roboflow.com/uuriglass/toybrick-seg/dataset/1
+  url: https://universe.roboflow.com/uuriglass/toybrick-seg/dataset/4

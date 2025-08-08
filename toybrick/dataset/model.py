@@ -3,9 +3,9 @@ from ultralytics import YOLO
 def train():
     model = YOLO('yolov8n-seg.pt')
     model.train(
-        data = 'dataset\\data.yaml',
-        epochs = 200,
-        batch = 16,
+        data = 'data.yaml',
+        epochs = 100,
+        batch = 32,
         imgsz = 640
     )
 
