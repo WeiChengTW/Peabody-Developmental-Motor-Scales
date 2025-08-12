@@ -77,7 +77,7 @@ def get_cm_per_pixel(image_path: str, cm_length: float = 16, show: bool = False)
 
 if __name__ == "__main__":
     # 範例用法
-    result = get_cm_per_pixel("paper\img1.png", cm_length=16, show=True)
+    result = get_cm_per_pixel("img15.png", cm_length=16, show=True)
     if result:
         cm_per_pixel, long_side, objects = result
         print(f"Obj2 長邊像素: {long_side}")
