@@ -148,7 +148,7 @@ def draw_edges_on_images(image_folder, pattern="img*.png"):
 
 
 if __name__ == "__main__":
-    folder = "paper"
+    folder = ""
     # path = "paper\img5.png"
     path = "img*.png"
     draw_edges_on_images(folder, path)
