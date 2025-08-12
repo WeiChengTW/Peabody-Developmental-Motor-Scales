@@ -3,7 +3,7 @@ import glob
 
 
 def reset_result_dir():
-    folders = ["edges"]
+    folders = ["edges", "result"]
 
     for folder in folders:
         if os.path.exists(folder):
