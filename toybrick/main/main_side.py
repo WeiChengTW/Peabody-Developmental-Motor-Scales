@@ -6,14 +6,14 @@ from MaskAnalyzer import MaskAnalyzer
 from StairChecker import StairChecker
 from PyramidChecker import PyramidCheck
 from LayerGrouping import LayerGrouping
-# 0 = 階梯, 1 = 金字塔
-MODE = 1
+# 0 = 階梯, 1 = 金字塔(一定要有空隙)
+MODE = 0
 
 # === 初始化模型與攝影機 ===
 cap = cv2.VideoCapture(1)
 model = YOLO(r'model\toybrick.pt')
 CONF = 0.8
-GAP_THRESHOLD_RATIO = 1.22
+GAP_THRESHOLD_RATIO = 1.05
 
 while True:
     ret, frame = cap.read()
@@ -24,7 +24,7 @@ while True:
     masks = results[0].masks.data.cpu().numpy() if results[0].masks is not None else []
 
     centroids = MaskAnalyzer.get_centroids(masks)
-
+    IS_GAP = False
     if len(masks) != 6:
         cv2.putText(frame, 'Plz place 6 bricks', (30, 50),
                 cv2.FONT_HERSHEY_SIMPLEX, 1.0,
@@ -47,7 +47,9 @@ while True:
                     cv2.putText(frame, f"{d:.1f}", (mid_x, mid_y),
                                 cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
                 
-                cv2.putText(frame, f"Gap Detected ({len(gap_pairs)})", (30, 50),
+                IS_GAP = True if(len(gap_pairs) // 2 == 3) else False
+
+                cv2.putText(frame, f"Gap Detected ({len(gap_pairs) // 2})", (30, 50),
                             cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 0, 255), 2)
             else:
                 cv2.putText(frame, f"No Gap", (30, 50),
@@ -63,9 +65,9 @@ while True:
         block_width = np.mean([box[2] - box[0] for box in results[0].boxes.xyxy.cpu().numpy()]) // 3.6
         grouper = LayerGrouping()
         layers = grouper.group_by_y(centroids)
-
+        
         pyramid_checker = PyramidCheck()
-        is_pyramid, pyramid_msg = pyramid_checker.check_pyramid(centroids, block_width)
+        is_pyramid, pyramid_msg = pyramid_checker.check_pyramid(centroids, block_width, IS_GAP)
 
         cv2.putText(frame, pyramid_msg, (30, 100),
                     cv2.FONT_HERSHEY_SIMPLEX, 1.0,

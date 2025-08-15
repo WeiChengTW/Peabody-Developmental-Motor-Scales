@@ -4,10 +4,10 @@ from ultralytics import YOLO
 
 # 讀取 YOLO segmentation 模型
 model = YOLO(r'model\toybrick.pt')
-CONF = 0.6
+CONF = 0.8
 
 # 攝影機初始化
-cap = cv2.VideoCapture(1)
+cap = cv2.VideoCapture(2)
 cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1440)
 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
 
@@ -96,11 +96,6 @@ while True:
                 color = (0, 255, 0) if rotate_ok else (0, 0, 255)  # OK = 綠，NG = 紅
                 cv2.drawContours(cropped, [box], 0, color, 2)
 
-                cx, cy = rect[0]
-                cx = int(cx * scale_x + x1)
-                cy = int(cy * scale_y + y1)
-                cv2.putText(cropped, f"{main_angle:.1f} deg", (cx, cy - 30),
-                            cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 0), 2)
 
     # 畫分析範圍
     # cv2.rectangle(cropped, (x1, y1), (x2, y2), (0, 255, 255), 2)
@@ -108,7 +103,7 @@ while True:
     # === 判斷邏輯 ===
     offset = False
     if len(centers) >= 2 and max_mask_side > 0:
-        threshold = max_mask_side / 10
+        threshold = max_mask_side // 8
 
         x_vals = [pt[0] for pt in centers]
         y_vals = [pt[1] for pt in centers]
@@ -139,7 +134,7 @@ while True:
     else:
         color = (0, 0, 0)
     
-    cv2.putText(cropped, summary, (30, 180), cv2.FONT_HERSHEY_SIMPLEX, 1, color, 3)
+    cv2.putText(cropped, summary, (230, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, color, 3)
     cv2.imshow("YOLO Segmentation - Center Area Only", cropped)
 
     if cv2.waitKey(1) == ord('q'):
