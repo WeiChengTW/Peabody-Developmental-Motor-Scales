@@ -6,8 +6,9 @@ from MaskAnalyzer import MaskAnalyzer
 from StairChecker import StairChecker
 from PyramidChecker import PyramidCheck
 from LayerGrouping import LayerGrouping
+
 # 0 = 階梯, 1 = 金字塔(一定要有空隙)
-MODE = 0
+MODE = 1
 
 # === 初始化模型與攝影機 ===
 cap = cv2.VideoCapture(1)
@@ -15,98 +16,159 @@ model = YOLO(r'model\toybrick.pt')
 CONF = 0.8
 GAP_THRESHOLD_RATIO = 1.05
 
+print("按下 's' 鍵拍照並分析")
+print("按下 'q' 鍵退出")
+print(f"當前模式: {['階梯', '金字塔'][MODE]}")
+
 while True:
     ret, frame = cap.read()
     if not ret:
         break
     
-    results = model.predict(source=frame, conf=CONF, verbose=False)
-    masks = results[0].masks.data.cpu().numpy() if results[0].masks is not None else []
-
-    centroids = MaskAnalyzer.get_centroids(masks)
-    IS_GAP = False
-    if len(masks) != 6:
-        cv2.putText(frame, 'Plz place 6 bricks', (30, 50),
-                cv2.FONT_HERSHEY_SIMPLEX, 1.0,
-                (0, 0, 255), 2)
-    else:     
-        if len(centroids) >= 2:
-            
-            bbox_widths = [box[2] - box[0] for box in results[0].boxes.xyxy.cpu().numpy()]
-            avg_width = np.mean(bbox_widths) if bbox_widths else 1
-            GAP_THRESHOLD = GAP_THRESHOLD_RATIO * avg_width
-
-            gap_checker = CheckGap(gap_threshold=GAP_THRESHOLD, y_layer_threshold=30)
-            gap_pairs = gap_checker.check(centroids)
-
-            if gap_pairs:
-                for idx, (p1, p2, d) in enumerate(gap_pairs):
-                    cv2.line(frame, p1, p2, (0, 0, 255), 2)
-                    mid_x = int((p1[0] + p2[0]) / 2)
-                    mid_y = int((p1[1] + p2[1]) / 2)
-                    cv2.putText(frame, f"{d:.1f}", (mid_x, mid_y),
-                                cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
-                
-                IS_GAP = True if(len(gap_pairs) // 2 == 3) else False
-
-                cv2.putText(frame, f"Gap Detected ({len(gap_pairs) // 2})", (30, 50),
-                            cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 0, 255), 2)
-            else:
-                cv2.putText(frame, f"No Gap", (30, 50),
-                            cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 255, 0), 2)
-    if MODE == 0:
-        stair_checker = StairChecker()
-        result, msg = stair_checker.check(centroids)
-
-        cv2.putText(frame, msg, (30, 100),
-                    cv2.FONT_HERSHEY_SIMPLEX, 1.0,
-                    (0, 255, 255) if result else (0, 0, 255), 2)
-    elif MODE == 1:
-        block_width = np.mean([box[2] - box[0] for box in results[0].boxes.xyxy.cpu().numpy()]) // 3.6
-        grouper = LayerGrouping()
-        layers = grouper.group_by_y(centroids)
-        
-        pyramid_checker = PyramidCheck()
-        is_pyramid, pyramid_msg = pyramid_checker.check_pyramid(centroids, block_width, IS_GAP)
-
-        cv2.putText(frame, pyramid_msg, (30, 100),
-                    cv2.FONT_HERSHEY_SIMPLEX, 1.0,
-                    (255, 255, 0) if is_pyramid else (0, 0, 255), 2)
+    # 顯示即時影像
+    live_frame = cv2.resize(frame, (0, 0), fx=1, fy=1)
+    cv2.imshow("Live Video - Press 's' to capture, 'q' to quit", live_frame)
     
-
-    # 自定義繪圖：畫 mask 與 conf
-    annotated = frame.copy()
-
-    if results[0].masks is not None:
-        masks = results[0].masks.data.cpu().numpy()  # shape: (N, H, W)
-        confs = results[0].boxes.conf.cpu().numpy()  # 信心值
-        names = results[0].names
-        classes = results[0].boxes.cls.cpu().numpy().astype(int)
-
-        for i, mask in enumerate(masks):
-            color = (255, 255, 255) 
-
-            # 畫半透明 mask
-            colored_mask = np.zeros_like(annotated, dtype=np.uint8)
-            for c in range(3):
-                colored_mask[:, :, c] = mask * color[c]
-            annotated = cv2.addWeighted(annotated, 1.0, colored_mask, 0.3, 0)
-
-            # 找中心點顯示 confq
-            ys, xs = np.where(mask > CONF)
-            if len(xs) > 0 and len(ys) > 0:
-                cx = int(np.mean(xs))
-                cy = int(np.mean(ys))
-                label = f"{names[classes[i]]} {confs[i]:.2f}"
-                cv2.circle(annotated, (cx, cy), 3, (0, 0, 0), -1)
-                cv2.putText(annotated, label, (cx, cy + 15), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (98, 111, 19), 2)
+    # 等待按鍵
+    key = cv2.waitKey(1) & 0xFF
+    
+    if key == ord('s'):
+        print("拍照中...")
         
-    combined = cv2.addWeighted(annotated, 0.8, frame, 0.2, 0)
-    combined = cv2.resize(combined, (0, 0), fx=2, fy=2)
+        # 進行YOLO預測和分析
+        results = model.predict(source=frame, conf=CONF, verbose=False)
+        masks = results[0].masks.data.cpu().numpy() if results[0].masks is not None else []
 
-    cv2.imshow("YOLOv8-segmentation with Gap Detection", combined)
+        centroids = MaskAnalyzer.get_centroids(masks)
+        IS_GAP = False
+        
+        # 複製frame進行標註
+        analysis_frame = frame.copy()
+        
+        if len(masks) != 6:
+            cv2.putText(analysis_frame, 'Plz place 6 bricks', (30, 50),
+                    cv2.FONT_HERSHEY_SIMPLEX, 1.0,
+                    (0, 0, 255), 2)
+            print("請放置6個積木")
+        else:     
+            if len(centroids) >= 2:
+                
+                bbox_widths = [box[2] - box[0] for box in results[0].boxes.xyxy.cpu().numpy()]
+                avg_width = np.mean(bbox_widths) if bbox_widths else 1
+                GAP_THRESHOLD = GAP_THRESHOLD_RATIO * avg_width
 
-    if cv2.waitKey(1) == ord('q'):
+                gap_checker = CheckGap(gap_threshold=GAP_THRESHOLD, y_layer_threshold=30)
+                gap_pairs = gap_checker.check(centroids)
+
+                if gap_pairs:
+                    for idx, (p1, p2, d) in enumerate(gap_pairs):
+                        cv2.line(analysis_frame, p1, p2, (0, 0, 255), 2)
+                        mid_x = int((p1[0] + p2[0]) / 2)
+                        mid_y = int((p1[1] + p2[1]) / 2)
+                        cv2.putText(analysis_frame, f"{d:.1f}", (mid_x, mid_y),
+                                    cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
+                    
+                    IS_GAP = True if(len(gap_pairs) // 2 == 3) else False
+
+                    cv2.putText(analysis_frame, f"Gap Detected ({len(gap_pairs) // 2})", (30, 50),
+                                cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 0, 255), 2)
+                    print(f"偵測到空隙: {len(gap_pairs) // 2} 個")
+                else:
+                    cv2.putText(analysis_frame, f"No Gap", (30, 50),
+                                cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 255, 0), 2)
+                    print("無空隙")
+        
+        # 模式檢測
+        if MODE == 0:  # 階梯模式
+            # 使用自適應LayerGrouping
+            boxes = results[0].boxes.xyxy.cpu().numpy()
+            grouper = LayerGrouping(layer_ratio=0.8)
+            layers = grouper.group_by_y(centroids, boxes=boxes)
+
+            stair_checker = StairChecker()
+            result, msg = stair_checker.check(centroids, boxes=boxes)
+
+            cv2.putText(analysis_frame, msg, (30, 100),
+                        cv2.FONT_HERSHEY_SIMPLEX, 1.0,
+                        (0, 255, 255) if result else (0, 0, 255), 2)
+            print(f"階梯檢測結果: {msg}")
+            
+            # 顯示分層資訊（除錯用）
+            print(f"分層結果: {len(layers)}層")
+            for i, layer in enumerate(layers):
+                avg_y = np.mean([point[1] for point in layer])
+                print(f"  第{i+1}層 (Y={avg_y:.1f}): {len(layer)}個積木")
+            
+        elif MODE == 1:  # 金字塔模式
+            # 使用自適應LayerGrouping
+            boxes = results[0].boxes.xyxy.cpu().numpy()
+            grouper = LayerGrouping(layer_ratio=0.8)
+            layers = grouper.group_by_y(centroids, boxes=boxes)
+            
+            # 計算block_width（用於金字塔檢測）
+            block_width = np.mean([box[2] - box[0] for box in boxes]) // 3.6
+            
+            pyramid_checker = PyramidCheck()
+            is_pyramid, pyramid_msg = pyramid_checker.check_pyramid(centroids, block_width, IS_GAP, boxes)
+
+            cv2.putText(analysis_frame, pyramid_msg, (30, 100),
+                        cv2.FONT_HERSHEY_SIMPLEX, 1.0,
+                        (255, 255, 0) if is_pyramid else (0, 0, 255), 2)
+            print(f"金字塔檢測結果: {pyramid_msg}")
+            
+            # 顯示分層資訊（除錯用）
+            print(f"分層結果: {len(layers)}層")
+            for i, layer in enumerate(layers):
+                avg_y = np.mean([point[1] for point in layer])
+                print(f"  第{i+1}層 (Y={avg_y:.1f}): {len(layer)}個積木")
+
+        # 自定義繪圖：畫邊界框與資訊
+        annotated = analysis_frame.copy()
+
+        if results[0].masks is not None:
+            masks = results[0].masks.data.cpu().numpy()  # shape: (N, H, W)
+            confs = results[0].boxes.conf.cpu().numpy()  # 信心值
+            names = results[0].names
+            classes = results[0].boxes.cls.cpu().numpy().astype(int)
+            boxes = results[0].boxes.xyxy.cpu().numpy().astype(int)  # 取得邊界框座標
+
+            for i, mask in enumerate(masks):
+                # 畫邊界框而不是填充mask
+                x1, y1, x2, y2 = boxes[i]
+                cv2.rectangle(annotated, (x1, y1), (x2, y2), (0, 255, 0), 2)
+
+                # 找中心點顯示 conf
+                ys, xs = np.where(mask > CONF)
+                if len(xs) > 0 and len(ys) > 0:
+                    cx = int(np.mean(xs))
+                    cy = int(np.mean(ys))
+                    label = f"{names[classes[i]]} {confs[i]:.2f}"
+                    cv2.circle(annotated, (cx, cy), 3, (0, 0, 0), -1)
+                    cv2.putText(annotated, label, (cx, cy + 15), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (98, 111, 19), 2)
+        
+        # 添加模式資訊
+        # cv2.putText(annotated, f"Mode: {['Stair', 'Pyramid'][MODE]}", (30, 150),
+        #             cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 0, 255), 2)
+        # cv2.putText(annotated, f"Detected: {len(centroids)} bricks", (30, 180),
+        #             cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 0, 255), 2)
+        
+        combined = cv2.addWeighted(annotated, 0.8, analysis_frame, 0.2, 0)
+        combined = cv2.resize(combined, (0, 0), fx=1, fy=1)
+
+        # 顯示分析結果
+        cv2.imshow("Analysis Result", combined)
+        
+        print(f"分析完成 - 偵測到 {len(centroids)} 個積木")
+        print("按任意鍵關閉分析視窗，繼續錄影...")
+        
+        # 等待按鍵關閉分析視窗
+        cv2.waitKey(0)
+        
+        # 關閉分析視窗
+        cv2.destroyWindow("Analysis Result")
+        
+    elif key == ord('q'):
+        print("退出程式")
         break
 
 cap.release()

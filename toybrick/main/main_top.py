@@ -7,20 +7,16 @@ model = YOLO(r'model\toybrick.pt')
 CONF = 0.8
 
 # 攝影機初始化
-cap = cv2.VideoCapture(2)
+cap = cv2.VideoCapture(1)
 cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1440)
 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
 
 CROP_RATIO = 0.5  # 中央區域比例
 
-while True:
-    
-    rotate_ok_list = []
-    ret, frame = cap.read()
-    if not ret:
-        break
+print("按下 's' 拍照並檢測，按下 'q' 退出")
 
-    original_frame = frame.copy()
+def analyze_image(frame):
+    """分析影像並返回結果"""
     H, W, _ = frame.shape
     crop_w, crop_h = int(W * CROP_RATIO), int(H * CROP_RATIO)
     x1 = (W - crop_w) // 2
@@ -35,6 +31,7 @@ while True:
     centers = []
     angles = []
     max_mask_side = 0
+    rotate_ok_list = []
     
     for mask in masks:
         binary_mask = (mask * 255).astype(np.uint8)
@@ -86,19 +83,14 @@ while True:
             
                 # === 比對是否「近似水平」或「近似垂直」 ===
                 angle_diff_to_horizontal = abs(main_angle)   # 跟 0 度比
-                angle_diff_to_vertical = abs(main_angle- 90) # 跟 90 度比
+                angle_diff_to_vertical = abs(main_angle - 90) # 跟 90 度比
 
                 rotate_ok = (angle_diff_to_horizontal <= 10 or angle_diff_to_vertical <= 10)
-
                 rotate_ok_list.append(rotate_ok)
 
                 # === 畫框、標角度 ===
                 color = (0, 255, 0) if rotate_ok else (0, 0, 255)  # OK = 綠，NG = 紅
                 cv2.drawContours(cropped, [box], 0, color, 2)
-
-
-    # 畫分析範圍
-    # cv2.rectangle(cropped, (x1, y1), (x2, y2), (0, 255, 255), 2)
 
     # === 判斷邏輯 ===
     offset = False
@@ -119,14 +111,12 @@ while True:
         cv2.putText(cropped, f"threshold = {threshold:.2f}", (30, 100),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.7, (100, 255, 100), 2)
 
-    
     # 顯示總體狀態
     status_rotate = "?"
     if rotate_ok_list:
         status_rotate = "No Rotate" if all(rotate_ok_list) else "Rotate !"
 
     status_offset = "No Offset" if offset else "Offset !"
-
     summary = f"{status_offset} | {status_rotate}"
 
     if status_offset == 'Offset !' or status_rotate == 'Rotate !':
@@ -135,10 +125,54 @@ while True:
         color = (0, 0, 0)
     
     cv2.putText(cropped, summary, (230, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, color, 3)
-    cv2.imshow("YOLO Segmentation - Center Area Only", cropped)
+    
+    return cropped, summary
 
-    if cv2.waitKey(1) == ord('q'):
+while True:
+    ret, frame = cap.read()
+    if not ret:
+        break
+
+    # 顯示原始預覽畫面（未檢測）
+    H, W, _ = frame.shape
+    crop_w, crop_h = int(W * CROP_RATIO), int(H * CROP_RATIO)
+    x1 = (W - crop_w) // 2
+    y1 = (H - crop_h) // 2
+    x2, y2 = x1 + crop_w, y1 + crop_h
+    
+    # 顯示裁切區域
+    preview_frame = frame[y1:y2, x1:x2].copy()
+    
+    # 在預覽畫面上加上提示文字
+    cv2.putText(preview_frame, "Press 's' to capture & detect", (10, 30),
+                cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 255), 2)
+    cv2.putText(preview_frame, "Press 'q' to quit", (10, 60),
+                cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 255), 2)
+    
+    cv2.imshow("Camera Preview - Press 's' to detect", preview_frame)
+
+    key = cv2.waitKey(1) & 0xFF
+    
+    if key == ord('s'):  # 按下 's' 拍照並檢測
+        print("拍照並檢測中...")
+        
+        # 拍照並分析
+        captured_frame = frame.copy()
+        analyzed_frame, summary = analyze_image(captured_frame)
+        
+        # 顯示分析結果
+        cv2.imshow("Detection Result", analyzed_frame)
+        
+        print(f"檢測結果: {summary}")
+        print("按下任意鍵返回預覽模式...")
+        
+        # 等待用戶按鍵後返回預覽模式
+        cv2.waitKey(0)
+        cv2.destroyWindow("Detection Result")
+        
+    elif key == ord('q'):  # 按下 'q' 退出
         break
 
 cap.release()
 cv2.destroyAllWindows()
+print("程式結束")

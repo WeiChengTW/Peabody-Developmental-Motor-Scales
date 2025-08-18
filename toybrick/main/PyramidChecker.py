@@ -16,15 +16,15 @@ class PyramidCheck:
             avg_x = int(np.mean(x_coords))
             avg_xs.append(avg_x)
 
-        if len(layers[0]) != 3 or len(layers[1]) != 2 or len(layers[2]) != 1:
+        if len(layers[0]) != 1 or len(layers[1]) != 2 or len(layers[2]) != 3:
             return False
         
         #比較最下面那一層的平均x 和 中層 頂層的差距 在一定範圍內就是金字塔
         return (abs(avg_xs[0] - avg_xs[1]) <= x_threshold and abs(avg_xs[0] - avg_xs[2]) <= x_threshold)
 
-    def check_pyramid(self, centroids, block_width, gap, layer_threshold=30):
-        grouper = LayerGrouping(layer_threshold)
-        layers = grouper.group_by_y(centroids)
+    def check_pyramid(self, centroids, block_width, gap, boxes, layer_ratio=0.8):
+        grouper = LayerGrouping(layer_ratio)
+        layers = grouper.group_by_y(centroids, boxes)
         
         if len(layers) != 3:
             return False, "Not 3 layers"
