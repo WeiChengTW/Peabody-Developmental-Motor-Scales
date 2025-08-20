@@ -5,7 +5,6 @@ import os
 from find_point import PointDetector
 from PaperDetector_edge import PaperDetector_edges
 from px2cm import get_pixel_per_cm_from_a4
-import matplotlib.pyplot as plt
 
 
 class ShapeEdgeDistanceCalculator:
@@ -250,7 +249,31 @@ class ShapeEdgeDistanceCalculator:
             (255, 0, 255),
             2,
         )
-
+        Correct_length_1 = 4.0
+        Correct_length_2 = 4.0 * (2**0.5)
+        print(
+            f"Correct_length_1: {Correct_length_1}, Correct_length_2: {Correct_length_2}"
+        )
+        kid = max(
+            abs(self.min_distance - Correct_length_1),
+            abs(self.max_distance - Correct_length_2),
+        )
+        score = None
+        if kid < 0.6:
+            score = 2
+        elif kid < 1.2:
+            score = 1
+        else:
+            score = 0
+        cv2.putText(
+            result_image,
+            f"Score: {score}, {kid:.2f}cm",
+            (10, 110),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            1,
+            (255, 255, 255),
+            2,
+        )
         self.result_image = result_image
 
         # 顯示結果
