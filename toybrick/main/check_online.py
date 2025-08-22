@@ -50,42 +50,6 @@ class check_on_line:
         
         return max_count
 
-    def check_gap(self, centroids):
-        gap_pairs = []
-
-        for i, (cx, cy) in enumerate(centroids):
-            top_neighbor = None      # 上方鄰居
-            bottom_neighbor = None   # 下方鄰居
-            min_top_dy = float('inf')
-            min_bottom_dy = float('inf')
-
-            for j, (nx, ny) in enumerate(centroids):
-                if i == j:
-                    continue
-                if abs(nx - cx) > self.x_layer_threshold:
-                    continue  # 過濾非同列 (x軸範圍內)
-
-                dy = ny - cy  # Y軸差距
-                if dy < 0 and abs(dy) < min_top_dy:      # dy < 0 表示在上方
-                    min_top_dy = abs(dy)
-                    top_neighbor = (nx, ny)
-                elif dy > 0 and abs(dy) < min_bottom_dy:  # dy > 0 表示在下方
-                    min_bottom_dy = abs(dy)
-                    bottom_neighbor = (nx, ny)
-
-            # 檢查上方鄰居的間隙
-            if top_neighbor:
-                dist = abs(cy - top_neighbor[1])  # Y軸距離
-                if dist > self.gap_threshold:
-                    gap_pairs.append(((cx, cy), top_neighbor, dist))
-
-            # 檢查下方鄰居的間隙
-            if bottom_neighbor:
-                dist = abs(cy - bottom_neighbor[1])  # Y軸距離
-                if dist > self.gap_threshold:
-                    gap_pairs.append(((cx, cy), bottom_neighbor, dist))
-
-        return gap_pairs
 
 
     

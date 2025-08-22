@@ -1,7 +1,17 @@
-*
+# *
 
-!bead/
-!toybrick/
-!graph/
-!readme.md
+# !draw_circle/main/
+# !draw_circle/main/**
+# !draw_circle/circle_or_oval/
+# !draw_circle/circle_or_oval/** 
+# !toybrick/main/
+# !toybrick/main/** 
+# !toybrick/model/
+# !toybrick/model/** 
+# !readme.md
+*.h5
+*.pt
+*.keras
+*.jpg
+*.png
 !.gitignore

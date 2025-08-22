@@ -1,101 +1,207 @@
 import cv2
-from ultralytics import YOLO
 import numpy as np
-from check_gap import CheckGap
-from MaskAnalyzer import MaskAnalyzer
-from LayerGrouping import LayerGrouping
-from check_online import check_on_line
+from ultralytics import YOLO
 
-#串積木 拉起來用相同x判斷是否為同一直線 + y空隙判斷是否相鄰, >= 2個積木才開始評分
+# ================== YOLO 模型 ==================
+model = YOLO(r'model\toybrick.pt')
+CONF = 0.5
 
-# 0 = 階梯, 1 = 金字塔, 2 = 串積木
-MODE = 1
+# ================== YOLO 偵測方塊 & 取得 mask ==================
+def detect_blocks_mask(frame, CONF=0.5):
+    results = model.predict(source=frame, conf=CONF, verbose=False)
+    boxes = []
+    masks = []
 
-cap = cv2.VideoCapture(1)
-model = YOLO(r'dataset\runs\segment\train4\weights\best.pt')
+    for r in results:
+        if r.boxes is None:
+            continue
+        for i, box in enumerate(r.boxes):
+            cls_id = int(box.cls[0])
+            x1, y1, x2, y2 = map(int, box.xyxy[0])
+            if cls_id == 0:  # 方塊類別
+                boxes.append((x1, y1, x2, y2))
+                if r.masks is not None:
+                    mask = r.masks.data.cpu().numpy()[i]
+                    masks.append(mask)
+    return boxes, masks, results
 
-#參數
-CONF = 0.8
-GAP_THRESHOLD_RATIO = 1.22
-offset_RATIO = 2.2
-layer_threshold = 30
-col = check_on_line()
+# ================== 遮掉方塊 ==================
+def remove_blocks_with_mask(binary, masks, extra_px=10):
+    h, w = binary.shape
+    for mask in masks:
+        mask_resized = cv2.resize(mask, (w, h), interpolation=cv2.INTER_NEAREST)
+
+        # 膨脹 mask，增加遮擋範圍
+        kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (extra_px*2, extra_px*2))
+        mask_dilated = cv2.dilate((mask_resized > 0).astype(np.uint8), kernel)
+
+        binary[mask_dilated > 0] = 0
+    return binary
+
+# ================== 骨架化 ==================
+def extract_line_skeleton(binary):
+    skeleton = np.zeros(binary.shape, np.uint8)
+    element = cv2.getStructuringElement(cv2.MORPH_CROSS, (3, 3))
+    temp = np.copy(binary)
+    while True:
+        open_img = cv2.morphologyEx(temp, cv2.MORPH_OPEN, element)
+        temp2 = cv2.subtract(temp, open_img)
+        eroded = cv2.erode(temp, element)
+        skeleton = cv2.bitwise_or(skeleton, temp2)
+        temp = eroded.copy()
+        if cv2.countNonZero(temp) == 0:
+            break
+    return skeleton
+
+# ================== 畫骨架紅點 ==================
+def draw_skeleton_points(skeleton, frame):
+    points = np.column_stack(np.where(skeleton > 0))
+    for (y, x) in points:
+        cv2.circle(frame, (x, y), 1, (0, 0, 255), -1)  # 紅色小點
+    return frame
+
+# ================== 判斷是否在骨架線點附近 ==================
+def is_mask_near_skeleton(mask, skeleton, tol=5):
+    """
+    mask: 二值 mask (0/1 或 0/255)
+    skeleton: 骨架二值圖
+    tol: 搜尋半徑
+    """
+    # resize mask 到骨架尺寸
+    mask_resized = cv2.resize(mask, (skeleton.shape[1], skeleton.shape[0]), interpolation=cv2.INTER_NEAREST)
+    
+    # 取得 mask 非零座標
+    ys, xs = np.where(mask_resized > 0)
+    
+    h, w = skeleton.shape
+    for x, y in zip(xs, ys):
+        x_start = max(0, x - tol)
+        x_end   = min(w, x + tol + 1)
+        y_start = max(0, y - tol)
+        y_end   = min(h, y + tol + 1)
+        if np.any(skeleton[y_start:y_end, x_start:x_end] > 0):
+            return True  # 任意一點靠近骨架就算
+    return False
+
+# ================== 主程式 ==================
+# 開啟攝影機
+cap = cv2.VideoCapture(1)  
+
+if not cap.isOpened():
+    print("無法開啟攝影機")
+    exit()
+
+print("按下 's' 鍵拍照並分析")
+print("按下 'q' 鍵退出")
 
 while True:
+    # 讀取影像
     ret, frame = cap.read()
-
+    
     if not ret:
+        print("無法讀取影像")
         break
     
-    results = model.predict(source=frame, conf=CONF, verbose=False)
-    masks = results[0].masks.data.cpu().numpy() if results[0].masks is not None else []
-
-    #偵測到的積木
-    centroids = MaskAnalyzer.get_centroids(masks)
-
-    bbox_widths = [box[2] - box[0] for box in results[0].boxes.xyxy.cpu().numpy()]
-    avg_width = np.mean(bbox_widths) if bbox_widths else 1
-
-    grouper = LayerGrouping(layer_threshold)
-    layers = grouper.group_by_y(centroids)
-
-    OL = col.check_x(layers=layers, offset = avg_width // offset_RATIO) 
-    count_brick = col.check_y(centroids)
-    gap_pairs = col.check_gap(centroids=centroids)
-
-    if gap_pairs:
-        
-            for idx, (p1, p2, d) in enumerate(gap_pairs):
-                cv2.line(frame, p1, p2, (0, 0, 255), 2)
-                mid_x = int((p1[0] + p2[0]) / 2)
-                mid_y = int((p1[1] + p2[1]) / 2)
-                cv2.putText(frame, f"{d:.1f}", (mid_x, mid_y),
-                            cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
-            
-            cv2.putText(frame, f"Gap Detected ({len(gap_pairs) // 2}) ", (0, 70),
-                        cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 0, 255), 2)
-    else:
-        cv2.putText(frame, f"No Gap", (0, 70),
-                    cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 255, 0), 2)
+    # 顯示即時影像
+    cv2.imshow('Live Video - Press "s" to capture, "q" to quit', frame)
     
-    cv2.putText(frame, f"Correct : {count_brick} ", (0, 100),
-                        cv2.FONT_HERSHEY_SIMPLEX, 1.0, (255, 255, 255), 2)
-    # 自定義繪圖：畫 mask 與 conf
-    annotated = frame.copy()
+    # 等待按鍵
+    key = cv2.waitKey(1) & 0xFF
+    
+    if key == ord('s'):
+        print("拍照中...")
+        
+        # 複製當前幅面進行分析
+        img = frame.copy()
+        display_frame = img.copy()
 
-    if results[0].masks is not None:
-        masks = results[0].masks.data.cpu().numpy()  # shape: (N, H, W)
-        confs = results[0].boxes.conf.cpu().numpy()  # 信心值
-        names = results[0].names
-        classes = results[0].boxes.cls.cpu().numpy().astype(int)
+        # 灰階 + 二值化
+        gray = cv2.cvtColor(display_frame, cv2.COLOR_BGR2GRAY)
+        blurred = cv2.GaussianBlur(gray, (21,21), 0)
+        _, binary = cv2.threshold(blurred, 0, 255, cv2.THRESH_OTSU)
 
+        # 閉運算去雜點
+        kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5))
+        binary = cv2.morphologyEx(binary, cv2.MORPH_CLOSE, kernel)
+
+        # YOLO 偵測方塊 & 取得 mask
+        boxes, masks, results = detect_blocks_mask(display_frame)
+
+        # 畫方塊邊框與中心點
+        annotated = display_frame.copy()
+        correct_num = 0
+        
+        for i, box in enumerate(boxes):
+            x1, y1, x2, y2 = box
+            cv2.rectangle(annotated, (x1, y1), (x2, y2), (255, 0, 0), 2)
+            if masks:
+                mask = masks[i]
+                mask_resized = cv2.resize(mask, (display_frame.shape[1], display_frame.shape[0]),
+                                        interpolation=cv2.INTER_NEAREST)
+                ys, xs = np.where(mask_resized > CONF)
+                if len(xs) > 0 and len(ys) > 0:
+                    cx = int(np.mean(xs))
+                    cy = int(np.mean(ys))
+                    cv2.circle(annotated, (cx, cy), 3, (0, 0, 0), -1)
+                    # cv2.putText(annotated, f"({cx},{cy})", (cx, cy + 15),
+                    #             cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0, 255, 0), 2)
+
+        # 遮掉方塊
+        binary = remove_blocks_with_mask(binary, masks)
+
+        # 骨架化
+        skeleton = extract_line_skeleton(binary)
+
+        # 畫骨架紅點
+        final_frame = draw_skeleton_points(skeleton, annotated)
+
+        # 檢查每個方塊是否靠近骨架
         for i, mask in enumerate(masks):
-            color = (255, 255, 255) 
+            if is_mask_near_skeleton(mask, skeleton, tol=10):
+                correct_num += 1
+                print(f"Box {i} is near skeleton")
+            else:
+                print(f"Box {i} is NOT near skeleton")
 
-            # 畫半透明 mask
-            colored_mask = np.zeros_like(annotated, dtype=np.uint8)
-            for c in range(3):
-                colored_mask[:, :, c] = mask * color[c]
-            annotated = cv2.addWeighted(annotated, 1.0, colored_mask, 0.3, 0)
+        # 添加文字資訊
+        cv2.putText(final_frame, f"Cube count : {len(boxes)}", (30, 45),
+                                cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 255), 2)
 
-            # 找中心點顯示 conf
-            ys, xs = np.where(mask > CONF)
-            if len(xs) > 0 and len(ys) > 0:
-                cx = int(np.mean(xs))
-                cy = int(np.mean(ys))
-                label = f"({cx}, {cy}) {names[classes[i]]} {confs[i]:.2f}"
-                cv2.circle(annotated, (cx, cy), 3, (0, 0, 0), -1)
-                cv2.putText(annotated, label, (cx, cy + 15), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (98, 111, 19), 2)
-    
-    line_msg = f"ON-Line, have {OL} brick(s)" if OL else "NO ON-Line"
+        cv2.putText(final_frame, f"Correct Cube count : {correct_num}", (300, 45),
+                                cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
 
-    cv2.putText(annotated, line_msg, (0, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 0), 2)
-    combined = cv2.addWeighted(annotated, 0.8, frame, 0.2, 0)
-    combined = cv2.resize(combined, (0, 0), fx=2, fy=2)
+        # 縮放顯示
+        binary_display = cv2.resize(binary, (0, 0), fx=0.4, fy=0.4)
+        blurred_display = cv2.resize(blurred, (0, 0), fx=0.4, fy=0.4)
+        final_frame_display = cv2.resize(final_frame, (0, 0), fx=0.4, fy=0.4)
+
+        # 顯示分析結果
+
+        SCALE = 2
+        blurred_display = cv2.resize(blurred_display, (0, 0), fx=SCALE, fy=SCALE)
+        cv2.imshow('Blurred', blurred_display)
+
+        binary_display = cv2.resize(binary_display, (0, 0), fx=SCALE, fy=SCALE)
+        cv2.imshow('Binary', binary_display)
+
+        final_frame_display = cv2.resize(final_frame_display, (0, 0), fx=SCALE, fy=SCALE)
+        cv2.imshow("Frame", final_frame_display)
         
-    cv2.imshow("YOLOv8-segmentation with Gap Detection", combined)
-
-    if cv2.waitKey(1) == ord('q'):
+        print(f"分析完成 - 找到 {len(boxes)} 個方塊，{correct_num} 個正確位置")
+        print("按任意鍵關閉分析視窗，繼續錄影...")
+        
+        # 等待按鍵關閉分析視窗
+        cv2.waitKey(0)
+        
+        # 關閉分析視窗
+        cv2.destroyWindow('Blurred')
+        cv2.destroyWindow('Binary') 
+        cv2.destroyWindow("Frame")
+        
+    elif key == ord('q'):
+        print("退出程式")
         break
+
+# 釋放資源
 cap.release()
 cv2.destroyAllWindows()

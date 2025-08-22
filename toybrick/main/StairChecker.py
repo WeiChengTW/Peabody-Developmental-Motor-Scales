@@ -7,21 +7,23 @@ class StairChecker:
         if len(layers) != 3:
             return False
         sizes = [len(layer) for layer in layers]
-        return sizes == [3, 2, 1]
+        return sizes == [1, 2, 3]
 
     @staticmethod
     def is_left_stair(layers):
         xs = [np.mean([p[0] for p in layer]) for layer in layers]
-        return xs[0] > xs[1] > xs[2]
+        return xs[0] < xs[1] < xs[2]
 
     @staticmethod
     def is_right_stair(layers):
         xs = [np.mean([p[0] for p in layer]) for layer in layers]
-        return xs[0] < xs[1] < xs[2]
+        return xs[0] > xs[1] > xs[2]
 
-    def check(self, centroids, layer_threshold=30):
-        grouper = LayerGrouping(layer_threshold)
-        layers = grouper.group_by_y(centroids)
+    def check(self, centroids, boxes, layer_ratio = 0.8):
+        grouper = LayerGrouping(layer_ratio)
+        layers = grouper.group_by_y(centroids, boxes=boxes)
+
+        print(len(layers))
 
         if not self.is_stair_shape(layers):
             return False, "Not stair shape"
