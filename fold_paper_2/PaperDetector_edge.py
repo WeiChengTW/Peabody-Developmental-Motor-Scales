@@ -79,7 +79,7 @@ class PaperDetector_edges:
             edges_resized = cv2.resize(edges, (new_width, new_height))
         else:
             edges_resized = edges
-        cv2.imshow("edges", edges_resized)
+        # cv2.imshow("edges", edges_resized)
         cv2.waitKey(0)
         cv2.destroyAllWindows()
         self.original = image

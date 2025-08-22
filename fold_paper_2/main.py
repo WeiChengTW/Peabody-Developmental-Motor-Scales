@@ -7,7 +7,7 @@ if __name__ == "__main__":
         image_path = rf"img\{img}.jpg"
         img = cv2.imread(image_path)
         resized = cv2.resize(img, (0, 0), fx=0.5, fy=0.5)
-        cv2.imshow("Image", resized)
+        # cv2.imshow("Image", resized)
         cv2.waitKey(0)
         cv2.destroyAllWindows()
         detector = PaperDetector_edges(image_path)
