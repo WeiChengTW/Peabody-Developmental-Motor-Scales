@@ -167,7 +167,7 @@ while True:
         cv2.putText(final_frame, f"Cube count : {len(boxes)}", (30, 45),
                                 cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 255), 2)
 
-        cv2.putText(final_frame, f"Correct Cube count : {correct_num}", (300, 45),
+        cv2.putText(final_frame, f"Correct Cube count : {correct_num - 2}", (300, 45),
                                 cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
 
         # 縮放顯示

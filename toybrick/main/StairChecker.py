@@ -12,12 +12,12 @@ class StairChecker:
     @staticmethod
     def is_left_stair(layers):
         xs = [np.mean([p[0] for p in layer]) for layer in layers]
-        return xs[0] > xs[1] > xs[2]
+        return xs[0] < xs[1] < xs[2]
 
     @staticmethod
     def is_right_stair(layers):
         xs = [np.mean([p[0] for p in layer]) for layer in layers]
-        return xs[0] < xs[1] < xs[2]
+        return xs[0] > xs[1] > xs[2]
 
     def check(self, centroids, boxes, layer_ratio = 0.8):
         grouper = LayerGrouping(layer_ratio)
