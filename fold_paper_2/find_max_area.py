@@ -16,7 +16,7 @@ class MaxAreaQuadFinder:
 
     def find_max_area_quad(self):
         gray = cv2.cvtColor(self.img, cv2.COLOR_BGR2GRAY)
-        edges = cv2.Canny(gray, 20, 150)
+        edges = cv2.Canny(gray, 20, 120)
         contours, _ = cv2.findContours(
             edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
         )
@@ -38,19 +38,34 @@ class MaxAreaQuadFinder:
             cv2.drawContours(self.img, [self.max_contour], -1, (0, 255, 0), 3)
             print("最大面積:", self.max_area)
             print("四個頂點座標:\n", self.max_contour.reshape(4, 2))
+            # 顯示四邊長於左上角
             if self.side_lengths:
                 print("邊長 :")
-                for k, v in self.side_lengths.items():
+                lines = []
+                for k in ["top", "right", "bottom", "left"]:
+                    v = self.side_lengths[k]
+                    lines.append(f"{k}: {(v / self.px2cm):.2f} cm")
                     print(f"  {k}: {v:.2f} 像素, {(v / self.px2cm):.2f} cm")
                 # 標註邊長
                 self._annotate_lengths()
+                # 將四邊長資訊畫在左上角
+                x0, y0 = 10, 30
+                for i, text in enumerate(lines):
+                    cv2.putText(
+                        self.img,
+                        text,
+                        (x0 + 50, y0 + (i * 60) + 10),
+                        cv2.FONT_HERSHEY_SIMPLEX,
+                        1.5,
+                        (255, 255, 255),
+                        2,
+                        cv2.LINE_AA,
+                    )
             resized = cv2.resize(self.img, (0, 0), fx=0.5, fy=0.5)
-            cv2.imshow("Max Area Quad", resized)
+            # cv2.imshow("Max Area Quad", resized)
             cv2.waitKey(0)
             cv2.destroyAllWindows()
-            # print(self.image_path)
             name = self.image_path.split("\\")[-1].split("_")[0]
-            # print(name)
             print(rf"儲存結果到 result\{name}_max_area_quad.jpg")
             cv2.imwrite(rf"result\{name}_max_area_quad.jpg", self.img)
         else:
@@ -98,12 +113,12 @@ class MaxAreaQuadFinder:
             length = self.side_lengths[name]
             cv2.putText(
                 self.img,
-                f"{name}:{(length / self.px2cm):.1f}",
+                f"{name}",
                 mid,
                 cv2.FONT_HERSHEY_SIMPLEX,
-                1,
+                2,
                 (0, 0, 255),
-                1,
+                2,
                 cv2.LINE_AA,
             )
 
