@@ -22,9 +22,8 @@ class PyramidCheck:
         #比較最下面那一層的平均x 和 中層 頂層的差距 在一定範圍內就是金字塔
         return (abs(avg_xs[0] - avg_xs[1]) <= x_threshold and abs(avg_xs[0] - avg_xs[2]) <= x_threshold)
 
-    def check_pyramid(self, centroids, block_width, gap, boxes, layer_ratio=0.8):
-        grouper = LayerGrouping(layer_ratio)
-        layers = grouper.group_by_y(centroids, boxes)
+    def check_pyramid(self, layers, block_width, gap):
+        
         
         if len(layers) != 3:
             return False, "Not 3 layers"

@@ -3,19 +3,22 @@ import numpy as np
 from ultralytics import YOLO
 
 # 讀取 YOLO segmentation 模型
-model = YOLO(r'model\toybrick.pt')
+model = YOLO(r'toybrick.pt')
 CONF = 0.8
-
-# 攝影機初始化
-cap = cv2.VideoCapture(1)
-cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1440)
-cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
-
 CROP_RATIO = 0.5  # 中央區域比例
 
-print("按下 's' 拍照並檢測，按下 'q' 退出")
+CAM_INDEX = 1  # 你的相機索引
+cap = cv2.VideoCapture(CAM_INDEX, cv2.CAP_DSHOW)  # 指定用 DirectShow（Windows 較穩）
 
-def analyze_image(frame):
+# 先指定壓縮格式，很多鏡頭 1080p 需要 MJPG 才能上 30fps
+cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'MJPG'))
+
+# 設定期望解析度與 FPS
+cap.set(cv2.CAP_PROP_FRAME_WIDTH,  1920)
+cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
+cap.set(cv2.CAP_PROP_FPS, 60)
+
+def analyze_image(frame, GET_POINT):
     """分析影像並返回結果"""
     H, W, _ = frame.shape
     crop_w, crop_h = int(W * CROP_RATIO), int(H * CROP_RATIO)
@@ -29,7 +32,6 @@ def analyze_image(frame):
     masks = results[0].masks.data.cpu().numpy() if results[0].masks is not None else []
 
     centers = []
-    angles = []
     max_mask_side = 0
     rotate_ok_list = []
     
@@ -120,59 +122,30 @@ def analyze_image(frame):
     summary = f"{status_offset} | {status_rotate}"
 
     if status_offset == 'Offset !' or status_rotate == 'Rotate !':
+        GET_POINT = 1
         color = (0, 0, 255)
     else:
         color = (0, 0, 0)
     
     cv2.putText(cropped, summary, (230, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, color, 3)
     
-    return cropped, summary
+    return cropped, summary, GET_POINT
 
-while True:
-    ret, frame = cap.read()
-    if not ret:
-        break
 
-    # 顯示原始預覽畫面（未檢測）
-    H, W, _ = frame.shape
-    crop_w, crop_h = int(W * CROP_RATIO), int(H * CROP_RATIO)
-    x1 = (W - crop_w) // 2
-    y1 = (H - crop_h) // 2
-    x2, y2 = x1 + crop_w, y1 + crop_h
-    
-    # 顯示裁切區域
-    preview_frame = frame[y1:y2, x1:x2].copy()
-    
-    # 在預覽畫面上加上提示文字
-    cv2.putText(preview_frame, "Press 's' to capture & detect", (10, 30),
-                cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 255), 2)
-    cv2.putText(preview_frame, "Press 'q' to quit", (10, 60),
-                cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 255), 2)
-    
-    cv2.imshow("Camera Preview - Press 's' to detect", preview_frame)
+# === 主程式：直接讀取圖片路徑 ===
+img_path = r"test.jpg" #讀取照片
+frame = cv2.imread(img_path)
 
-    key = cv2.waitKey(1) & 0xFF
-    
-    if key == ord('s'):  # 按下 's' 拍照並檢測
-        print("拍照並檢測中...")
-        
-        # 拍照並分析
-        captured_frame = frame.copy()
-        analyzed_frame, summary = analyze_image(captured_frame)
-        
-        # 顯示分析結果
-        cv2.imshow("Detection Result", analyzed_frame)
-        
-        print(f"檢測結果: {summary}")
-        print("按下任意鍵返回預覽模式...")
-        
-        # 等待用戶按鍵後返回預覽模式
-        cv2.waitKey(0)
-        cv2.destroyWindow("Detection Result")
-        
-    elif key == ord('q'):  # 按下 'q' 退出
-        break
+if frame is None:
+    print("讀取圖片失敗，請確認路徑正確")
+else:
+    GET_POINT = 2
+    analyzed_frame, summary, GET_POINT = analyze_image(frame, GET_POINT)
 
-cap.release()
-cv2.destroyAllWindows()
-print("程式結束")
+    # 顯示結果
+    cv2.imshow("Detection Result", analyzed_frame)
+    print(f"檢測結果: {summary}")
+    print(f'總共得到 {GET_POINT} 分')
+
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()

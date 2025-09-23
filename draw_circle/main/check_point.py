@@ -158,11 +158,6 @@ class check_point:
                                 (start_point[0] + 10, start_point[1] - 10), 
                                 cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
                     
-                    # # 畫路徑（藍色線條）
-                    # if len(main_path) > 1:
-                    #     for i in range(len(main_path) - 1):
-                    #         cv2.line(skeleton_bgr, main_path[i], main_path[i+1], (255, 0, 0), 2)
-                    
                     # 畫終點（黃色圓圈）
                     if len(main_path) > 1:
                         end_point = main_path[-1]
@@ -171,13 +166,6 @@ class check_point:
                                     (end_point[0] + 10, end_point[1] + 10), 
                                     cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 255), 2)
                     
-                    # # 在路徑上每隔一定間隔標註順序數字
-                    # step = max(1, len(main_path) // 10) 
-                    # for i in range(0, len(main_path), step):
-                    #     cv2.putText(skeleton_bgr, str(i), 
-                    #                 (main_path[i][0], main_path[i][1]), 
-                    #                 cv2.FONT_HERSHEY_SIMPLEX, 0.3, (255, 255, 255), 1)
-                        
                 dist_specific = calculate_distance_numpy(main_path[0], main_path[-1])
                 cv2.line(skeleton_bgr, main_path[0], main_path[-1], (255, 255, 255), 2)
                 # print(f'端點距離 : {dist_specific}')

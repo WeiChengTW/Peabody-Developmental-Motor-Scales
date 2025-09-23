@@ -1,7 +1,7 @@
 import numpy as np
 
 class LayerGrouping:
-    def __init__(self, layer_ratio=0.8):
+    def __init__(self, layer_ratio):
         """
         layer_ratio: 用於判斷是否為同一層的比例，相對於積木高度
         例如：0.8 表示如果兩個積木的Y座標差距小於積木高度的80%，就認為是同一層
@@ -37,8 +37,6 @@ class LayerGrouping:
             layer_threshold = 30
             print("警告: 未提供積木尺寸資訊，使用預設threshold=30")
         
-        print(f"使用 layer_threshold: {layer_threshold:.1f}")
-        
         # 按Y座標排序（由上到下）
         sorted_points = sorted(centroids, key=lambda p: p[1])
         
@@ -62,5 +60,5 @@ class LayerGrouping:
         
         # 按Y座標排序層級（從上到下）
         layers.sort(key=lambda layer: np.mean([point[1] for point in layer]))
-        
+        print(f'分成 {len(layers)} 層')
         return layers

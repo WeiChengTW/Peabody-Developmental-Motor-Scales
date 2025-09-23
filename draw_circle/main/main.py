@@ -145,11 +145,14 @@ def read_all_images_from_folder(folder_path):
     
     return all_images
 
-if __name__ == "__main__":
+def main():
 
     #==參數==#
     real_width_cm = 29.7
     SCALE = 2
+
+    SCORE = 2
+
     origin_img = r'demo\1.jpg'
     MODEL_PATH = r'circle_or_oval\Final_model.h5'
     CLASS_NAMES = ['Other', 'circle_or_oval']
@@ -195,7 +198,12 @@ if __name__ == "__main__":
             if px == 0.0:
                 print(f'{url} : Perfect!')
             else:    
-                print(f'{url} : {px / pixel_per_cm}cm')
+                offset = px / pixel_per_cm
+                print(f'{url} : {offset}cm')
+                if offset > 1.2 and offset <= 2.5:
+                    SCORE = 1
+                else:
+                    SCORE = 0
         else:
             img = cv2.imread(url)
             cv2.putText(img, 'Other !', 
@@ -203,7 +211,13 @@ if __name__ == "__main__":
                     cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
             cv2.imshow('Other', img)
             print(f'{url} is {result[url]}!')
+            SCORE = 0
             cv2.waitKey(0)
             cv2.destroyAllWindows()
-            
-       
+
+    return SCORE
+
+if __name__ == "__main__":
+
+    score = main()
+    print(score)
