@@ -1,33 +1,5 @@
-2025-09-23 14:18:26 - INFO - Flask 應用程式啟動
-2025-09-23 14:18:26 - INFO - 準備啟動 Flask 應用程式，HOST=127.0.0.1, PORT=8000
-2025-09-23 14:18:26 - INFO - 已設定瀏覽器自動開啟
-2025-09-23 14:18:26 - INFO - Flask 應用程式開始運行
-2025-09-23 14:18:41 - INFO - 資料夾 cgu 已存在，確認結果文件
-2025-09-23 14:18:51 - INFO - 收到 Python 腳本執行請求：使用者=cgu, 圖片ID=ch2-t4
-2025-09-23 14:18:51 - INFO - 創建新任務：5c31821e-efbe-4146-adce-85f8d8358d13，腳本路徑：C:\Users\chang\Downloads\web\ch2-t4\main.py
-2025-09-23 14:18:51 - INFO - 開始背景分析任務 5c31821e-efbe-4146-adce-85f8d8358d13：使用者=cgu, 圖片ID=ch2-t4
-2025-09-23 14:18:51 - INFO - 執行命令：C:\Users\chang\miniconda3\envs\PDMS\python.exe C:\Users\chang\Downloads\web\ch2-t4\main.py cgu ch2-t4
-2025-09-23 14:18:51 - ERROR - 腳本錯誤輸出 (任務 5c31821e-efbe-4146-adce-85f8d8358d13)：
-Traceback (most recent call last):
-  File "C:\Users\chang\Downloads\web\ch2-t4\main.py", line 70, in <module>
-    main()
-  File "C:\Users\chang\Downloads\web\ch2-t4\main.py", line 15, in main
-    raise FileNotFoundError(f"找不到 {PXCM_JSON}")
-FileNotFoundError: 找不到 px_cm.json
-
-2025-09-23 14:18:51 - INFO - 背景分析任務 5c31821e-efbe-4146-adce-85f8d8358d13 完成，狀態：失敗 (返回碼: 1)
-2025-09-23 14:19:26 - INFO - 收到 Python 腳本執行請求：使用者=cgu, 圖片ID=ch2-t4
-2025-09-23 14:19:26 - INFO - 創建新任務：ed338995-065f-4597-903a-0d9b20868a1a，腳本路徑：C:\Users\chang\Downloads\web\ch2-t4\main.py
-2025-09-23 14:19:26 - INFO - 開始背景分析任務 ed338995-065f-4597-903a-0d9b20868a1a：使用者=cgu, 圖片ID=ch2-t4
-2025-09-23 14:19:26 - INFO - 執行命令：C:\Users\chang\miniconda3\envs\PDMS\python.exe C:\Users\chang\Downloads\web\ch2-t4\main.py cgu ch2-t4
-2025-09-23 14:19:27 - INFO - 腳本輸出 (任務 ed338995-065f-4597-903a-0d9b20868a1a)：
-
-=== 處理 ch2-t4.jpg | pixel_per_cm=40.4714 ===
-最遠點: (456, 187) 偏差 3.583 cm （145.0 px）
-偏離次數（任何偏離）：3 次
-嚴重偏離（> 1.2 cm）：3 次
-最大偏差: 3.583 cm
-得分: 0 分（最大偏差 ≥ 1.2 cm）
-結果已儲存到 result.json - 用戶 cgu 的關卡 ch2-t4 分數: 0
-
-2025-09-23 14:19:27 - INFO - 背景分析任務 ed338995-065f-4597-903a-0d9b20868a1a 完成，狀態：成功 (返回碼: 0)
+2025-09-23 14:55:47 - INFO - Flask 應用程式啟動
+2025-09-23 14:55:47 - INFO - 準備啟動 Flask 應用程式，HOST=127.0.0.1, PORT=8000
+2025-09-23 14:55:47 - INFO - 已設定瀏覽器自動開啟
+2025-09-23 14:55:47 - INFO - Flask 應用程式開始運行
+2025-09-23 14:56:01 - INFO - 資料夾 cgu 已存在，確認結果文件
