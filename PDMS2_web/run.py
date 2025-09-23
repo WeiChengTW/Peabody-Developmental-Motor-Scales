@@ -13,6 +13,12 @@ import secrets
 from datetime import datetime
 import uuid
 import os
+import cv2
+import numpy as np
+import io
+from PIL import Image
+import base64
+from flask_cors import CORS
 
 # 設定環境變數強制使用 UTF-8（可選）
 os.environ["PYTHONIOENCODING"] = "utf-8"
@@ -64,7 +70,7 @@ ROOT = Path(__file__).parent.resolve()  # 專案根：有 css/, js/, html/
 
 app = Flask(__name__, static_folder=None)  # 不用預設 /static，改用我們自己的資料夾
 app.secret_key = secrets.token_hex(16)  # 為 session 設置安全密鑰
-
+CORS(app)
 
 # 清除上次的 console.txt 內容
 def clear_console_log():
@@ -294,74 +300,6 @@ def safe_subprocess_run(cmd, **kwargs):
 
     return subprocess.run(cmd, **default_kwargs)
 
-
-@app.route("/move-photos", methods=["POST"])
-def move_photos():
-    try:
-        # 優先從 session 獲取 UID，其次從請求體獲取（向後相容）
-        uid = session.get("uid")
-        if not uid:
-            data = request.get_json()
-            uid = data.get("uid", "").strip() if data else ""
-
-        if not uid:
-            return (
-                jsonify({"success": False, "error": "UID 不能為空，請先設置 UID"}),
-                400,
-            )
-
-        # 檢查UID是否包含無效字符
-        invalid_chars = ["/", "\\", ":", "*", "?", '"', "<", ">", "|"]
-        if any(char in uid for char in invalid_chars):
-            return jsonify({"success": False, "error": "UID 包含無效字符"}), 400
-
-        # 執行 chang_path.py
-        script_path = ROOT / "chang_path.py"
-        cmd = [sys.executable, str(script_path), uid]
-
-        # 使用安全的 subprocess 呼叫
-        result = safe_subprocess_run(cmd, cwd=ROOT)
-
-        # 解析腳本輸出的 JSON 結果
-        output_lines = result.stdout.strip().split("\n")
-        json_result = None
-
-        for line in output_lines:
-            if line.startswith("RESULT_JSON:"):
-                try:
-                    json_result = json.loads(line[12:])  # 移除 "RESULT_JSON:" 前綴
-                    break
-                except json.JSONDecodeError:
-                    pass
-
-        if json_result:
-            return jsonify(
-                {
-                    "success": json_result.get("success", False),
-                    "moved_files": json_result.get("moved_files", []),
-                    "moved_count": json_result.get("moved_count", 0),
-                    "not_found_files": json_result.get("not_found_files", []),
-                    "message": json_result.get("message", ""),
-                    "error": json_result.get("error", ""),
-                    "stdout": result.stdout,
-                    "stderr": result.stderr,
-                    "returncode": result.returncode,
-                }
-            )
-        else:
-            return jsonify(
-                {
-                    "success": result.returncode == 0,
-                    "stdout": result.stdout,
-                    "stderr": result.stderr,
-                    "returncode": result.returncode,
-                }
-            )
-
-    except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
-
-
 def run_analysis_in_background(task_id, uid, img_id, script_path):
     """在背景執行分析的函數"""
     try:
@@ -559,6 +497,172 @@ def cleanup_completed_tasks():
         }
     )
 
+
+# 全局相機對象
+camera = None
+camera_active = False
+
+def release_camera():
+    """釋放相機資源"""
+    global camera, camera_active
+    if camera is not None:
+        camera.release()
+        camera = None
+    camera_active = False
+
+def init_camera(camera_index=1):
+    """初始化相機"""
+    global camera, camera_active
+    try:
+        release_camera()
+        camera = cv2.VideoCapture(camera_index)  # 改用參數
+
+        if not camera.isOpened():
+            # 如果指定的失敗，嘗試其他索引
+            for i in range(0, 4):
+                camera = cv2.VideoCapture(i)
+                if camera.isOpened():
+                    break
+            else:
+                raise Exception("無法找到可用的相機")
+
+        camera.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
+        camera.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
+        camera.set(cv2.CAP_PROP_FPS, 120)
+
+        camera_active = True
+        return True
+
+    except Exception as e:
+        print(f"相機初始化失敗: {e}")
+        release_camera()
+        return False
+
+
+
+camera_lock = threading.Lock()
+
+def get_frame():
+    """獲取一幀圖像"""
+    global camera, camera_active
+    
+    if not camera_active or camera is None:
+        return None
+    
+    try:
+        with camera_lock:
+            ret, frame = camera.read()
+            if not ret:
+                return None
+
+            # 轉換為 JPEG
+            _, buffer = cv2.imencode('.jpg', frame, [cv2.IMWRITE_JPEG_QUALITY, 85])
+            return buffer.tobytes()
+        
+    except Exception as e:
+        print(f"獲取幀錯誤: {e}")
+        return None
+
+# === OpenCV 相機路由 ===
+
+@app.route("/opencv-camera/start", methods=["POST"])
+def start_opencv_camera():
+    try:
+        data = request.get_json()
+        task_id = data.get("task_id", "")
+        cam_index = data.get("camera_index", 1)  # 新增
+
+        if init_camera(cam_index):
+            global camera_active
+            camera_active = True
+            return jsonify({"success": True, "message": "相機已成功開啟", "task_id": task_id})
+        else:
+            return jsonify({"success": False, "error": "無法開啟相機"}), 500
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route("/opencv-camera/frame", methods=["GET"])
+def get_opencv_frame():
+    """獲取相機幀，回傳 base64 編碼的 JPEG 圖像"""
+    try:
+        if not camera_active:
+            return jsonify({"success": False, "error": "相機尚未啟動"}), 400
+
+        frame_data = get_frame()
+        if frame_data is None:
+            return jsonify({"success": False, "error": "無法獲取相機畫面"}), 500
+
+        # 將 bytes 轉成 base64 字串
+        img_base64 = base64.b64encode(frame_data).decode('utf-8')
+
+        return jsonify({
+            "success": True,
+            "image": img_base64
+        })
+
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+@app.route("/opencv-camera/capture", methods=["POST"])
+def capture_opencv_photo():
+    """拍照並儲存"""
+    try:
+        data = request.get_json()
+        task_id = data.get("task_id", "")
+        uid = data.get("uid", "") or session.get("uid", "default")
+        
+        if not task_id:
+            return jsonify({"success": False, "error": "缺少任務 ID"}), 400
+        
+        # 獲取當前畫面
+        frame_data = get_frame()
+        if frame_data is None:
+            return jsonify({"success": False, "error": "無法獲取相機畫面"}), 500
+        
+        target_dir = ROOT / "kid" / uid
+        target_dir.mkdir(parents=True, exist_ok=True)
+        
+        # 加上 timestamp 避免覆蓋
+        from datetime import datetime
+        filename = f"{task_id}.jpg"
+        file_path = target_dir / filename
+        
+        nparr = np.frombuffer(frame_data, np.uint8)
+        img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+        
+        if not cv2.imwrite(str(file_path), img):
+            return jsonify({"success": False, "error": "圖像儲存失敗"}), 500
+        
+        return jsonify({
+            "success": True,
+            "filename": filename,
+            "path": str(file_path),
+            "uid": uid,
+            "task_id": task_id,
+            "message": f"照片已成功儲存到 {file_path}"
+        })
+        
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route("/opencv-camera/stop", methods=["POST"])
+def stop_opencv_camera():
+    """關閉 OpenCV 相機"""
+    try:
+        release_camera()
+        global camera_active
+        camera_active = False
+        return jsonify({"success": True, "message": "相機已關閉"})
+        
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+# 在應用程式關閉時清理資源
+import atexit
+atexit.register(release_camera)
 
 if __name__ == "__main__":
     try:
