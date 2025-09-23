@@ -1,4 +1,4 @@
-# crop_measure.py
+# get_pixel_per_cm.py  —— 單線版：只裁切，不計算比例；比例改讀 px_cm.json
 import cv2
 import numpy as np
 import json
@@ -7,7 +7,7 @@ import os
 
 ORIG_FOLDER = "images"   # 原始圖片
 CROP_FOLDER = "new"      # 裁切輸出
-PIXEL_MAP_JSON = "pixel_per_cm_map.json"
+PXCM_JSON   = "px_cm.json"  # << 只讀這個比例 {"pixel_per_cm": ...}
 
 os.makedirs(CROP_FOLDER, exist_ok=True)
 
@@ -48,71 +48,48 @@ def warp_a4(image, quad):
     dst = np.array([[0,0],[width_px-1,0],[width_px-1,height_px-1],[0,height_px-1]], dtype="float32")
     M = cv2.getPerspectiveTransform(quad, dst)
     warped = cv2.warpPerspective(image, M, (width_px, height_px))
-    return warped, width_px, height_px
+    return warped
 
-def measure_pixel_per_cm(width_px, height_px, long_cm=29.7, short_cm=21.0):
-    # 以較長邊對應 29.7 cm 為基準
-    if width_px < height_px:
-        width_px, height_px = height_px, width_px
-    return float(width_px / long_cm)
+def crop_only(image_path, output_path):
+    """只裁切白紙，輸出到 output_path；回傳裁切影像 ndarray。"""
+    img = cv2.imread(image_path)
+    if img is None:
+        raise ValueError(f"圖片讀取失敗：{image_path}")
 
-def batch_crop_and_measure(src_dir=ORIG_FOLDER, out_dir=CROP_FOLDER, save_map=PIXEL_MAP_JSON):
-    # 1) 擴充分檔名 + 印出找到的檔案
-    patterns = ["*.jpg", "*.jpeg", "*.png"]
-    image_files = []
-    for p in patterns:
-        image_files += glob.glob(os.path.join(src_dir, p))
-    image_files = sorted(image_files)
+    quad = detect_quad(img)
+    if quad is not None and len(quad) == 4:
+        warped = warp_a4(img, quad)
+    else:
+        # 後援：偵測不到四邊形就整張輸出，保證不報錯
+        warped = img.copy()
 
-    print(f"[INFO] CWD = {os.getcwd()}")
-    print(f"[INFO] 將從資料夾：{os.path.abspath(src_dir)} 讀圖")
-    print(f"[INFO] 找到 {len(image_files)} 張：")
-    for fp in image_files:
-        print(" -", os.path.abspath(fp))
+    ok = cv2.imwrite(output_path, warped)
+    if not ok:
+        raise IOError(f"寫檔失敗：{output_path}")
+    return warped
 
-    if not image_files:
-        raise ValueError(f"資料夾 {src_dir} 沒有找到圖片（請確認執行時的工作目錄與副檔名）")
-
-    ratio_map = {}
-    counter = 1  
-
-    for path in image_files:
-        base = os.path.basename(path)
-        img = cv2.imread(path)
-        if img is None:
-            print(f"❌ 無法讀取：{path}")
-            continue
-
-        # 2) 先試 A4 偵測；失敗就用「整張」當作裁切（保證會輸出）
-        quad = detect_quad(img)
-        if quad is not None and len(quad) == 4:
-            warped, wpx, hpx = warp_a4(img, quad)
-        else:
-            print(f"⚠️ {base} 偵測不到四邊形，啟用後援：直接使用整張影像")
-            warped = img.copy()
-            hpx, wpx = warped.shape[:2]
-
-        # 3) 計算像素/公分：以較長邊對應 A4 29.7 cm
-        if wpx < hpx:
-            wpx, hpx = hpx, wpx
-        ppcm = float(wpx / 29.7)
-
-        # 4) 存檔（new2.jpg, new3.jpg...）
-        out_filename = f"new{counter}.jpg"
-        out_path = os.path.join(out_dir, out_filename)
-        ok = cv2.imwrite(out_path, warped)
-        if not ok:
-            print(f"❌ 寫檔失敗：{out_path}")
-            continue
-
-        ratio_map[out_filename] = ppcm
-        print(f"✅ {out_filename} → 輸出完成，pixel_per_cm={ppcm:.4f}")
-        counter += 1
-
-    with open(save_map, "w", encoding="utf-8") as f:
-        json.dump(ratio_map, f, ensure_ascii=False, indent=2)
-    print(f"📄 已寫入 {save_map} ，共 {len(ratio_map)} 筆")
-    return ratio_map
+def load_pixel_per_cm(pxcm_json=PXCM_JSON):
+    """從 px_cm.json 讀比例：{'pixel_per_cm': float}；回傳 float。"""
+    if not os.path.exists(pxcm_json):
+        raise FileNotFoundError(f"找不到比例檔：{os.path.abspath(pxcm_json)}")
+    with open(pxcm_json, "r", encoding="utf-8") as f:
+        obj = json.load(f)
+    ppcm = float(obj.get("pixel_per_cm", 0.0))
+    if ppcm <= 0:
+        raise ValueError(f"{pxcm_json} 內的 pixel_per_cm 非正值：{ppcm}")
+    return ppcm
 
 if __name__ == "__main__":
-    batch_crop_and_measure()
+    img_num = 1  # ← 改成你要裁切的編號
+    in_path  = os.path.join(ORIG_FOLDER, f"{img_num}.jpg")
+    out_path = os.path.join(CROP_FOLDER, f"new{img_num}.jpg")
+    os.makedirs(CROP_FOLDER, exist_ok=True)
+
+    if not os.path.exists(in_path):
+        raise FileNotFoundError(f"找不到圖片：{os.path.abspath(in_path)}")
+
+    warped = crop_only(in_path, out_path)
+    ppcm = load_pixel_per_cm(PXCM_JSON)
+
+    print(f"已裁切：{in_path} → {out_path}  (size={warped.shape[1]}x{warped.shape[0]})")
+    print(f"轉換比例 pixel_per_cm = {ppcm:.6f}（來自 {PXCM_JSON}）")

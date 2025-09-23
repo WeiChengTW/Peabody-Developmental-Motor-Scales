@@ -6,7 +6,7 @@ import glob
 import os
 
 CROP_FOLDER = "new"
-PIXEL_MAP_JSON = "pixel_per_cm_map.json"
+PXCM_JSON   = "px_cm.json"   # 單一比例檔，內容：{"pixel_per_cm": 40.47...}
 SHOW_SCALE = 0.7
 MARGIN = 40
 
@@ -337,35 +337,35 @@ def find_baseline_and_show_all(img_bgr, pixel_per_cm):
     print(f"最大偏差: {far_dev_cm:.3f} cm")
     print(f"得分: {score} 分（{reason}）")
 
+# 取代整個 main()：只跑單張 + 從 px_cm.json 讀比例
 def main():
-    if not os.path.exists(PIXEL_MAP_JSON):
-        raise FileNotFoundError(f"找不到 {PIXEL_MAP_JSON}，請先跑 crop_measure.py")
-    with open(PIXEL_MAP_JSON, "r", encoding="utf-8") as f:
-        ratio_map = json.load(f)
+    # 1) 讀單一比例 px_cm.json
+    if not os.path.exists(PXCM_JSON):
+        raise FileNotFoundError(f"找不到 {PXCM_JSON}，請先準備好比例檔（例如：{{\"pixel_per_cm\": 40.47}}）")
+    with open(PXCM_JSON, "r", encoding="utf-8") as f:
+        obj = json.load(f)
+    pixel_per_cm = float(obj.get("pixel_per_cm", 0.0))
+    if pixel_per_cm <= 0:
+        raise ValueError(f"{PXCM_JSON} 內 pixel_per_cm 無效：{pixel_per_cm}")
 
-    crop_files = sorted(
-        glob.glob(os.path.join(CROP_FOLDER, "*.jpg")) +
-        glob.glob(os.path.join(CROP_FOLDER, "*.jpeg")) +
-        glob.glob(os.path.join(CROP_FOLDER, "*.png"))
-    )
-    if not crop_files:
-        raise ValueError(f"資料夾 {CROP_FOLDER} 沒有找到裁切後的圖片")
+    # 2) 只跑一張圖（改這個編號即可）
+    img_num = 1
+    img_path = os.path.join(CROP_FOLDER, f"new{img_num}.jpg")
+    if not os.path.exists(img_path):
+        raise FileNotFoundError(f"找不到裁切圖：{os.path.abspath(img_path)}")
 
-    for img_path in crop_files:
-        base = os.path.basename(img_path)
-        if base not in ratio_map:
-            print(f"⚠️ {base} 沒找到 pixel_per_cm，略過")
-            continue
-        ppcm = float(ratio_map[base])
-        print(f"\n=== 處理 {base} | pixel_per_cm={ppcm:.4f} ===")
+    # 3) 讀圖並分析
+    img = cv2.imread(img_path)
+    if img is None:
+        raise ValueError(f"無法讀取影像：{img_path}")
 
-        img = cv2.imread(img_path)
-        if img is None:
-            print(f"❌ 無法讀取：{img_path}")
-            continue
+    print(f"\n=== 處理 {os.path.basename(img_path)} | pixel_per_cm={pixel_per_cm:.4f} ===")
+    find_baseline_and_show_all(img, pixel_per_cm)
 
-        find_baseline_and_show_all(img, ppcm)
-        cv2.waitKey(0); cv2.destroyAllWindows()
+    # 4) 視窗控制
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+
 
 if __name__ == "__main__":
     main()
