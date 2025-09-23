@@ -246,29 +246,30 @@ def analyze_paint(image, y_top, y_bot, show_windows=False):
 analyze_image = analyze_paint
 
 
-# ============ 測試區（選用）：讀 main_lines.json 循環處理 new/ ============ #
+# ============ 測試區（單張）=========== #
 def main():
     """
-    測試跑法：
-      1) 先把裁切結果存到 new/（例如 new/new6.jpg）
-      2) 檢出水平線並將座標寫到 main_lines.json
-      3) 執行本檔（python draw_range_correct.py），會批次計算 ratio/score
+    單張跑法：
+      1) 先準備 new/new{img}.jpg
+      2) 自動偵測兩條水平線 y_top, y_bot
+      3) 呼叫 analyze_paint 做評分
     """
-    with open("main_lines.json", encoding="utf-8") as f:
-        all_lines = json.load(f)
+    img = 1  # ← 改成你要測的編號（對應 new/new{img}.jpg）
+    img_path = os.path.join("new", f"new{img}.jpg")
+    if not os.path.exists(img_path):
+        raise FileNotFoundError(f"找不到圖片：{os.path.abspath(img_path)}")
 
-    new_folder = "new"
-    for filename, coords in all_lines.items():
-        img_path = os.path.join(new_folder, filename)
-        if not os.path.exists(img_path):
-            print(f"找不到圖片 {img_path}，略過")
-            continue
+    # 單張自動抓 y_top, y_bot（不再用 JSON）
+    from exceed_correct import detect_horizontal_lines
+    y_top, y_bot = detect_horizontal_lines(img_path, show_debug=False)
+    if y_top is None or y_bot is None:
+        raise RuntimeError("偵測不到兩條主線")
 
-        y_top = int(coords["y_top"])
-        y_bot = int(coords["y_bot"])
-
-        result = analyze_paint(img_path, y_top, y_bot, show_windows=True)
-        print(f"{filename} → 佔比: {result['ratio']:.2%}, 突出: {result['protrude_count']}, 分數: {result['score']} | {result['rule']}")
+    # 分析
+    result = analyze_paint(img_path, int(y_top), int(y_bot), show_windows=True)
+    print(f"{os.path.basename(img_path)} → 佔比: {result['ratio']:.2%}, "
+          f"突出: {result['protrude_count']}, 分數: {result['score']} | {result['rule']}")
 
 if __name__ == "__main__":
     main()
+

@@ -1,5 +1,6 @@
 import cv2
 import numpy as np
+import os
 
 def refine_y_center(bw, y0, cover_frac=0.25, search=12):
     h, w = bw.shape
@@ -31,9 +32,9 @@ def group_lines_1d(ylist, gap=8):
 
 def detect_horizontal_lines(image, show_debug=False):
     """
-    輸入影像 (numpy array 或影像路徑)，回傳找到的水平線 y 座標列表
-    - image: 可給路徑字串或已讀取的影像 (ndarray)
-    - show_debug: 是否顯示偵測過程
+    輸入影像 (numpy array 或影像路徑)，回傳兩條水平線的 y 座標：
+      return (y_top, y_bot)
+    若只找到一條，兩者相同；若找不到，回傳 (None, None)。
     """
     # 若傳入的是路徑就讀圖
     if isinstance(image, str):
@@ -42,7 +43,7 @@ def detect_horizontal_lines(image, show_debug=False):
         img = image
 
     if img is None:
-        return []
+        return (None, None)
 
     h, w = img.shape[:2]
 
@@ -116,7 +117,7 @@ def detect_horizontal_lines(image, show_debug=False):
         ylist = group_lines_1d(ylist, gap=8)
         good_rows = sorted(set(good_rows + ylist))
 
-    # 取上下兩條
+    # 取上下兩條或一條
     if len(good_rows) >= 2:
         ylist_grouped = group_lines_1d(good_rows, gap=8)
         center_lines = [ylist_grouped[0], ylist_grouped[-1]]
@@ -128,40 +129,35 @@ def detect_horizontal_lines(image, show_debug=False):
         refine_y_center(bw_close, y, cover_frac=0.12, search=18) for y in center_lines
     ]
 
+    # === 這裡改成直接回傳 y_top, y_bot ===
+    if len(center_lines) >= 2:
+        y_top, y_bot = int(min(center_lines)), int(max(center_lines))
+    elif len(center_lines) == 1:
+        y_top = y_bot = int(center_lines[0])
+    else:
+        y_top = y_bot = None
+
     if show_debug:
         dbg = cv2.cvtColor(bw_close, cv2.COLOR_GRAY2BGR)
-        for y in center_lines:
-            cv2.line(dbg, (0, int(y)), (w - 1, int(y)), (0, 255, 255), 2)
+        if y_top is not None:
+            cv2.line(dbg, (0, int(y_top)), (w - 1, int(y_top)), (0, 255, 255), 2)
+        if y_bot is not None and y_bot != y_top:
+            cv2.line(dbg, (0, int(y_bot)), (w - 1, int(y_bot)), (0, 255, 0), 2)
         cv2.imshow("Detected lines", dbg)
         cv2.waitKey(0)
         cv2.destroyAllWindows()
 
-    return center_lines
+    return y_top, y_bot
 
 
-# 測試區：單獨執行這個檔案，會去 new/ 找圖並輸出 main_lines.json
+# 測試區：只跑單張圖片
 if __name__ == "__main__":
-    import glob, os, json
-    new_folder = "new"
-    os.makedirs(new_folder, exist_ok=True)
+    img = 1   # ← 改成你要測的圖編號
+    img_path = rf"new\new{img}.jpg"
 
-    image_files = sorted(
-        glob.glob(os.path.join(new_folder, "*.jpg")) +
-        glob.glob(os.path.join(new_folder, "*.png"))
-    )
+    if not os.path.exists(img_path):
+        raise FileNotFoundError(f"找不到圖片 {img_path}")
 
-    all_lines = {}
-    for img_path in image_files:
-        base = os.path.basename(img_path)
-        center_lines = detect_horizontal_lines(img_path, show_debug=False)
-        if len(center_lines) >= 2:
-            y_top, y_bot = int(min(center_lines)), int(max(center_lines))
-        elif len(center_lines) == 1:
-            y_top = y_bot = int(center_lines[0])
-        else:
-            y_top = y_bot = None
-        all_lines[base] = {"y_top": y_top, "y_bot": y_bot}
+    y_top, y_bot = detect_horizontal_lines(img_path, show_debug=True)
+    print(f"{os.path.basename(img_path)} → y_top={y_top}, y_bot={y_bot}")
 
-    with open("main_lines.json", "w", encoding="utf-8") as f:
-        json.dump(all_lines, f, ensure_ascii=False, indent=2)
-    print("✅ 已輸出 main_lines.json")
