@@ -42,7 +42,7 @@ class ImageClassifier:
 # 使用範例
 # -------------------------
 if __name__ == "__main__":
-    MODEL_PATH = r'circle_or_oval\Final_model.h5'
+    MODEL_PATH = r'model/check_circle.h5'
     CLASS_NAMES = ['Other', 'circle_or_oval']
 
     classifier = ImageClassifier(MODEL_PATH, CLASS_NAMES)

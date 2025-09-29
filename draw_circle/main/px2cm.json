@@ -1,5 +1,5 @@
 {
-  "pixel_per_cm": 30.111854630287247,
-  "image_path": "demo\\1.jpg",
-  "cropped_path": "cropped_a4\\1_a4_cropped.jpg"
+  "pixel_per_cm": 11.381716744265573,
+  "image_path": "test01.jpg",
+  "cropped_path": "cropped_a4\\test01_a4_cropped.jpg"
 }

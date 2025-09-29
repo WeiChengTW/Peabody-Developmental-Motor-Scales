@@ -143,7 +143,7 @@ def crop_a4_region_simple(image_path, output_folder="cropped_a4"):
 
 # 單獨執行這個檔案時顯示紙張輪廓並儲存裁切區域
 if __name__ == "__main__":
-    image_path = r'demo\1.jpg'
+    image_path = r''
     
     # 方法1: 完整功能（計算像素比例 + 儲存裁切圖）
     pixel_per_cm, json_path, cropped_path = get_pixel_per_cm_from_a4(
