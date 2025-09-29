@@ -10,8 +10,8 @@ import glob
 from PIL import Image
 import os
 from check_point import check_point
-from circle_or_oval import ImageClassifier
-
+from q_or_other import ImageClassifier
+import shutil
 
 def get_pixel_per_cm_from_a4(image_path, real_width_cm=29.7, show_debug=False, save_cropped=True, output_folder="cropped_a4"):
     img = cv2.imread(image_path)
@@ -145,68 +145,192 @@ def read_all_images_from_folder(folder_path):
     
     return all_images
 
-if __name__ == "__main__":
-
+def main(img_path):
     #==參數==#
     real_width_cm = 29.7
     SCALE = 2
-    origin_img = r'C:\Users\hiimd\Desktop\vscode\Peabody-Developmental-Motor-Scales\draw_square\demo\1.jpg'
-    MODEL_PATH = r'C:\Users\hiimd\Desktop\vscode\Peabody-Developmental-Motor-Scales\draw_square\model\quadrilateral_v1.h5'
-    CLASS_NAMES = ['other', 'quadrilateral']
-    result = {}
+    SCORE = -1
+
+    input_folder = "realtest"   # <-- 資料夾
+    MODEL_PATH = r'model\square.h5'
+    CLASS_NAMES = ['Other', 'quadrilateral']
     #==參數==#
 
+    # 讀取資料夾內所有圖片
+    # all_images = read_all_images_from_folder(input_folder)
 
-    #得出px->cm
-    print('\n==得出px -> cm==\n')
-    pixel_per_cm, _, cropped_path = get_pixel_per_cm_from_a4(
-        origin_img, 
-        show_debug=True, 
-        save_cropped=True,
-        output_folder="cropped_a4"
-    )
-    print(pixel_per_cm)
-    
+    # 建立分類資料夾（只建立一次）
+    os.makedirs("quadrilateral", exist_ok=True)
+    os.makedirs("Other", exist_ok=True)
 
-    #裁切圖形
-    print('\n==裁切圖形==')
-    segmenter = Analyze_graphics()
-    ready = segmenter.infer_and_draw(cropped_path)
-
-
-    #分類圖形(圓 橢圓 其他)
-    print('\n==分類圖形==\n')
     classifier = ImageClassifier(MODEL_PATH, CLASS_NAMES)
+    cp = check_point(SCALE=SCALE)
+
+    #資料夾初始化
+    segmenter = Analyze_graphics()
+    segmenter.initialize_workspace()
+
+    # 逐張處理
+    # for origin_img in all_images:
+    #     print(f"\n=== 處理 {origin_img} ===\n")
+
+    #     # 得出 px->cm
+    #     try:
+    #         pixel_per_cm, _, cropped_path = get_pixel_per_cm_from_a4(
+    #             origin_img, 
+    #             show_debug=False,  # 關掉視覺化避免卡住
+    #             save_cropped=True,
+    #             output_folder="cropped_a4"
+    #         )
+    #         print(f"{origin_img} pixel_per_cm = {pixel_per_cm}")
+    #     except ValueError as e:
+    #         print(f"⚠️ 跳過 {origin_img}：{e}")
+    #         continue  # 直接跳過這張圖片
+        
+    #     # 裁切圖形
+    #     print('\n==裁切圖形==')
+        
+    #     # print(cropped_path)
+    #     ready = segmenter.infer_and_draw(origin_img, expand_ratio=0.15)
+
+    #     # 分類圖形(圓 橢圓 其他)
+    #     print('\n==分類圖形==\n')
+    #     result = {}
+
+    #     # 先建立分類資料夾
+    #     os.makedirs("quadrilateral", exist_ok=True)
+    #     os.makedirs("Other", exist_ok=True)
+
+    #     for rb in ready:
+    #         if "binary" in rb:
+    #             predicted_class_name, conf = classifier.predict(rb)
+    #             url = rb.replace('_binary', "")
+    #             print(f"{url} → {predicted_class_name} ({conf*100:.2f}%)")
+    #             result[url] = predicted_class_name
+
+    #             # 直接分類存檔
+    #             if predicted_class_name == "quadrilateral":
+    #                 shutil.copy(url, os.path.join("quadrilateral", os.path.basename(url)))
+    #             else:
+    #                 # 讀取圖片並加上標記
+    #                 img = cv2.imread(url)
+    #                 cv2.putText(img, 'Other !', 
+    #                             (30, 50), 
+    #                             cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
+    #                 save_path = os.path.join("Other", os.path.basename(url))
+    #                 cv2.imwrite(save_path, img)  # 直接存檔，不用手動關視窗
+    #                 print(f"{url} 已存入 Other 資料夾並加上標記")
+
+
+    #     # 計算端點距離 & 複製到對應資料夾
+    #     print('\n==計算端點距離==\n')
+    #     for url, u_type in result.items():
+    #         if u_type == 'quadrilateral':
+    #             px = cp.check_point(url)
+    #             if px == 0.0:
+    #                 print(f'{url} : Perfect!')
+    #             else:
+    #                 offset = px / pixel_per_cm
+    #                 print(f'{url} : {offset}cm')
+    #                 if offset <= 1.2:
+    #                     SCORE = 2
+    #                 elif offset > 1.2 and offset <= 2.5:
+    #                     SCORE = 1
+    #                 else:
+    #                     SCORE = 0
+
+    #         else:
+    #             img = cv2.imread(url)
+    #             cv2.putText(img, 'Other !', 
+    #                         (30, 50), 
+    #                         cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
+    #             # cv2.imshow('Other', img)
+    #             print(f'{url} is {result[url]}!')
+    #             SCORE = 0
+    #             cv2.waitKey(0)
+    #             cv2.destroyAllWindows()
+    
+    print(f"\n=== 處理 {img_path} ===\n")
+
+    # 得出 px->cm
+    try:
+        pixel_per_cm, _, cropped_path = get_pixel_per_cm_from_a4(
+            img_path, 
+            show_debug=False,  # 關掉視覺化避免卡住
+            save_cropped=True,
+            output_folder="cropped_a4"
+        )
+        print(f"{img_path} pixel_per_cm = {pixel_per_cm}")
+    except ValueError as e:
+        print(f"⚠️ 跳過 {img_path}：{e}")
+    
+    # 裁切圖形
+    print('\n==裁切圖形==')
+    
+    # print(cropped_path)
+    ready = segmenter.infer_and_draw(img_path, expand_ratio=0.15)
+
+    # 分類圖形(圓 橢圓 其他)
+    print('\n==分類圖形==\n')
+    result = {}
+
+    # 先建立分類資料夾
+    os.makedirs("quadrilateral", exist_ok=True)
+    os.makedirs("Other", exist_ok=True)
 
     for rb in ready:
         if "binary" in rb:
             predicted_class_name, conf = classifier.predict(rb)
             url = rb.replace('_binary', "")
             print(f"{url} → {predicted_class_name} ({conf*100:.2f}%)")
-            result.update({url:predicted_class_name})
-        else:
-            continue
+            result[url] = predicted_class_name
+
+            # 直接分類存檔
+            if predicted_class_name == "quadrilateral":
+                shutil.copy(url, os.path.join("quadrilateral", os.path.basename(url)))
+            else:
+                # 讀取圖片並加上標記
+                img = cv2.imread(url)
+                cv2.putText(img, 'Other !', 
+                            (30, 50), 
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
+                save_path = os.path.join("Other", os.path.basename(url))
+                cv2.imwrite(save_path, img)  # 直接存檔，不用手動關視窗
+                print(f"{url} 已存入 Other 資料夾並加上標記")
 
 
-    #計算端點距離
+    # 計算端點距離 & 複製到對應資料夾
     print('\n==計算端點距離==\n')
-    cp = check_point(SCALE=SCALE)
-
     for url, u_type in result.items():
         if u_type == 'quadrilateral':
             px = cp.check_point(url)
             if px == 0.0:
                 print(f'{url} : Perfect!')
-            else:    
-                print(f'{url} : {px / pixel_per_cm}cm')
+            else:
+                offset = px / pixel_per_cm
+                print(f'{url} : {offset}cm')
+                if offset <= 1.2:
+                    SCORE = 2
+                elif offset > 1.2 and offset <= 2.5:
+                    SCORE = 1
+                else:
+                    SCORE = 0
+
         else:
             img = cv2.imread(url)
             cv2.putText(img, 'Other !', 
-                    (30, 50), 
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
-            cv2.imshow('Other', img)
+                        (30, 50), 
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
+            # cv2.imshow('Other', img)
             print(f'{url} is {result[url]}!')
+            SCORE = 0
             cv2.waitKey(0)
             cv2.destroyAllWindows()
-            
-       
+
+    return SCORE
+
+
+if __name__ == "__main__":
+    img_path = '' 
+    score = main(img_path)
+    print(score)
