@@ -12,6 +12,7 @@ import os
 from check_point import check_point
 from q_or_other import ImageClassifier
 import shutil
+from square_detect import SquareGapAnalyzer
 
 def get_pixel_per_cm_from_a4(image_path, real_width_cm=29.7, show_debug=False, save_cropped=True, output_folder="cropped_a4"):
     img = cv2.imread(image_path)
@@ -297,40 +298,13 @@ def main(img_path):
                 save_path = os.path.join("Other", os.path.basename(url))
                 cv2.imwrite(save_path, img)  # 直接存檔，不用手動關視窗
                 print(f"{url} 已存入 Other 資料夾並加上標記")
-
-
-    # 計算端點距離 & 複製到對應資料夾
-    print('\n==計算端點距離==\n')
-    for url, u_type in result.items():
-        if u_type == 'quadrilateral':
-            px = cp.check_point(url)
-            if px == 0.0:
-                print(f'{url} : Perfect!')
-            else:
-                offset = px / pixel_per_cm
-                print(f'{url} : {offset}cm')
-                if offset <= 1.2:
-                    SCORE = 2
-                elif offset > 1.2 and offset <= 2.5:
-                    SCORE = 1
-                else:
-                    SCORE = 0
-
-        else:
-            img = cv2.imread(url)
-            cv2.putText(img, 'Other !', 
-                        (30, 50), 
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
-            # cv2.imshow('Other', img)
-            print(f'{url} is {result[url]}!')
-            SCORE = 0
-            cv2.waitKey(0)
-            cv2.destroyAllWindows()
-
-    return SCORE
+    
+    SGA = SquareGapAnalyzer()
+    res = SGA.process_image(cropped_path)
+    return res['score']
 
 
 if __name__ == "__main__":
-    img_path = '' 
+    img_path = r'realtest\S__75472904_0.jpg' 
     score = main(img_path)
-    print(score)
+    print(f'score = {score}')
