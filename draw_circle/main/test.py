@@ -1,4 +1,4 @@
-#====== 測試模型用 ======#
+#裁切圖形 + 得出px->cm -> 分類圖形(圓 橢圓 其他) -> 標示端點&算距離
 
 import cv2
 import numpy as np
@@ -145,18 +145,16 @@ def read_all_images_from_folder(folder_path):
     
     return all_images
 
-def main():
+def main(img_path):
     #==參數==#
     real_width_cm = 29.7
     SCALE = 2
     SCORE = -1
 
     input_folder = "input"   # <-- 資料夾
-    MODEL_PATH = r'circle_or_oval_resnet50.h5'
+    MODEL_PATH = r'model/circle_detect.h5'
     CLASS_NAMES = ['Other', 'circle_or_oval']
     #==參數==#
-
-    
 
     # 讀取資料夾內所有圖片
     all_images = read_all_images_from_folder(input_folder)
@@ -167,10 +165,12 @@ def main():
 
     classifier = ImageClassifier(MODEL_PATH, CLASS_NAMES)
     cp = check_point(SCALE=SCALE)
-    segmenter = Analyze_graphics()
 
     #初始化空間
+    segmenter = Analyze_graphics()
     segmenter.initialize_workspace()
+
+
     # 逐張處理
     for origin_img in all_images:
         print(f"\n=== 處理 {origin_img} ===\n")
@@ -190,6 +190,7 @@ def main():
         
         # 裁切圖形
         print('\n==裁切圖形==')
+        segmenter = Analyze_graphics()
         print(cropped_path)
         ready = segmenter.infer_and_draw(cropped_path, expand_ratio=0.15)
 
@@ -200,8 +201,6 @@ def main():
         # 先建立分類資料夾
         os.makedirs("circle_or_oval", exist_ok=True)
         os.makedirs("Other", exist_ok=True)
-
-        print(ready)        
 
         for rb in ready:
             if "binary" in rb:
@@ -222,42 +221,42 @@ def main():
                     save_path = os.path.join("Other", os.path.basename(url))
                     cv2.imwrite(save_path, img)  # 直接存檔，不用手動關視窗
                     print(f"{url} 已存入 Other 資料夾並加上標記")
-                
 
 
-        # # 計算端點距離 & 複製到對應資料夾
-        # print('\n==計算端點距離==\n')
-        # for url, u_type in result.items():
-        #     if u_type == 'circle_or_oval':
-        #         px = cp.check_point(url)
-        #         if px == 0.0:
-        #             print(f'{url} : Perfect!')
-        #         else:
-        #             offset = px / pixel_per_cm
-        #             print(f'{url} : {offset}cm')
-        #             if offset <= 1.2:
-        #                 SCORE = 2
-        #             elif offset > 1.2 and offset <= 2.5:
-        #                 SCORE = 1
-        #             else:
-        #                 SCORE = 0
+        # 計算端點距離 & 複製到對應資料夾
+        print('\n==計算端點距離==\n')
+        for url, u_type in result.items():
+            if u_type == 'circle_or_oval':
+                px = cp.check_point(url)
+                if px == 0.0:
+                    print(f'{url} : Perfect!')
+                else:
+                    offset = px / pixel_per_cm
+                    print(f'{url} : {offset}cm')
+                    if offset <= 1.2:
+                        SCORE = 2
+                    elif offset > 1.2 and offset <= 2.5:
+                        SCORE = 1
+                    else:
+                        SCORE = 0
 
-        #     else:
-        #         img = cv2.imread(url)
-        #         cv2.putText(img, 'Other !', 
-        #                     (30, 50), 
-        #                     cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
-        #         cv2.imshow('Other', img)
-        #         print(f'{url} is {result[url]}!')
-        #         SCORE = 0
-        #         cv2.waitKey(0)
-        #         cv2.destroyAllWindows()
+            else:
+                img = cv2.imread(url)
+                cv2.putText(img, 'Other !', 
+                            (30, 50), 
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
+                # cv2.imshow('Other', img)
+                print(f'{url} is {result[url]}!')
+                SCORE = 0
+                cv2.waitKey(0)
+                cv2.destroyAllWindows()
         
+
 
     return SCORE
 
 
 if __name__ == "__main__":
-
-    score = main()
+    img_path = 'test01.jpg'
+    score = main(img_path)
     print(score)
