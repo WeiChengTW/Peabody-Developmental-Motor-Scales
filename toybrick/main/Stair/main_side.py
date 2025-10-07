@@ -36,7 +36,7 @@ def main(img_path, score, ORI_TYPE):
     # 初始化模型
     model = YOLO(r'toybrick.pt')
     CONF = 0.8
-    GAP_THRESHOLD_RATIO = 0.366
+    GAP_THRESHOLD_RATIO = 0.7
 
     SCORE = score
     print(f"當前模式: {['階梯', '金字塔'][MODE]}")
