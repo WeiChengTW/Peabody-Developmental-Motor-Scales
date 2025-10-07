@@ -289,38 +289,27 @@ IV. 提升家長安心感，確保偏鄉兒童不因地理限制錯失協助。
 
 ## 參考資料
 
-[1] Guralnick, M. J. (2011). Why Early Intervention Works: A Systems Perspective. _Infants & Young Children_, 24(1), 6-28. Retrieved from https://journals.lww.com/iycjournal/fulltext/2011/01000/why_early_intervention_works__a_systems.2.aspx
+[1]: Guralnick（2011）, "Why Early Intervention Works: A Systems Perspective. Infants & Young Children," 2011. [Online]. Available: https://journals.lww.com/iycjournal/fulltext/2011/01000/why_early_intervention_works__a_systems.2.aspx.
 
-[2] Centers for Disease Control and Prevention. (n.d.). Learn the signs. Act early: Early intervention. _U.S. Department of Health & Human Services_. Retrieved from https://www.cdc.gov/act-early/early-intervention/index.html
+[2]: C. f. D. C. a. Prevention. "Learn the signs. Act early: Early intervention. ." U.S. Department of Health & Human Services. https://www.cdc.gov/act-early/early-intervention/index.html (accessed.
 
-[3] 行政院主計總處綜合統計處. (2022). 國情統計通報：110 年發展遲緩兒童早期療育服務人數 1.9 萬人. Retrieved from https://ws.dgbas.gov.tw/001/Upload/463/relfile/11150/89262/110%E5%B9%B4%E7%99%BC%E5%B1%95%E9%81%B2%E7%B7%A9%E5%85%92%E7%AB%A5%E6%97%A9%E6%9C%9F%E7%99%82%E8%82%B2%E6%9C%8D%E5%8B%99%E4%BA%BA%E6%95%B81.9%E8%90%AC%E4%BA%BA.pdf
+[3]: 行. 綜合統計處. "國情統計通報." https://ws.dgbas.gov.tw/001/Upload/463/relfile/11150/89262/110%E5%B9%B4%E7%99%BC%E5%B1%95%E9%81%B2%E7%B7%A9%E5%85%92%E7%AB%A5%E6%97%A9%E6%9C%9F%E7%99%82%E8%82%B2%E6%9C%8D%E5%8B%99%E4%BA%BA%E6%95%B81.9%E8%90%AC%E4%BA%BA.pdf (accessed.
 
-[4] Hennigan, A., Ladd, K., & Wolfe, A. (2021). The effects of occupational therapy–led fine motor centers on preschoolers' fine motor skills. _Journal of Occupational Therapy, Schools, & Early Intervention_, 14(3), 234-250. Retrieved from https://eric.ed.gov/?id=EJ1322481
+[4]: A. Hennigan, Ladd, K., & Wolfe, A. , "The effects of occupational therapy–led fine motor centers on preschoolers’ fine motor skills. Journal of Occupational Therapy, Schools, & Early Intervention,," 2021. [Online]. Available: https://eric.ed.gov/?id=EJ1322481.
 
-[5] Barnard-Brak, L., Morales-Aleman, M. M., Tomeny, K., & McWilliam, R. A. (2021). Rural and Racial/Ethnic Differences in Children Receiving Early Intervention Services. _Family & Community Health_, 44(1), 52-58. doi: 10.1097/FCH.0000000000000285
+[5]: L. Barnard-Brak, M. M. Morales-Aleman, K. Tomeny, and R. A. McWilliam, "Rural and Racial/Ethnic Differences in Children Receiving Early Intervention Services," Fam Community Health, vol. 44, no. 1, pp. 52–58, Jan/Mar 2021, doi: 10.1097/FCH.0000000000000285.
 
-[6] Hsieh, Y. H., et al. (2020). Collaborative Home-Visit Program for Young Children With Motor Delays in Rural Taiwan: A Pilot Randomized Controlled Trial. _Physical Therapy_, 100(6), 979-994. doi: 10.1093/ptj/pzaa033
+[6]: Y. H. Hsieh et al., "Collaborative Home-Visit Program for Young Children With Motor Delays in Rural Taiwan: A Pilot Randomized Controlled Trial," Phys Ther, vol. 100, no. 6, pp. 979–994, Jun 23 2020, doi: 10.1093/ptj/pzaa033.
 
-[7] Rebelo, M., Serrano, J., Duarte-Mendes, P., Paulo, R., Marinho, D. A., & Martins, J. (2021). Validity and reliability of the Portuguese version of the Peabody Developmental Motor Scales-II in children aged 12 to 48 months. _Journal of Motor Learning and Development_, 9(2), 264-275. Retrieved from https://pmc.ncbi.nlm.nih.gov/articles/PMC8623394/
-
-[8] 衛生福利部. (2024). 7 月 1 日起正式上路 未滿 7 歲兒童新增 6 次「兒童發展篩檢服務」透過接受標準化篩檢工具找出關鍵原因. Retrieved from https://www.mohw.gov.tw/cp-16-79140-1.html
-
-[9] 衛生福利部國民健康署. (n.d.). 衛生福利部國民健康署補助地方推動兒童發展聯合評估中心名單. Retrieved from https://www.hpa.gov.tw/Pages/Detail.aspx?nodeid=1602&pid=548
-
-[10] 衛生福利部. (n.d.). 我國偏鄉離島地區醫療資源及相關提升計畫執行成效之探討. Retrieved from https://share.google/yaiUBYD6cQvq4Cahq
-
-[11] 衛生福利部. (2024). 優化偏鄉醫療精進計畫第二期. Retrieved from https://share.google/2wvYmhQ713gsbjvCE
-
-[12] Choo, Y. Y., Agarwal, P., How, C. H., & Yeleswarapu, S. P. (2019). Developmental delay: identification and management at primary care level. _Singapore Medical Journal_, 60(3), 119-123. doi: 10.11622/smedj.2019025
-[2] C. f. D. C. a. Prevention. "Learn the signs. Act early: Early intervention. ." U.S. Department of Health & Human Services. https://www.cdc.gov/act-early/early-intervention/index.html (accessed.
-[3] 行. 綜合統計處. "國情統計通報." https://ws.dgbas.gov.tw/001/Upload/463/relfile/11150/89262/110%E5%B9%B4%E7%99%BC%E5%B1%95%E9%81%B2%E7%B7%A9%E5%85%92%E7%AB%A5%E6%97%A9%E6%9C%9F%E7%99%82%E8%82%B2%E6%9C%8D%E5%8B%99%E4%BA%BA%E6%95%B81.9%E8%90%AC%E4%BA%BA.pdf (accessed.
-[4] A. Hennigan, Ladd, K., & Wolfe, A. , "The effects of occupational therapy–led fine motor centers on preschoolers’ fine motor skills. Journal of Occupational Therapy, Schools, & Early Intervention,," 2021. [Online]. Available: https://eric.ed.gov/?id=EJ1322481.
-[5] L. Barnard-Brak, M. M. Morales-Aleman, K. Tomeny, and R. A. McWilliam, "Rural and Racial/Ethnic Differences in Children Receiving Early Intervention Services," Fam Community Health, vol. 44, no. 1, pp. 52–58, Jan/Mar 2021, doi: 10.1097/FCH.0000000000000285.
-[6] Y. H. Hsieh et al., "Collaborative Home-Visit Program for Young Children With Motor Delays in Rural Taiwan: A Pilot Randomized Controlled Trial," Phys Ther, vol. 100, no. 6, pp. 979–994, Jun 23 2020, doi: 10.1093/ptj/pzaa033.
-[7] M. Rebelo, Serrano, J., Duarte-Mendes, P., Paulo, R., Marinho, D. A., & Martins, J., "Validity and reliability of the Portuguese version of the Peabody Developmental Motor Scales-II in children aged 12 to 48 months.," 2021. [Online]. Available: https://pmc.ncbi.nlm.nih.gov/articles/PMC8623394/
+[7]: M. Rebelo, Serrano, J., Duarte-Mendes, P., Paulo, R., Marinho, D. A., & Martins, J., "Validity and reliability of the Portuguese version of the Peabody Developmental Motor Scales-II in children aged 12 to 48 months.," 2021. [Online]. Available: https://pmc.ncbi.nlm.nih.gov/articles/PMC8623394/
 https://ws.dgbas.gov.tw/001/Upload/463/relfile/11150/89262/110%E5%B9%B4%E7%99%BC%E5%B1%95%E9%81%B2%E7%B7%A9%E5%85%92%E7%AB%A5%E6%97%A9%E6%9C%9F%E7%99%82%E8%82%B2%E6%9C%8D%E5%8B%99%E4%BA%BA%E6%95%B81.9%E8%90%AC%E4%BA%BA.pdf.
-[8] "7 月 1 日起正式上路 未滿 7 歲兒童新增 6 次「兒童發展篩檢服務」透過接受標準化篩檢工具找出關鍵原因. 衛生福利部最新消息." https://www.mohw.gov.tw/cp-16-79140-1.html (accessed.
-[9] 衛生福利部婦幼健康組. "衛生福利部國民健康署補助地方推動 兒童發展聯合評估中心名單." https://www.hpa.gov.tw/Pages/Detail.aspx?nodeid=1602&pid=548 (accessed.
-[10] 衛生福利部, "我國偏鄉離島地區醫療資源及相關提升計畫執行成效之探討 ", (n.d.). [Online]. Available: https://share.google/yaiUBYD6cQvq4Cahq
-[11] 衛生福利部, "優化偏鄉醫療精進計畫第二期," 2024. [Online]. Available: https://share.google/2wvYmhQ713gsbjvCE
-[12] Y. Y. Choo, P. Agarwal, C. H. How, and S. P. Yeleswarapu, "Developmental delay: identification and management at primary care level," Singapore Med J, vol. 60, no. 3, pp. 119–123, Mar 2019, doi: 10.11622/smedj.2019025.
+
+[8]: "7 月 1 日起正式上路 未滿 7 歲兒童新增 6 次「兒童發展篩檢服務」透過接受標準化篩檢工具找出關鍵原因. 衛生福利部最新消息." https://www.mohw.gov.tw/cp-16-79140-1.html (accessed.
+
+[9]: 衛生福利部婦幼健康組. "衛生福利部國民健康署補助地方推動 兒童發展聯合評估中心名單." https://www.hpa.gov.tw/Pages/Detail.aspx?nodeid=1602&pid=548 (accessed.
+
+[10]: 衛生福利部, "我國偏鄉離島地區醫療資源及相關提升計畫執行成效之探討 ", (n.d.). [Online]. Available: https://share.google/yaiUBYD6cQvq4Cahq
+
+[11]: 衛生福利部, "優化偏鄉醫療精進計畫第二期," 2024. [Online]. Available: https://share.google/2wvYmhQ713gsbjvCE
+
+[12]: Y. Y. Choo, P. Agarwal, C. H. How, and S. P. Yeleswarapu, "Developmental delay: identification and management at primary care level," Singapore Med J, vol. 60, no. 3, pp. 119–123, Mar 2019, doi: 10.11622/smedj.2019025.
