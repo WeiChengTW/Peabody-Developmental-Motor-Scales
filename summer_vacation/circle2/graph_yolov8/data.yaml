@@ -1,0 +1,13 @@
+train: ../train/images
+val: ../valid/images
+test: ../test/images
+
+nc: 5
+names: ['Circle', 'Cross', 'Diamond', 'Square', 'Triangle']
+
+roboflow:
+  workspace: uuriglass
+  project: graph-yjyi5
+  version: 2
+  license: CC BY 4.0
+  url: https://universe.roboflow.com/uuriglass/graph-yjyi5/dataset/2
