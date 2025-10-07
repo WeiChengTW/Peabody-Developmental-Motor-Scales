@@ -86,7 +86,7 @@ def score_from_image(img_path, conf=CONF):
     _, binary = cv2.threshold(blurred, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
 
     # 閉運算去雜點
-    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5))
+    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
     binary = cv2.morphologyEx(binary, cv2.MORPH_CLOSE, kernel)
 
     # YOLO 偵測方塊 & 取得 mask
@@ -99,6 +99,10 @@ def score_from_image(img_path, conf=CONF):
     # 骨架化
     skeleton = extract_line_skeleton(binary)
 
+    cv2.imshow('binary', binary)
+    cv2.imshow('skel', skeleton)
+
+    cv2.waitKey(0)
     # 檢查每個方塊是否靠近骨架
     correct_num = 0
     for mask in masks:
@@ -117,7 +121,8 @@ def score_from_image(img_path, conf=CONF):
 
 # ======= 範例用法（不需要可刪） =======
 if __name__ == "__main__":
-    test_img = r"c_b_1.jpg"  # 讀取圖片
+    test_img = r"c_b_0_2.jpg"  # 讀取圖片
     score, num = score_from_image(test_img)
     print("score =", score)
+    print('num =', num)
     
