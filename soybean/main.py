@@ -4,8 +4,8 @@ import numpy as np
 import time
 
 # 初始化模型
-model = YOLO(r'runs\segment\train\weights\best.pt')
-cap = cv2.VideoCapture(1)
+model = YOLO(r'bean_model.pt')
+cap = cv2.VideoCapture(0)
 
 CONF = 0.45
 DIST_THRESHOLD = 2  # 中心點合併距離閾值
