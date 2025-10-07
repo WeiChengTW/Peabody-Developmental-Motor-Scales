@@ -258,33 +258,6 @@ IV. 提升家長安心感，確保偏鄉兒童不因地理限制錯失協助。
 - **資料庫：** MySQL 8.0+
 - **瀏覽器：** Chrome/Edge (支援觸控功能)
 
-### 快速開始
-
-1. **環境準備**
-
-   ```bash
-   git clone https://github.com/WeiChengTW/Peabody-Developmental-Motor-Scales.git
-   cd Peabody-Developmental-Motor-Scales
-   pip install -r PDMS2_web/requirements.txt
-   ```
-
-2. **資料庫設置**
-
-   - 安裝並啟動 MySQL
-   - 執行資料庫初始化腳本
-
-3. **啟動系統**
-
-   ```bash
-   cd PDMS2_web
-   python run.py
-   ```
-
-4. **硬體架設**
-   - 展開妙妙屋帳篷
-   - 連接雙攝影機與觸控螢幕
-   - 放置測驗道具於指定位置
-
 ## 開發工具及相關說明
 
 ### 核心技術框架
