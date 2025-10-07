@@ -515,11 +515,11 @@ def run_analysis_in_background(task_id, uid, img_id, script_path):
         task_id_std = normalize_task_id(img_id)
         uid_eff = uid or "unknown"
 
-        score = _read_score_from_result_json(ROOT, uid_eff, img_id)
-        if score is None:
-            score = _parse_score_from_stdout(result.stdout)
-        if score is None:
-            score = int(result.returncode)
+        # score = _read_score_from_result_json(ROOT, uid_eff, img_id)
+        # if score is None:
+        #     score = _parse_score_from_stdout(result.stdout)
+        # if score is None:
+        score = int(result.returncode)
 
         # 寫入你的 schema：user_list / task_list / score_list
         score_id = None
