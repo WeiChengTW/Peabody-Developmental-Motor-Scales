@@ -117,7 +117,7 @@ def score_from_image(img_path, conf=CONF):
 
 # ======= 範例用法（不需要可刪） =======
 if __name__ == "__main__":
-    test_img = r"c_b_2.jpg"  # 讀取圖片
+    test_img = r"c_b_1.jpg"  # 讀取圖片
     s, num = score_from_image(test_img)
     print("score =", s)
     print("num = ", num)

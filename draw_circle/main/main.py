@@ -151,7 +151,7 @@ def main(img_path):
     SCALE = 2
     SCORE = -1
 
-    input_folder = "realtest"   # <-- 資料夾
+    input_folder = "input"   # <-- 資料夾
     MODEL_PATH = r'model/circle_detect.h5'
     CLASS_NAMES = ['Other', 'circle_or_oval']
     #==參數==#
@@ -191,8 +191,8 @@ def main(img_path):
     #     # 裁切圖形
     #     print('\n==裁切圖形==')
     #     segmenter = Analyze_graphics()
-    #     print(cropped_path)
-    #     ready = segmenter.infer_and_draw(origin_img, expand_ratio=0.15)
+    #     # print(cropped_path)
+    #     ready = segmenter.infer_and_draw(cropped_path, expand_ratio=0.15)
 
     #     # 分類圖形(圓 橢圓 其他)
     #     print('\n==分類圖形==\n')
@@ -270,7 +270,7 @@ def main(img_path):
     # 裁切圖形
     print('\n==裁切圖形==')
     segmenter = Analyze_graphics()
-    print(cropped_path)
+
     ready = segmenter.infer_and_draw(img_path, expand_ratio=0.15)
 
     # 分類圖形(圓 橢圓 其他)
@@ -334,6 +334,6 @@ def main(img_path):
 
 
 if __name__ == "__main__":
-    img_path = 'test01.jpg'
+    img_path = r'realtest\S__75472905_0.jpg'
     score = main(img_path)
     print(score)

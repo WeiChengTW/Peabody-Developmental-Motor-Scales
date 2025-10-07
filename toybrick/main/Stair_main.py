@@ -10,9 +10,9 @@ import os
 
 
 
-def main(img_path, score):
+def main(img_path, score, ORI_TYPE, mode):
     # 0 = 階梯, 1 = 金字塔(一定要有空隙)
-    MODE = 0
+    MODE = mode
 
     # === 設定圖片路徑 ===
     IMAGE_PATH = rf"{img_path}" # 讀取照片
@@ -94,7 +94,7 @@ def main(img_path, score):
     if MODE == 0:  # 階梯模式
 
         # Left Stair, Right Stair
-        ORI_TYPE = "Left Stair"
+        ORI_TYPE = ORI_TYPE
 
         # 使用自適應LayerGrouping
         boxes = results[0].boxes.xyxy.cpu().numpy()
@@ -164,16 +164,16 @@ def main(img_path, score):
                 cv2.putText(annotated, label, (cx, cy + 15), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (98, 111, 19), 2)
 
     # 添加模式資訊
-    # cv2.putText(annotated, f"Mode: {['Stair', 'Pyramid'][MODE]}", (30, 150),
-    #             cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 0, 255), 2)
-    # cv2.putText(annotated, f"Detected: {len(centroids)} bricks", (30, 180),
-    #             cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 0, 255), 2)
+    cv2.putText(annotated, f"Mode: {['Stair', 'Pyramid'][MODE]}", (30, 150),
+                cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 0, 255), 2)
+    cv2.putText(annotated, f"Detected: {len(centroids)} bricks", (30, 180),
+                cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 0, 255), 2)
 
-    # combined = cv2.addWeighted(annotated, 0.8, analysis_frame, 0.2, 0)
+    combined = cv2.addWeighted(annotated, 0.8, analysis_frame, 0.2, 0)
 
     # 顯示分析結果
-    # cv2.imshow("Analysis Result", combined)
-    
+    cv2.imshow("Analysis Result", combined)
+    cv2.waitKey(0)
     # print(f"分析完成 - 偵測到 {len(centroids)} 個積木")
     # print(f"最終分數: {SCORE}")
     # print("按任意鍵關閉視窗...")
@@ -191,6 +191,9 @@ def main(img_path, score):
 if __name__ == "__main__":
 
     #圖片路徑
-    img_path = "left_stair.jpg"
-    score = main(img_path, 2)
+    img_path = "Pyramid_side.jpg"
+
+    # Left Stair, Right Stair
+    ORI_TYPE = 'Left Stair'
+    score = main(img_path, 2, ORI_TYPE, 1) #0 -> Stair, 1 -> Pyramid
     print(score)
