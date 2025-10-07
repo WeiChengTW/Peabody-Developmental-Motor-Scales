@@ -7,7 +7,7 @@ model = YOLO(r'toybrick.pt')
 CONF = 0.5
 
 # ================== YOLO 偵測方塊 & 取得 mask ==================
-def detect_blocks_mask(frame, CONF=0.5):
+def detect_blocks_mask(frame, CONF=0.3):
     results = model.predict(source=frame, conf=CONF, verbose=False)
     boxes, masks = [], []
 
@@ -99,10 +99,11 @@ def score_from_image(img_path, conf=CONF):
     # 骨架化
     skeleton = extract_line_skeleton(binary)
 
-    cv2.imshow('binary', binary)
-    cv2.imshow('skel', skeleton)
+    # cv2.imshow('origin', img)
+    # cv2.imshow('binary', binary)
+    # cv2.imshow('skel', skeleton)
+    # cv2.waitKey(0)
 
-    cv2.waitKey(0)
     # 檢查每個方塊是否靠近骨架
     correct_num = 0
     for mask in masks:
@@ -121,7 +122,7 @@ def score_from_image(img_path, conf=CONF):
 
 # ======= 範例用法（不需要可刪） =======
 if __name__ == "__main__":
-    test_img = r"c_b_0_2.jpg"  # 讀取圖片
+    test_img = r"c_b_2.jpg"  # 讀取圖片
     score, num = score_from_image(test_img)
     print("score =", score)
     print('num =', num)

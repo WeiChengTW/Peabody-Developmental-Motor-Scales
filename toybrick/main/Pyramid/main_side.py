@@ -14,7 +14,7 @@ import json
 MODE = 1  # 0 = 階梯, 1 = 金字塔(一定要有空隙)
 MODEL_PATH = r"toybrick.pt"
 CONF = 0.8
-GAP_THRESHOLD_RATIO = 0.366  # 用平均 bbox 寬度 * 這個比例
+GAP_THRESHOLD_RATIO = 0.222  # 用平均 bbox 寬度 * 這個比例
 
 def main(IMG_PATH):
 
