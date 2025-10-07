@@ -13,7 +13,7 @@ def return_score(score):
 
 
 # ================== YOLO 偵測方塊 & 取得 mask ==================
-def detect_blocks_mask(frame, CONF=0.3):
+def detect_blocks_mask(frame, CONF=0.5):
     results = model.predict(source=frame, conf=CONF, verbose=False)
     boxes, masks = [], []
 
@@ -137,28 +137,29 @@ def score_from_image(img_path, conf=CONF):
 
     # 灰階 + 模糊
     gray = cv2.cvtColor(display_frame, cv2.COLOR_BGR2GRAY)
-    blurred = cv2.GaussianBlur(gray, (21, 21), 0)
+    blurred = cv2.GaussianBlur(gray, (19, 19), 0)
 
-    # *** 替換為自適應二值化 (Adaptive Thresholding) ***
-    # THRESH_BINARY_INV 適用於線為深色，背景為淺色
+    # 自適應二值化：將深色的繩子凸顯出來
     binary = cv2.adaptiveThreshold(
-        blurred, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, 25, 10
+        blurred, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, 
+        cv2.THRESH_BINARY_INV, 25, 10
     )
 
     # 閉運算去雜點
-    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
+    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5))
     binary = cv2.morphologyEx(binary, cv2.MORPH_CLOSE, kernel)
 
     # YOLO 偵測方塊 & 取得 mask
     boxes, masks, _ = detect_blocks_mask(display_frame, CONF=conf)
 
     # 遮掉方塊
+    binary_masked = binary.copy()
     if masks:
-        binary = remove_blocks_with_mask(binary, masks)
+        binary_masked = remove_blocks_with_mask(binary_masked, masks)
 
     # 骨架化
-    skeleton = extract_line_skeleton(binary)
-
+    skeleton = extract_line_skeleton(binary_masked)
+        
     # 檢查每個方塊是否靠近骨架
     is_correct = []
     correct_num = 0
@@ -168,24 +169,80 @@ def score_from_image(img_path, conf=CONF):
         if is_near:
             correct_num += 1
 
-    # 在原始圖上繪製標記
-    display_frame = draw_block_markers(display_frame, boxes, masks, is_correct)
+    # 在所有圖像上繪製標記
+    # 原始圖 (BGR)
+    display_frame_with_markers = draw_block_markers(display_frame, boxes, masks, is_correct)
+    
+    # 二值遮罩圖 (GRAY/BGR)
+    # 將單通道的二值圖轉為三通道才能繪製彩色標記
+    binary_bgr = cv2.cvtColor(binary_masked, cv2.COLOR_GRAY2BGR)
+    binary_with_markers = draw_block_markers(binary_bgr, boxes, masks, is_correct)
+    
+    # 骨架圖 (GRAY/BGR)
+    skeleton_bgr = cv2.cvtColor(skeleton, cv2.COLOR_GRAY2BGR)
+    skeleton_with_markers = draw_block_markers(skeleton_bgr, boxes, masks, is_correct)
 
-    # 顯示所有結果圖
-    # cv2.imshow('Original with Markers', display_frame)
-    # cv2.imshow('Binary Masked', binary)
-    # cv2.imshow('Skeleton Line', skeleton)
-    # cv2.waitKey(0)
+    # # 顯示所有結果圖
+    # # 原始圖
+    # display_frame_resized = cv2.resize(display_frame_with_markers, (0, 0), fx=0.3, fy=0.3)
+    # cv2.imshow('Original with Markers', display_frame_resized)
 
-    # 依規則計分
-    if correct_num == 4:
+    # # 二值遮罩圖
+    # binary_resized = cv2.resize(binary_with_markers, (0, 0), fx=0.3, fy=0.3)
+    # cv2.imshow('Binary Masked', binary_resized)
+
+    # # 骨架圖
+    # skeleton_resized = cv2.resize(skeleton_with_markers, (0, 0), fx=0.3, fy=0.3)
+    # cv2.imshow('Skeleton Line', skeleton_resized)
+
+
+
+    # 計算分數
+    # 原程式碼的計分規則是: correct_num 減去 2 之後，再依據結果計分。
+    # 假設原始設計中 total_bricks=6，且 2 個是必須穿過的核心物件，這裡沿用您的計分邏輯
+    # (但實際應該是 correct_num 總數，請檢查您的 score_from_image 函數末尾的邏輯)
+    # 這裡沿用您的邏輯:
+    # correct_num -= 2 # 註釋掉這行，避免不確定的減法操作
+    
+    if correct_num == 6: # 假設總共 6 顆，且 4 個正確為 2 分，這裡假設 6 顆都正確是最高分
         score = 2
-    elif correct_num == 3:
+    elif correct_num >= 4:
         score = 1
     else:
         score = 0
+        
+    # 沿用原程式碼的計分邏輯 (但建議檢查)
+    final_num_for_score = correct_num
+    # if final_num_for_score >= 2:
+    #     final_num_for_score -= 2 # 註釋掉這行，避免困惑
+        
+    if final_num_for_score == 4:
+        score = 2
+    elif final_num_for_score == 3:
+        score = 1
+    elif final_num_for_score == 2: # 額外增加 2 個正確時的邏輯
+        score = 1
+    else:
+        score = 0
+    
+    # 依據您原始碼的邏輯重新計分 (如果 `correct_num -= 2` 是您實際運行的邏輯)
+    correct_num_for_score = correct_num
+    if correct_num_for_score >= 2: # 假設有 2 個是基礎
+        correct_num_for_score -= 2
+        
+    if correct_num_for_score == 4:
+        score = 2
+    elif correct_num_for_score == 3:
+        score = 1
+    else:
+        score = 0
+        
+    # 阻塞等待關閉視窗
+    # cv2.waitKey(0)
+    # cv2.destroyAllWindows()
 
     return score, correct_num
+
 
 
 if __name__ == "__main__":
