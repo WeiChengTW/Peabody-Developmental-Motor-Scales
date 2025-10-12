@@ -6,6 +6,11 @@ import sys
 import os
 import json
 
+
+def return_score(score):
+    return score
+
+
 if __name__ == "__main__":
     # 檢查是否有傳入 id 參數
     if len(sys.argv) > 2:
@@ -75,3 +80,5 @@ if __name__ == "__main__":
             print(
                 f"結果已儲存到 {result_file} - 用戶 {uid} 的關卡 {img_id} 分數: {score}"
             )
+
+        return_score(score)
