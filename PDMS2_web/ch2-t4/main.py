@@ -9,6 +9,10 @@ CROP_FOLDER = r"ch2-t4\new"
 PXCM_JSON = "px2cm.json"
 
 
+def return_score(score):
+    sys.exit(int(score))
+
+
 def main():
     # Step 1) 讀比例
     if not os.path.exists(PXCM_JSON):
@@ -42,28 +46,8 @@ def main():
         f"\n=== 處理 {os.path.basename(image_path)} | pixel_per_cm={pixel_per_cm:.4f} ==="
     )
     score = find_baseline_and_show_all(img, pixel_per_cm)
-    result_file = "result.json"
-    try:
-        if os.path.exists(result_file):
-            with open(result_file, "r", encoding="utf-8") as f:
-                results = json.load(f)
-        else:
-            results = {}
-    except (json.JSONDecodeError, FileNotFoundError):
-        results = {}
-
-    # 確保 uid 存在於結果中
-    if uid not in results:
-        results[uid] = {}
-
-    # 更新對應 uid 的關卡分數
-    results[uid][img_id] = score
-
-    # 儲存到 result.json
-    with open(result_file, "w", encoding="utf-8") as f:
-        json.dump(results, f, ensure_ascii=False, indent=2)
-
-    print(f"結果已儲存到 {result_file} - 用戶 {uid} 的關卡 {img_id} 分數: {score}")
+    # print(f"得分：{score}")
+    return_score(score)
 
 
 if __name__ == "__main__":

@@ -6,6 +6,11 @@ from draw_range_correct import analyze_paint  # 或 analyze_image
 import json
 import sys
 
+
+def return_score(score):
+    sys.exit(int(score))
+
+
 if __name__ == "__main__":
     # 檢查是否有傳入 id 參數
     if len(sys.argv) > 2:
@@ -38,25 +43,4 @@ if __name__ == "__main__":
     # print("得分：", result["score"])
     # print("說明：", result["rule"])
     score = result["score"]
-    result_file = "result.json"
-    try:
-        if os.path.exists(result_file):
-            with open(result_file, "r", encoding="utf-8") as f:
-                results = json.load(f)
-        else:
-            results = {}
-    except (json.JSONDecodeError, FileNotFoundError):
-        results = {}
-
-    # 確保 uid 存在於結果中
-    if uid not in results:
-        results[uid] = {}
-
-    # 更新對應 uid 的關卡分數
-    results[uid][img_id] = score
-
-    # 儲存到 result.json
-    with open(result_file, "w", encoding="utf-8") as f:
-        json.dump(results, f, ensure_ascii=False, indent=2)
-
-    print(f"結果已儲存到 {result_file} - 用戶 {uid} 的關卡 {img_id} 分數: {score}")
+    return_score(score)
