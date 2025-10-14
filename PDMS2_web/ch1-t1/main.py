@@ -1,10 +1,16 @@
 import cv2
 import numpy as np
 from ultralytics import YOLO
+import sys
 
 # ================== YOLO 模型 ==================
-model = YOLO(r'toybrick.pt')
+model = YOLO(r"toybrick.pt")
 CONF = 0.5
+
+
+def return_score(score):
+    sys.exit(int(score))
+
 
 # ================== YOLO 偵測方塊 & 取得 mask ==================
 def detect_blocks_mask(frame, CONF=0.3):
@@ -24,20 +30,24 @@ def detect_blocks_mask(frame, CONF=0.3):
                     masks.append(mask)
     return boxes, masks, results
 
+
 # ================== 遮掉方塊 ==================
 def remove_blocks_with_mask(binary, masks, extra_px=10):
     h, w = binary.shape
     for mask in masks:
         mask_resized = cv2.resize(mask, (w, h), interpolation=cv2.INTER_NEAREST)
         # 膨脹 mask，增加遮擋範圍
-        kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (extra_px*2, extra_px*2))
+        kernel = cv2.getStructuringElement(
+            cv2.MORPH_ELLIPSE, (extra_px * 2, extra_px * 2)
+        )
         mask_dilated = cv2.dilate((mask_resized > 0).astype(np.uint8), kernel)
-        
+
         # 使用 bitwise_and 替代直接賦值，使邏輯更清晰
         mask_inverted = cv2.bitwise_not(mask_dilated * 255)
         binary = cv2.bitwise_and(binary, mask_inverted)
-        
+
     return binary
+
 
 # ================== 骨架化 ==================
 def extract_line_skeleton(binary):
@@ -54,6 +64,7 @@ def extract_line_skeleton(binary):
             break
     return skeleton
 
+
 # ================== 判斷是否在骨架線點附近 ==================
 def is_mask_near_skeleton(mask, skeleton, tol=5):
     """
@@ -61,16 +72,20 @@ def is_mask_near_skeleton(mask, skeleton, tol=5):
     skeleton: 骨架二值圖
     tol: 搜尋半徑
     """
-    mask_resized = cv2.resize(mask, (skeleton.shape[1], skeleton.shape[0]),
-                              interpolation=cv2.INTER_NEAREST)
+    mask_resized = cv2.resize(
+        mask, (skeleton.shape[1], skeleton.shape[0]), interpolation=cv2.INTER_NEAREST
+    )
     ys, xs = np.where(mask_resized > 0)
     h, w = skeleton.shape
     for x, y in zip(xs, ys):
-        x0 = max(0, x - tol);  x1 = min(w, x + tol + 1)
-        y0 = max(0, y - tol);  y1 = min(h, y + tol + 1)
+        x0 = max(0, x - tol)
+        x1 = min(w, x + tol + 1)
+        y0 = max(0, y - tol)
+        y1 = min(h, y + tol + 1)
         if np.any(skeleton[y0:y1, x0:x1] > 0):
             return True
     return False
+
 
 # ================== 新增: 在方塊中心標記點 ==================
 def draw_block_markers(frame, boxes, masks, is_correct):
@@ -88,7 +103,7 @@ def draw_block_markers(frame, boxes, masks, is_correct):
 
     for i, box in enumerate(boxes):
         x1, y1, x2, y2 = box
-        
+
         # 計算中心點
         center_x = (x1 + x2) // 2
         center_y = (y1 + y2) // 2
@@ -98,14 +113,15 @@ def draw_block_markers(frame, boxes, masks, is_correct):
         # 綠色 (0, 255, 0) 代表正確 (Correct)
         # 紅色 (0, 0, 255) 代表錯誤 (Incorrect)
         color = (0, 255, 0) if is_correct[i] else (0, 0, 255)
-        
+
         # 繪製中心點 (圓形)
         cv2.circle(frame, center, radius=10, color=color, thickness=-1)
-        
+
         # 繪製邊界框 (可選，用於確認偵測範圍)
         # cv2.rectangle(frame, (x1, y1), (x2, y2), color, 2)
 
     return frame
+
 
 # ================== 封裝：讀取 img_path 並回傳 score ==================
 def score_from_image(img_path, conf=CONF):
@@ -126,8 +142,7 @@ def score_from_image(img_path, conf=CONF):
     # *** 替換為自適應二值化 (Adaptive Thresholding) ***
     # THRESH_BINARY_INV 適用於線為深色，背景為淺色
     binary = cv2.adaptiveThreshold(
-        blurred, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, 
-        cv2.THRESH_BINARY_INV, 25, 10
+        blurred, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, 25, 10
     )
 
     # 閉運算去雜點
@@ -174,7 +189,15 @@ def score_from_image(img_path, conf=CONF):
 
 
 if __name__ == "__main__":
-    test_img = r"c_b_2.jpg"  # 讀取圖片
-    score, num = score_from_image(test_img)
+    if len(sys.argv) > 2:
+        # 使用傳入的 uid 和 id 作為圖片路徑
+        uid = sys.argv[1]
+        img_id = sys.argv[2]
+        # uid = "lull222"
+        # img_id = "ch3-t1"
+        image_path = rf"kid\{uid}\{img_id}.jpg"
+    # test_img = r"c_b_2.jpg"  # 讀取圖片
+    score, num = score_from_image(image_path)
     print("score =", score)
-    print('num =', num)
+    print("num =", num)
+    return_score(score)
