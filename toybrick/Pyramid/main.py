@@ -154,6 +154,7 @@ def analyze_image_top(frame, model, initial_get_point=2):
     # 繪製總體狀態 (在 cropped 圖像上)
     cv2.putText(cropped, summary, (230, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, color, 3)
     
+    
     return cropped, summary, GET_POINT
 
 
