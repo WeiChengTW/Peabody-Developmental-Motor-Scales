@@ -330,6 +330,6 @@ if __name__ == "__main__":
     print("===============================")
     
     # 等待按鍵關閉所有視窗
-    if analyzed_frame_top is not None:
-         cv2.waitKey(0)
-         cv2.destroyAllWindows()
+    # if analyzed_frame_top is not None:
+    #      cv2.waitKey(0)
+    #      cv2.destroyAllWindows()
