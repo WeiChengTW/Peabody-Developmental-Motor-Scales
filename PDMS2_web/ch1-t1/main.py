@@ -3,6 +3,9 @@ import numpy as np
 from ultralytics import YOLO
 import sys
 
+# ================== 裁剪設定 ==================
+CROP_RATIO = 0.85  
+
 # ================== YOLO 模型 ==================
 model = YOLO(r"toybrick.pt")
 CONF = 0.5
@@ -10,6 +13,29 @@ CONF = 0.5
 
 def return_score(score):
     sys.exit(int(score))
+
+
+# ================== 輔助函數：中心裁剪 ==================
+def crop_center(frame, ratio=CROP_RATIO):
+    """
+    將圖像裁剪至中心指定比例 (ratio) 的區域。
+    """
+    h, w = frame.shape[:2]
+    
+    # 計算邊緣需要裁剪掉的比例
+    margin_ratio = (1 - ratio) / 2
+    
+    # 計算起始和結束座標
+    x_start = int(w * margin_ratio)
+    x_end = int(w * (1 - margin_ratio))
+    
+    y_start = int(h * margin_ratio)
+    y_end = int(h * (1 - margin_ratio))
+    
+    # 裁剪圖像
+    cropped_frame = frame[y_start:y_end, x_start:x_end]
+    
+    return cropped_frame
 
 
 # ================== YOLO 偵測方塊 & 取得 mask ==================
@@ -26,6 +52,7 @@ def detect_blocks_mask(frame, CONF=0.5):
             if cls_id == 0:  # 方塊類別
                 boxes.append((x1, y1, x2, y2))
                 if r.masks is not None:
+                    # 注意: masks 數據需要與當前幀的尺寸匹配
                     mask = r.masks.data.cpu().numpy()[i]
                     masks.append(mask)
     return boxes, masks, results
@@ -87,7 +114,7 @@ def is_mask_near_skeleton(mask, skeleton, tol=5):
     return False
 
 
-# ================== 新增: 在方塊中心標記點 ==================
+# ================== 在方塊中心標記點 ==================
 def draw_block_markers(frame, boxes, masks, is_correct):
     """
     在原始圖像上標記所有偵測到的方塊。
@@ -133,11 +160,15 @@ def score_from_image(img_path, conf=CONF):
     if img is None:
         raise ValueError(f"讀取圖片失敗：{img_path}")
 
+    # ===== 新增: 中心裁剪 75% 區域 =====
+    img = crop_center(img, CROP_RATIO)
+    # ==================================
+    
     display_frame = img.copy()
 
     # 灰階 + 模糊
     gray = cv2.cvtColor(display_frame, cv2.COLOR_BGR2GRAY)
-    blurred = cv2.GaussianBlur(gray, (19, 19), 0)
+    blurred = cv2.GaussianBlur(gray, (17, 17), 0)
 
     # 自適應二值化：將深色的繩子凸顯出來
     binary = cv2.adaptiveThreshold(
@@ -150,6 +181,7 @@ def score_from_image(img_path, conf=CONF):
     binary = cv2.morphologyEx(binary, cv2.MORPH_CLOSE, kernel)
 
     # YOLO 偵測方塊 & 取得 mask
+    # 由於 YOLO 模型會自動縮放圖片，因此這裡傳入裁剪後的 display_frame 即可
     boxes, masks, _ = detect_blocks_mask(display_frame, CONF=conf)
 
     # 遮掉方塊
@@ -182,50 +214,16 @@ def score_from_image(img_path, conf=CONF):
     skeleton_bgr = cv2.cvtColor(skeleton, cv2.COLOR_GRAY2BGR)
     skeleton_with_markers = draw_block_markers(skeleton_bgr, boxes, masks, is_correct)
 
+    # 這裡的顯示程式碼已經被註釋，如果需要預覽，請取消註釋
     # # 顯示所有結果圖
-    # # 原始圖
-    # display_frame_resized = cv2.resize(display_frame_with_markers, (0, 0), fx=0.3, fy=0.3)
-    # cv2.imshow('Original with Markers', display_frame_resized)
+    display_frame_resized = cv2.resize(display_frame_with_markers, (0, 0), fx=0.3, fy=0.3)
+    cv2.imshow('Original with Markers', display_frame_resized)
+    binary_resized = cv2.resize(binary_with_markers, (0, 0), fx=0.3, fy=0.3)
+    cv2.imshow('Binary Masked', binary_resized)
+    skeleton_resized = cv2.resize(skeleton_with_markers, (0, 0), fx=0.3, fy=0.3)
+    cv2.imshow('Skeleton Line', skeleton_resized)
 
-    # # 二值遮罩圖
-    # binary_resized = cv2.resize(binary_with_markers, (0, 0), fx=0.3, fy=0.3)
-    # cv2.imshow('Binary Masked', binary_resized)
-
-    # # 骨架圖
-    # skeleton_resized = cv2.resize(skeleton_with_markers, (0, 0), fx=0.3, fy=0.3)
-    # cv2.imshow('Skeleton Line', skeleton_resized)
-
-
-
-    # 計算分數
-    # 原程式碼的計分規則是: correct_num 減去 2 之後，再依據結果計分。
-    # 假設原始設計中 total_bricks=6，且 2 個是必須穿過的核心物件，這裡沿用您的計分邏輯
-    # (但實際應該是 correct_num 總數，請檢查您的 score_from_image 函數末尾的邏輯)
-    # 這裡沿用您的邏輯:
-    # correct_num -= 2 # 註釋掉這行，避免不確定的減法操作
-    
-    if correct_num == 6: # 假設總共 6 顆，且 4 個正確為 2 分，這裡假設 6 顆都正確是最高分
-        score = 2
-    elif correct_num >= 4:
-        score = 1
-    else:
-        score = 0
-        
-    # 沿用原程式碼的計分邏輯 (但建議檢查)
-    final_num_for_score = correct_num
-    # if final_num_for_score >= 2:
-    #     final_num_for_score -= 2 # 註釋掉這行，避免困惑
-        
-    if final_num_for_score == 4:
-        score = 2
-    elif final_num_for_score == 3:
-        score = 1
-    elif final_num_for_score == 2: # 額外增加 2 個正確時的邏輯
-        score = 1
-    else:
-        score = 0
-    
-    # 依據您原始碼的邏輯重新計分 (如果 `correct_num -= 2` 是您實際運行的邏輯)
+    # 計算分數 (沿用您的計分邏輯)
     correct_num_for_score = correct_num
     if correct_num_for_score >= 2: # 假設有 2 個是基礎
         correct_num_for_score -= 2
@@ -237,12 +235,10 @@ def score_from_image(img_path, conf=CONF):
     else:
         score = 0
         
-    # 阻塞等待關閉視窗
-    # cv2.waitKey(0)
-    # cv2.destroyAllWindows()
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
 
     return score, correct_num
-
 
 
 if __name__ == "__main__":
@@ -250,11 +246,15 @@ if __name__ == "__main__":
         # 使用傳入的 uid 和 id 作為圖片路徑
         uid = sys.argv[1]
         img_id = sys.argv[2]
-        # uid = "lull222"
-        # img_id = "ch3-t1"
         image_path = rf"kid\{uid}\{img_id}.jpg"
-    # test_img = r"c_b_2.jpg"  # 讀取圖片
+    else:
+        # 測試圖片路徑 (請替換為實際測試路徑)
+        print("請提供 uid 和 img_id 參數或在程式碼中設定測試路徑。")
+        sys.exit(0) 
+
+    # test_img = r"ch1-t1.jpg"  # 讀取圖片
     score, num = score_from_image(image_path)
+    # score, num = score_from_image(test_img)
     print("score =", score)
     print("num =", num)
     return_score(score)
