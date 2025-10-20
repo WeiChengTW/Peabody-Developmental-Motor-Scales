@@ -12,6 +12,12 @@ from cross_or_other import ImageClassifier
 import shutil
 from cross_detect import CrossScorer
 import sys
+import os
+from pathlib import Path
+
+BASE_DIR = Path(__file__).resolve().parent
+target_dir = BASE_DIR.parent / "ch2-t3"
+MODEL_PATH = BASE_DIR.parent / "ch2-t3" / "model" / "cross_final.h5"
 
 
 def return_score(score):
@@ -23,7 +29,7 @@ def get_pixel_per_cm_from_a4(
     real_width_cm=29.7,
     show_debug=False,
     save_cropped=True,
-    output_folder="cropped_a4",
+    output_folder=target_dir / "cropped_a4",
 ):
     img = cv2.imread(image_path)
     if img is None:
@@ -168,8 +174,6 @@ def main(img_path):
     real_width_cm = 29.7
     SCORE = -1
 
-    input_folder = "realtest"  # <-- 資料夾
-    MODEL_PATH = r"model/cross_final.h5"
     CLASS_NAMES = ["cross", "other"]
 
     # ==參數==#
@@ -178,8 +182,10 @@ def main(img_path):
     # all_images = read_all_images_from_folder(input_folder)
 
     ## 先建立分類資料夾
-    os.makedirs("cross", exist_ok=True)
-    os.makedirs("other", exist_ok=True)
+    cross_dir = target_dir / "cross"
+    other_dir = target_dir / "other"
+    os.makedirs(cross_dir / "cross", exist_ok=True)
+    os.makedirs(other_dir / "other", exist_ok=True)
 
     classifier = ImageClassifier(MODEL_PATH, CLASS_NAMES)
 
@@ -198,7 +204,7 @@ def main(img_path):
             img_path,
             show_debug=False,  # 關掉視覺化避免卡住
             save_cropped=True,
-            output_folder="cropped_a4",
+            output_folder=target_dir / "cropped_a4",
         )
         print(f"{img_path} pixel_per_cm = {pixel_per_cm}")
     except ValueError as e:
@@ -232,7 +238,7 @@ def main(img_path):
 
             # 直接分類存檔
             if predicted_class_name == "cross":
-                shutil.copy(url, os.path.join("cross", os.path.basename(url)))
+                shutil.copy(url, cross_dir / os.path.basename(url))
                 results, _, _, _ = cs.score_image(url)
                 return results["score"]
 
@@ -248,7 +254,7 @@ def main(img_path):
                     (0, 0, 255),
                     2,
                 )
-                save_path = os.path.join("other", os.path.basename(url))
+                save_path = other_dir / os.path.basename(url)
                 cv2.imwrite(save_path, img)  # 直接存檔，不用手動關視窗
                 print(f"{url} 已存入 Other 資料夾並加上標記")
                 return 0

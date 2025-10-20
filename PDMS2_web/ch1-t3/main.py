@@ -29,6 +29,109 @@ def return_score(score):
 # ====================================================================
 
 
+# def analyze_image_side(img_path, initial_score, ori_type, model):
+#     """
+#     分析側視圖 (SIDE View) 影像，檢查空隙和結構。
+
+#     :param img_path: 圖片路徑
+#     :param initial_score: 初始得分 (例如 2)
+#     :param ori_type: 期望的結構類型 ('Left Stair' 或 'Right Stair')
+#     :param model: 已載入的 YOLO 模型
+#     :return: score_side (0, 1, 或 2, 失敗返回 -1)
+#     """
+#     if not SIDE_ANALYSIS_AVAILABLE:
+#         print("側視圖分析模組缺失，跳過分析並返回 -1。")
+#         return -1
+
+#     MODE = 0  # 0 = 階梯
+#     CONF = 0.8
+#     GAP_THRESHOLD_RATIO = 0.7
+#     SCORE = initial_score
+
+#     # 檢查圖片是否存在
+#     if not os.path.exists(img_path):
+#         print(f"側視圖分析錯誤: 找不到圖片檔案 {img_path}")
+#         return -1
+
+#     # 載入圖片
+#     frame = cv2.imread(img_path)
+#     if frame is None:
+#         print(f"側視圖分析錯誤: 無法讀取圖片 {img_path}")
+#         return -1
+
+#     print(f"側視圖分析 - 圖片: {img_path}")
+#     print(f"當前模式: {['階梯', '金字塔'][MODE]}")
+
+#     # 進行YOLO預測和分析
+#     results = model.predict(source=frame, conf=CONF, verbose=False)
+#     masks = results[0].masks.data.cpu().numpy() if results[0].masks is not None else []
+#     boxes = (
+#         results[0].boxes.xyxy.cpu().numpy()
+#         if results[0].boxes is not None
+#         else np.empty((0, 4))
+#     )
+
+#     centroids = MaskAnalyzer.get_centroids(masks)
+#     IS_GAP = False
+
+#     # 核心邏輯開始
+#     if len(masks) != 6:
+#         print(f"側視圖警告: 偵測到 {len(masks)} 個積木，非預期的 6 個。")
+
+#     if len(centroids) >= 2:
+#         bbox_widths = [box[2] - box[0] for box in boxes] if len(boxes) > 0 else []
+#         avg_width = np.mean(bbox_widths) if bbox_widths else 1
+#         GAP_THRESHOLD = GAP_THRESHOLD_RATIO * avg_width
+
+#         gap_checker = CheckGap(gap_threshold=GAP_THRESHOLD, y_layer_threshold=30)
+#         gap_pairs = gap_checker.check(centroids)
+
+#         if gap_pairs:
+#             IS_GAP = True if (len(gap_pairs) // 2 == 3) else False
+#             print(f"偵測到空隙: {len(gap_pairs) // 2} 組")
+#             if MODE == 0:
+#                 SCORE = 1  # 階梯模式遇到空隙，扣分
+#         else:
+#             print("無空隙")
+#             if MODE == 1:
+#                 SCORE = 1  # 金字塔模式沒空隙，扣分
+
+#     # 模式檢測
+#     if MODE == 0:  # 階梯模式
+#         grouper = LayerGrouping(layer_ratio=0.2)
+#         layers = grouper.group_by_y(centroids, boxes=boxes)
+
+#         stair_checker = StairChecker()
+#         result, msg = stair_checker.check(layers)
+#         TYPE = msg
+
+#         print(f"階梯檢測結果: {msg}")
+
+#         if not result or TYPE != ori_type:
+#             SCORE = 0  # 結構不對或類型不符，最低分
+
+#     elif MODE == 1:  # 金字塔模式 (保留原邏輯，雖然原 main_side.py 預設 MODE=0)
+#         grouper = LayerGrouping(layer_ratio=0.2)
+#         layers = grouper.group_by_y(centroids, boxes=boxes)
+#         block_width = (
+#             np.mean([box[2] - box[0] for box in boxes]) // 2 if len(boxes) > 0 else 0
+#         )
+
+#         pyramid_checker = PyramidCheck()
+#         is_pyramid, pyramid_msg = pyramid_checker.check_pyramid(
+#             layers, block_width, IS_GAP
+#         )
+#         print(f"金字塔檢測結果: {pyramid_msg}")
+
+#         if not is_pyramid:
+#             SCORE = 0
+
+#     # 註釋掉原有的 cv2.imshow 呼叫
+#     # cv2.imshow("Side Analysis Result", annotated_frame)
+#     # cv2.waitKey(0) # 只留一幀，不阻塞
+
+#     return SCORE
+
 def analyze_image_side(img_path, initial_score, ori_type, model):
     """
     分析側視圖 (SIDE View) 影像，檢查空隙和結構。
@@ -59,6 +162,8 @@ def analyze_image_side(img_path, initial_score, ori_type, model):
         print(f"側視圖分析錯誤: 無法讀取圖片 {img_path}")
         return -1
 
+    annotated_frame = frame.copy()  # 用來繪製的副本
+    
     print(f"側視圖分析 - 圖片: {img_path}")
     print(f"當前模式: {['階梯', '金字塔'][MODE]}")
 
@@ -74,6 +179,19 @@ def analyze_image_side(img_path, initial_score, ori_type, model):
     centroids = MaskAnalyzer.get_centroids(masks)
     IS_GAP = False
 
+    # ========== 繪製所有偵測到的框框 ==========
+    for i, box in enumerate(boxes):
+        x1, y1, x2, y2 = map(int, box)
+        cv2.rectangle(annotated_frame, (x1, y1), (x2, y2), (0, 255, 0), 2)  # 綠色框
+        cv2.putText(annotated_frame, f"Block {i+1}", (x1, y1-5), 
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1)
+    
+    # ========== 繪製質心 ==========
+    for i, (cx, cy) in enumerate(centroids):
+        cv2.circle(annotated_frame, (int(cx), int(cy)), 5, (255, 0, 0), -1)  # 藍色點
+        cv2.putText(annotated_frame, f"C{i+1}", (int(cx)+5, int(cy)-5), 
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.4, (255, 0, 0), 1)
+
     # 核心邏輯開始
     if len(masks) != 6:
         print(f"側視圖警告: 偵測到 {len(masks)} 個積木，非預期的 6 個。")
@@ -86,9 +204,26 @@ def analyze_image_side(img_path, initial_score, ori_type, model):
         gap_checker = CheckGap(gap_threshold=GAP_THRESHOLD, y_layer_threshold=30)
         gap_pairs = gap_checker.check(centroids)
 
+        # ========== 繪製空隙 ==========
         if gap_pairs:
             IS_GAP = True if (len(gap_pairs) // 2 == 3) else False
             print(f"偵測到空隙: {len(gap_pairs) // 2} 組")
+            
+            # gap_pairs 應該是 [(c1, c2), (c3, c4), ...] 的格式
+            for idx in range(0, len(gap_pairs), 2):
+                if idx + 1 < len(gap_pairs):
+                    c1_idx, c2_idx = gap_pairs[idx], gap_pairs[idx + 1]
+                    if c1_idx < len(centroids) and c2_idx < len(centroids):
+                        cx1, cy1 = centroids[c1_idx]
+                        cx2, cy2 = centroids[c2_idx]
+                        # 在空隙點之間畫紅線
+                        cv2.line(annotated_frame, (int(cx1), int(cy1)), (int(cx2), int(cy2)), 
+                                (0, 0, 255), 2)  # 紅色線
+                        # 標記空隙
+                        mid_x, mid_y = int((cx1 + cx2) / 2), int((cy1 + cy2) / 2)
+                        cv2.putText(annotated_frame, "GAP", (mid_x, mid_y), 
+                                   cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
+            
             if MODE == 0:
                 SCORE = 1  # 階梯模式遇到空隙，扣分
         else:
@@ -101,16 +236,33 @@ def analyze_image_side(img_path, initial_score, ori_type, model):
         grouper = LayerGrouping(layer_ratio=0.2)
         layers = grouper.group_by_y(centroids, boxes=boxes)
 
+        # ========== 繪製分層 ==========
+        colors = [(255, 0, 0), (0, 255, 0), (0, 0, 255), (255, 255, 0), 
+                  (255, 0, 255), (0, 255, 255)]
+        for layer_idx, layer in enumerate(layers):
+            color = colors[layer_idx % len(colors)]
+            for block_idx in layer:
+                if block_idx < len(boxes):
+                    x1, y1, x2, y2 = map(int, boxes[block_idx])
+                    cv2.rectangle(annotated_frame, (x1, y1), (x2, y2), color, 3)
+                    cv2.putText(annotated_frame, f"L{layer_idx+1}", (x1, y2+20), 
+                               cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 2)
+
         stair_checker = StairChecker()
         result, msg = stair_checker.check(layers)
         TYPE = msg
 
         print(f"階梯檢測結果: {msg}")
 
+        # ========== 在左上角顯示檢測結果 ==========
+        result_text = f"Type: {TYPE} | Expected: {ori_type} | Match: {'✓' if TYPE == ori_type else '✗'}"
+        cv2.putText(annotated_frame, result_text, (10, 30), 
+                   cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 255), 2)
+
         if not result or TYPE != ori_type:
             SCORE = 0  # 結構不對或類型不符，最低分
 
-    elif MODE == 1:  # 金字塔模式 (保留原邏輯，雖然原 main_side.py 預設 MODE=0)
+    elif MODE == 1:  # 金字塔模式
         grouper = LayerGrouping(layer_ratio=0.2)
         layers = grouper.group_by_y(centroids, boxes=boxes)
         block_width = (
@@ -126,12 +278,21 @@ def analyze_image_side(img_path, initial_score, ori_type, model):
         if not is_pyramid:
             SCORE = 0
 
-    # 註釋掉原有的 cv2.imshow 呼叫
+    # ========== 顯示得分 ==========
+    score_text = f"Score: {SCORE}/2"
+    cv2.putText(annotated_frame, score_text, (10, annotated_frame.shape[0] - 20), 
+               cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 255, 255), 2)
+
+    # 保存標註後的圖片（可選）
+    output_path = img_path.replace(".jpg", "_annotated.jpg")
+    cv2.imwrite(output_path, annotated_frame)
+    print(f"標註結果已保存至: {output_path}")
+
+    # 如果要顯示（開發時用），可解註：
     # cv2.imshow("Side Analysis Result", annotated_frame)
-    # cv2.waitKey(1) # 只留一幀，不阻塞
+    # cv2.waitKey(0)
 
     return SCORE
-
 
 # ====================================================================
 # === 俯視圖 (TOP View) 分析函數 - 來自 main_top.py 的 analyze_image 函數核心邏輯
@@ -304,6 +465,7 @@ if __name__ == "__main__":
         # 使用傳入的 uid 和 id 作為圖片路徑
         uid = sys.argv[1]
         img_id = sys.argv[2]
+        stair_type = sys.argv[3] if len(sys.argv) > 3 else None
         # uid = "lull222"
         # img_id = "ch3-t1"
         # image_path = rf"kid\{uid}\{img_id}.jpg"
@@ -311,10 +473,11 @@ if __name__ == "__main__":
         # 請根據您的實際情況修改這些路徑
         SIDE_IMG_PATH = rf"kid\{uid}\{img_id}-side.jpg"
         TOP_IMG_PATH = rf"kid\{uid}\{img_id}-top.jpg"
-    MODEL_PATH = r"toybrick.pt"
+        MODEL_PATH = r"ch1-t3/toybrick.pt"
 
     # 側視圖的期望結構類型 (來自 main_side.py 的 if __name__ 區塊)
-    SIDE_ORI_TYPE = "Left Stair"
+    SIDE_ORI_TYPE = "Left Stair" if stair_type == "L" else "Right Stair"
+    print(f"側視圖期望結構類型: {SIDE_ORI_TYPE}")
     INITIAL_SCORE = 2
 
     # --- 載入模型 ---

@@ -1,6 +1,11 @@
 // 共用 KEY；與你的其他頁一致
 const KEY = "kid-quest-progress-v1";
 
+// ======相機參數 (對應 app.py) =====
+const TOP = 1; 
+const SIDE = 2; 
+// ===================================
+
 // 讀 id（如 ch2-t3）
 function getId(){
   const u = new URL(location.href);
@@ -64,7 +69,6 @@ const els = {
 // 狀態變量
 let cameraActive = false;
 let streamInterval = null;
-let currentPhoto = null;
 const id = getId();
 
 // 更新狀態信息
@@ -78,6 +82,10 @@ function updateStatus(message, type = 'info') {
   const meta = ID_TO_META[id] || {icon:"", title:"拍照存證"};
   setIcon(els.taskIcon, meta.icon);
   if(meta.title) els.taskTitle.textContent = meta.title;
+  
+  if (id === "ch5-t1") {
+    els.shotBtn.style.display = 'none'; // Ch5-t1 不顯示按鈕
+  }
 })();
 
 // 串流預覽
@@ -101,15 +109,16 @@ function startVideoStream() {
   }, 60); // 約 60ms 更新一次
 }
 
-// 開啟 OpenCV 相機（預覽一律先用鏡頭 1）
+// 開啟 OpenCV 相機（靜態拍照用）
 async function openCamera() {
   try {
     updateStatus('正在開啟相機...', 'loading');
 
+    // 靜態拍照預覽一律用 TOP 鏡頭 (索引 1)
     const response = await fetch('/opencv-camera/start', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ task_id: id, camera_index: 1 })
+      body: JSON.stringify({ task_id: id, camera_index: TOP }) // 使用 TOP
     });
 
     if (!response.ok) throw new Error('無法開啟相機');
@@ -118,7 +127,7 @@ async function openCamera() {
 
     if (result.success) {
       cameraActive = true;
-      updateStatus('相機已開啟，正在串流...', 'success');
+      updateStatus('相機已開啟，請對準目標後按鈕', 'success');
 
       // 開始串流
       els.placeholderText.style.display = 'none';
@@ -134,7 +143,7 @@ async function openCamera() {
   }
 }
 
-// === 新增：輔助函式（開指定鏡頭並拍一張，以 suffix 當檔名尾巴）===
+// === [修正] 輔助函式 (開鏡頭並拍照，回傳 analysis_task_id) ===
 async function captureWithCamera(cameraIndex, fileSuffix, uid) {
   // 切換鏡頭（或確保指定鏡頭已開）
   const startRes = await fetch('/opencv-camera/start', {
@@ -147,8 +156,7 @@ async function captureWithCamera(cameraIndex, fileSuffix, uid) {
   // 稍等讓鏡頭穩定
   await new Promise(r => setTimeout(r, 300));
 
-  // 依照後端規則：會用 task_id 直接當檔名 (task_id.jpg)
-  // 所以我們把 task_id 傳成 `${id}-side` / `${id}-top`（或 just id）
+  // 拍照並觸發背景分析
   const capRes = await fetch('/opencv-camera/capture', {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
@@ -160,62 +168,144 @@ async function captureWithCamera(cameraIndex, fileSuffix, uid) {
   if (!result.success) throw new Error(result.error || '拍照失敗');
 
   console.log(`已拍攝鏡頭 ${cameraIndex}: ${result.filename}`);
+  
+  // 回傳分析任務 ID，讓 takeShot 可以 poll
+  return result.analysis_task_id;
 }
 
 
+// === [新增] 輔助函式 (輪詢任務狀態) ===
+async function pollTaskStatus(taskId) {
+  const msg = id === "ch5-t1"?'正在啟動遊戲...請稍後...':'分析中...請稍候...'
+  updateStatus(msg, 'loading');
+  const startTime = Date.now();
+  
+  // 輪詢 30 秒 (靜態分析) 或 150 秒 (遊戲)
+  const timeout = (id === "ch5-t1") ? 150000 : 30000; 
 
-// === 修改後：只有 ch1-t2 / ch1-t3 拍兩張（1=side → 0=top），其他任務拍一張（1）===
+  while (Date.now() - startTime < timeout) {
+    try {
+      const res = await fetch(`/check-task/${taskId}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.status === 'completed') {
+          const score = data.result.returncode;
+          updateStatus(`準備跳轉...`, 'success');
+          await new Promise(r => setTimeout(r, 1500)); // 顯示成功訊息
+          return; // 成功
+        } else if (data.status === 'error') {
+          throw new Error(data.error || '分析失敗');
+        }
+        // else: 狀態是 'running' 或 'pending'，繼續輪詢
+      }
+    } catch (e) {
+      // 忽略 fetch 錯誤，繼續嘗試
+      console.warn("Poll error:", e.message);
+    }
+    await new Promise(r => setTimeout(r, 2000)); // 每 2 秒檢查一次
+  }
+  
+  // 逾時
+  updateStatus('分析逾時，將在背景繼續。準備跳轉...', 'info');
+  await new Promise(r => setTimeout(r, 1500));
+}
+
+// === [新增] 輔助函式 (跳轉) ===
+function redirectToNextTask(currentId) {
+  const TASK_IDS = Object.keys(ID_TO_META);
+  const idx = TASK_IDS.indexOf(currentId);
+  const nextTaskId = (idx >= 0 && idx < TASK_IDS.length - 1) ? TASK_IDS[idx + 1] : null;
+
+  if (nextTaskId){
+    location.href = `/html/task.html?id=${nextTaskId}`;
+  } else {
+    location.href = "/html/index.html";
+  }
+}
+
+
+// === [修正] takeShot (只處理靜態拍照，並使用 poll) ===
 async function takeShot() {
   try {
     const currentUid = await getUid() || 'default';
+    els.shotBtn.disabled = true; // 禁用按鈕
 
-    //SIDE = 側面攝影機號碼 TOP = 上面攝影機號碼
-    SIDE = 1;
-    TOP = 0;
-    //===================================//
+    let analysisTaskId = null; // 儲存要輪詢的任務 ID
+
     if (["ch1-t2", "ch1-t3"].includes(id)) {
       updateStatus('正在拍攝側面鏡頭...', 'loading');
-      await captureWithCamera(SIDE, `${id}-side`, currentUid);
+      await captureWithCamera(SIDE, `${id}-side`, currentUid); // [cf: 1, line 1030]
 
       updateStatus('側面完成，切換上方鏡頭...', 'loading');
-      await captureWithCamera(TOP, `${id}-top`, currentUid);
+      // 儲存最後一個拍照任務的 ID
+      analysisTaskId = await captureWithCamera(TOP, `${id}-top`, currentUid); // [cf: 1, line 1030]
     } else {
-      updateStatus('正在拍照（鏡頭 1）...', 'loading');
-      await captureWithCamera(SIDE, id, currentUid);
+      updateStatus('正在拍照（上方鏡頭）...', 'loading');
+      // 儲存拍照任務的 ID
+      analysisTaskId = await captureWithCamera(TOP, id, currentUid); // [cf: 1, line 1030]
     }
 
     updateStatus('照片拍攝完成，開始分析...', 'success');
 
-    // 背景分析
-    const analysisResponse = await fetch('/run-python', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({ id: id })
-    });
-    const analysisResult = await analysisResponse.json();
-    if (analysisResult.success) {
-      console.log(`分析任務已在背景執行，task_id: ${analysisResult.task_id}`);
+    // [修正] 不再呼叫 /run-python，因為 /capture 已經觸發了
+    
+    // [修正] 改為輪詢 capture 回傳的 analysis_task_id
+    if (analysisTaskId) {
+      await pollTaskStatus(analysisTaskId);
+    } else {
+      // 萬一後端沒有回傳 task_id (例如腳本不存在) [cf: 1, line 1051]
+      updateStatus('照片已儲存(無分析腳本)，準備跳轉...', 'info');
+      await new Promise(r => setTimeout(r, 1000)); // 短暫延遲
     }
 
     // 關閉相機
     await closeCamera();
 
     // 跳轉到下一個任務
-    const TASK_IDS = Object.keys(ID_TO_META);
-    const idx = TASK_IDS.indexOf(id);
-    const nextTaskId = (idx >= 0 && idx < TASK_IDS.length - 1) ? TASK_IDS[idx + 1] : null;
-
-    if (nextTaskId){
-      location.href = `/html/task.html?id=${nextTaskId}`;
-    } else {
-      location.href = "/html/index.html";
-    }
+    redirectToNextTask(id);
 
   } catch (error) {
     console.error('拍照錯誤:', error);
     updateStatus(`拍照失敗: ${error.message}`, 'error');
+    els.shotBtn.disabled = false; // 失敗時重新啟用按鈕
   }
 }
+
+// === [新增] Ch5-t1 遊戲自動執行函數 ===
+async function runGame() {
+  try {
+    updateStatus('正在啟動遊戲...請稍候...', 'loading');
+    els.placeholderText.style.display = 'block';
+    els.cameraStream.style.display = 'none';
+
+    const currentUid = await getUid() || 'default';
+
+    // 直接呼叫 /run-python 啟動 Ch5-t1
+    const analysisResponse = await fetch('/run-python', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ id: id, uid: currentUid })
+    });
+    
+    if (!analysisResponse.ok) throw new Error('啟動遊戲失敗 (伺服器錯誤)');
+    
+    const analysisResult = await analysisResponse.json();
+    if (!analysisResult.success) throw new Error(analysisResult.error || '啟動遊戲失敗');
+    
+    updateStatus('遊戲執行中...請查看彈出視窗。完成後將自動跳轉。', 'info');
+    
+    // 輪詢遊戲任務，直到它結束
+    await pollTaskStatus(analysisResult.task_id);
+
+    // 遊戲結束 (或逾時)，跳轉
+    redirectToNextTask(id);
+
+  } catch (error) {
+    console.error('遊戲執行錯誤:', error);
+    updateStatus(`遊戲失敗: ${error.message}`, 'error');
+  }
+}
+
 
 // 關閉相機
 async function closeCamera() {
@@ -242,9 +332,15 @@ async function closeCamera() {
 // 綁定事件
 els.shotBtn.addEventListener("click", takeShot);
 
-// 進入畫面自動開鏡頭（先開 1 當預覽）
+// === [修正] 進入畫面時，根據 ID 決定行為 ===
 document.addEventListener("DOMContentLoaded", async () => {
-  await openCamera();
+  if (id === "ch5-t1") {
+    // Ch5-t1: 自動執行遊戲，不開網頁相機
+    await runGame();
+  } else {
+    // 其他任務: 開啟網頁相機預覽
+    await openCamera();
+  }
 });
 
 // 頁面卸載時清理資源

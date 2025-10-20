@@ -282,7 +282,7 @@ if __name__ == "__main__":
         # 請根據您的實際情況修改這些路徑
         SIDE_IMG_PATH = rf"kid\{uid}\{img_id}-side.jpg"
         TOP_IMG_PATH = rf"kid\{uid}\{img_id}-top.jpg"
-    MODEL_PATH = r"toybrick.pt"
+        MODEL_PATH = r"ch1-t2/toybrick.pt"
 
     # --- 載入模型 ---
     try:

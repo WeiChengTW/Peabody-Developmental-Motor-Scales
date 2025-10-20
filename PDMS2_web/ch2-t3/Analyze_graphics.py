@@ -4,15 +4,23 @@ import shutil
 from ultralytics import YOLO
 import math
 import numpy as np
+import os
+from pathlib import Path
+
+BASE_DIR = Path(__file__).resolve().parent
+MODEL_PATH = BASE_DIR.parent / "ch2-t3" / "model" / "YOLO.pt"
+target_dir = BASE_DIR.parent / "ch2-t3"
 
 class Analyze_graphics:
     def __init__(
         self,
-        model_path=r"model/YOLO.pt",
+        model_path=MODEL_PATH,
+        base_output_dir=target_dir,
         class_names=["Circle", "Cross", "Diamond", "Square", "Triangle"],
     ):
         self.model = YOLO(model_path)
         self.class_names = class_names
+        self.base_dir = base_output_dir
 
     # ------------ 公用工具 ------------
     def calculate_distance(self, center1, center2):
@@ -40,37 +48,47 @@ class Analyze_graphics:
             shutil.rmtree(dir_path)
         os.makedirs(dir_path)
 
-    def ensure_dir(self, dir_path):
-        if not os.path.exists(dir_path):
-            os.makedirs(dir_path)
-
     def clear_multiple_dirs(self, dir_list):
-        for dir_path in dir_list:
-            if os.path.exists(dir_path):
+        for dir_name in dir_list:
+            dir_path = self.base_dir / dir_name # 結合基底路徑
+            if dir_path.exists():
                 print(f"清空資料夾: {dir_path}")
                 shutil.rmtree(dir_path)
-            os.makedirs(dir_path)
+            dir_path.mkdir(parents=True, exist_ok=True) # 使用 Path.mkdir
             print(f"重新建立資料夾: {dir_path}")
 
+    def ensure_dir(self, dir_name):
+        dir_path = self.base_dir / dir_name # 結合基底路徑
+        if not dir_path.exists():
+            dir_path.mkdir(parents=True, exist_ok=True)
+
     def initialize_workspace(self, clear_all=True):
-        workspace_dirs = ["cross", "other", "cropped_a4", "ready"]
+        # 這裡只保留資料夾名稱
+        workspace_dirs = ["cross", "Other", "cropped_a4", "ready"]
         if clear_all:
             print("=== 初始化工作空間，清空所有資料夾 ===")
             self.clear_multiple_dirs(workspace_dirs)
         else:
             print("=== 確保工作空間資料夾存在 ===")
-            for dir_path in workspace_dirs:
-                self.ensure_dir(dir_path)
-                print(f"確保資料夾存在: {dir_path}")
+            for dir_name in workspace_dirs:
+                self.ensure_dir(dir_name) # ensure_dir 會自動加上 self.base_dir
+                print(f"確保資料夾存在: {self.base_dir / dir_name}")
         print("工作空間初始化完成！\n")
 
     def get_next_index(self, ready_dir, image_name):
-        if not os.path.exists(ready_dir):
+        # 確保 ready_dir 是 Path 物件
+        ready_dir_obj = Path(ready_dir)
+
+        if not ready_dir_obj.exists():
             return 0
-        existing_files = [f for f in os.listdir(ready_dir) if f.startswith(image_name)]
+        
+        # 使用 listdir() 獲取檔名字串
+        existing_files = [f for f in os.listdir(ready_dir_obj) if f.startswith(image_name)]
+        
         max_index = -1
         for filename in existing_files:
             try:
+                # 這裡的 filename 是字串，所以 split() 等操作是安全的
                 parts = filename.split('_')
                 if len(parts) >= 2 and parts[1].isdigit():
                     max_index = max(max_index, int(parts[1]))
@@ -78,18 +96,26 @@ class Analyze_graphics:
                 continue
         return max_index + 1
 
+    # Analyze_graphics 類別內
+
     def get_unique_filename(self, base_path):
-        if not os.path.exists(base_path):
-            return base_path
-        dir_path = os.path.dirname(base_path)
-        filename = os.path.basename(base_path)
-        name, ext = os.path.splitext(filename)
+        # 確保輸入是 Path 物件
+        base_path_obj = Path(base_path)
+
+        if not base_path_obj.exists():
+            return str(base_path_obj) # 回傳字串
+
+        dir_path = base_path_obj.parent
+        filename = base_path_obj.name
+        name, ext = os.path.splitext(filename) # os.path.splitext 可以處理 Path 物件
+
         counter = 1
         while True:
             new_filename = f"{name}_v{counter}{ext}"
-            new_path = os.path.join(dir_path, new_filename)
-            if not os.path.exists(new_path):
-                return new_path
+            new_path = dir_path / new_filename # 使用 Path 物件的 / 運算符
+            
+            if not new_path.exists():
+                return str(new_path) # 回傳字串
             counter += 1
 
     # ------------ 重點：固定 224×224 的工具 ------------
@@ -139,7 +165,9 @@ class Analyze_graphics:
             print(f"錯誤：無法讀取圖片 {image_path}")
             return []
 
-        ready_dir = "ready"
+        ready_dir_name = "ready"
+        ready_dir = self.base_dir / ready_dir_name
+
         if save_results:
             if clear_dir:
                 self.reset_dir(ready_dir)  # 建議第一次測試用 True，避免舊檔干擾
@@ -194,10 +222,10 @@ class Analyze_graphics:
                     print(f"切割結果為空，跳過索引 {index}")
                     continue
 
-                ready_path = os.path.join(ready_dir, f"{image_name}_{index}_{class_name}.jpg")
-                ready_binary_path = os.path.join(ready_dir, f"{image_name}_{index}_{class_name}_binary.jpg")
+                ready_path = ready_dir / f"{image_name}_{index}_{class_name}.jpg"
+                ready_binary_path = ready_dir / f"{image_name}_{index}_{class_name}_binary.jpg"
 
-                # 若你不想版本尾碼，可改成 clear_dir=True 或移除下面兩行
+                #
                 ready_path = self.get_unique_filename(ready_path)
                 ready_binary_path = self.get_unique_filename(ready_binary_path)
 

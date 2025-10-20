@@ -22,7 +22,6 @@ async function getCurrentUid() {
 }
 
 // 任務內容（依 PDF）：ID → 顯示資料
-// 圖片檔名放 /images 下（自行準備），沒有就用 emoji 顯示
 const TASK_MAP = {
   // 第一關
   "ch1-t1": { emoji:"🧱", title:"串積木：做成一條橋",
@@ -45,7 +44,7 @@ const TASK_MAP = {
   },
   "ch1-t3": { emoji:"🪜", title:"疊階梯：翻過高牆",
     desc:"把方塊疊成樓梯，繼續前往魔法王國。",
-    img: Math.random() < 0.5 ? "/video/ch1-t3-L.mp4" : "/video/ch1-t3-R.mp4",
+    img: () => Math.random() < 0.5 ? "/video/ch1-t3-L.mp4" : "/video/ch1-t3-R.mp4",
     steps:[ "排出一階一階的形狀", "確認每格都踩得到", "小心地走上去！" ]
   },
 
@@ -119,7 +118,6 @@ function getId(){
   return u.searchParams.get("id");
 }
 
-// 載入任務資料
 function render(){
   const id = getId();
   const data = TASK_MAP[id];
@@ -133,20 +131,34 @@ function render(){
   const img = document.getElementById("img");
   const video = document.getElementById("video");
   const imgEmoji = document.getElementById("imgEmoji");
-  if(data.img){
-    if(data.img.endsWith('.mp4')){
+  
+  // 如果 img 是函數就呼叫它，否則直接用
+  const imgSrc = typeof data.img === 'function' ? data.img() : data.img;
+  
+  if(imgSrc){
+    if(imgSrc.endsWith('.mp4')){
       // 顯示影片
       if(video){
-        video.src = data.img;
+        video.src = imgSrc;
         video.style.display = "block";
         video.controls = true;
       }
       if(img) img.style.display = "none";
       imgEmoji.style.display = "none";
+      
+      // 如果是 ch1-t3，送給 Flask
+      if(id === "ch1-t3"){
+        const stair_type = imgSrc.includes("-L.mp4") ? "L" : "R";
+        fetch("/save-stair-type", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ stair_type: stair_type })
+        }).catch(err => console.error("save-stair-type 失敗:", err));
+      }
     }else{
       // 顯示圖片
       if(img){
-        img.src = data.img;
+        img.src = imgSrc;
         img.onload = ()=>{ img.style.display="block"; imgEmoji.style.display="none"; if(video) video.style.display="none"; };
         img.onerror = ()=>{ img.style.display="none"; imgEmoji.style.display="block"; if(video) video.style.display="none"; };
       }
@@ -154,6 +166,7 @@ function render(){
     }
   }
 
+  // 步驟清單
   const ol = document.getElementById("steps");
   ol.innerHTML = "";
   (data.steps||[]).forEach(s=>{
@@ -172,10 +185,10 @@ function render(){
   
   // 停止朗讀
   document.getElementById("stopBtn").onclick = ()=>{
-    speechSynthesis.cancel();   // 馬上停止
+    speechSynthesis.cancel();
   };
 
-  // 完成 → 寫回主頁進度並返回
+  // 完成按鈕 ← 這是你缺少的部分
   document.getElementById("doneBtn").onclick = ()=>{
     const st = JSON.parse(localStorage.getItem(KEY) || "{}");
     // 解析 chX-tY
@@ -186,7 +199,7 @@ function render(){
     st.done[chKey][t-1] = true;
     localStorage.setItem(KEY, JSON.stringify(st));
 
-    // 小煙火 + 返回
+    // 小煙火 + 返回相機頁
     celebrate();
     setTimeout(()=>{
       location.href = `/html/camera.html?id=${encodeURIComponent(id)}`;
@@ -213,11 +226,10 @@ function celebrate(){
 
 render();
 
-// ========= 安全返回處理 =========
+// 安全返回處理
 const HOME = "/html/index.html";
 function safeBack(e){
   if(e) e.preventDefault();
-  // 有前一頁且同一網域，就回上一頁；否則回首頁
   if (document.referrer) {
     try {
       const prev = new URL(document.referrer);
@@ -230,7 +242,7 @@ function safeBack(e){
   location.href = HOME;
 }
 
-// 綁定兩顆返回按鈕
+// 綁定返回按鈕
 const topBtn = document.getElementById("backBtn");
 const bottomBtn = document.getElementById("backBtnBottom");
 if (topBtn) topBtn.addEventListener("click", safeBack);
