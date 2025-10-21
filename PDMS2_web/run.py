@@ -781,25 +781,25 @@ def start_opencv_camera():
         data = request.get_json() or {}
         cam_index = data.get("camera_index", TOP)
         if init_camera(cam_index):
-            return jsonify({"success": True, "message": "相機已成功開啟"})
+            return jsonify({"success": True})
         else:
-            return jsonify({"success": False, "error": "無法開啟相機"}), 500
-    except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
+            return jsonify({"success": False}), 500
+    except Exception:
+        return jsonify({"success": False}), 500
 
 
 @app.get("/opencv-camera/frame")
 def get_opencv_frame():
     try:
         if not camera_active:
-            return jsonify({"success": False, "error": "相機尚未啟動"}), 400
+            return jsonify({"success": False}), 400
         frame_data = get_frame()
         if frame_data is None:
-            return jsonify({"success": False, "error": "無法獲取相機畫面"}), 500
+            return jsonify({"success": False}), 500
         img_b64 = base64.b64encode(frame_data).decode("utf-8")
         return jsonify({"success": True, "image": img_b64})
-    except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
+    except Exception:
+        return jsonify({"success": False}), 500
 
 
 @app.post("/opencv-camera/capture")
@@ -807,34 +807,30 @@ def capture_opencv_photo():
     """拍照並儲存，儲存成功後立即啟動對應任務的 main.py 做評分"""
     try:
         data = request.get_json() or {}
-        task_id_input = (
-            data.get("task_id") or ""
-        ).strip()  # 使用 task_id_input 避免覆蓋
+        task_id_input = (data.get("task_id") or "").strip()
         uid = (data.get("uid") or "").strip() or session.get("uid", "default")
 
         if not task_id_input:
-            return jsonify({"success": False, "error": "缺少任務 ID"}), 400
+            return jsonify({"success": False}), 400
 
         frame_data = get_frame()
         if frame_data is None:
-            return jsonify({"success": False, "error": "無法獲取相機畫面"}), 500
+            return jsonify({"success": False}), 500
 
         target_dir = ROOT / "kid" / uid
         target_dir.mkdir(parents=True, exist_ok=True)
 
-        filename = f"{task_id_input}.jpg"  # 使用輸入的 task_id (可能包含 -side/-top)
+        filename = f"{task_id_input}.jpg"
         file_path = target_dir / filename
 
         nparr = np.frombuffer(frame_data, np.uint8)
         img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
         if not cv2.imwrite(str(file_path), img):
             write_to_console(f"圖像儲存失敗: {file_path}", "ERROR")
-            return jsonify({"success": False, "error": "圖像儲存失敗"}), 500
-        else:
-            write_to_console(f"圖像儲存成功: {file_path}", "INFO")
+            return jsonify({"success": False}), 500
 
-        # 使用原始的任務 ID (不含 -side/-top) 去找腳本
-        # 例如，即使 task_id_input 是 "ch1-t2-side"，script_task_id 仍是 "ch1-t2"
+        write_to_console(f"圖像儲存成功: {file_path}", "INFO")
+
         script_task_id = task_id_input.replace("-side", "").replace("-top", "")
         script_path = resolve_script_path(script_task_id)
 
@@ -842,9 +838,8 @@ def capture_opencv_photo():
             return jsonify(
                 {
                     "success": True,
-                    "message": f"照片已儲存({filename})，但找不到對應的 main.py ({script_task_id})（未啟動評分）",
                     "uid": uid,
-                    "task_id": task_id_input,  # 回傳原始輸入 ID
+                    "task_id": task_id_input,
                     "filename": filename,
                     "analysis_started": False,
                 }
@@ -854,22 +849,15 @@ def capture_opencv_photo():
         processing_tasks[bg_task_id] = {
             "status": "pending",
             "uid": uid,
-            "img_id": script_task_id,  # 分析任務使用原始 ID
+            "img_id": script_task_id,
             "progress": 0,
         }
 
-        # 取得階梯參數 (如果有的話)
         stair_type = session.get("stair_type")
 
         t = Thread(
             target=run_analysis_in_background,
-            args=(
-                bg_task_id,
-                uid,
-                script_task_id,
-                script_path,
-                stair_type,
-            ),  # 傳入 stair_type
+            args=(bg_task_id, uid, script_task_id, script_path, stair_type),
         )
         t.daemon = True
         t.start()
@@ -877,27 +865,26 @@ def capture_opencv_photo():
         return jsonify(
             {
                 "success": True,
-                "message": f"照片已儲存({filename})並開始評分({script_task_id})",
                 "uid": uid,
-                "task_id": task_id_input,  # 回傳原始輸入 ID
+                "task_id": task_id_input,
                 "filename": filename,
                 "analysis_started": True,
                 "analysis_task_id": bg_task_id,
             }
         )
 
-    except Exception as e:
-        write_to_console(f"/opencv-camera/capture 錯誤: {e}", "ERROR")
-        return jsonify({"success": False, "error": str(e)}), 500
+    except Exception:
+        write_to_console(f"/opencv-camera/capture 錯誤", "ERROR")
+        return jsonify({"success": False}), 500
 
 
 @app.post("/opencv-camera/stop")
 def stop_opencv_camera():
     try:
         release_camera()
-        return jsonify({"success": True, "message": "相機已關閉"})
-    except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
+        return jsonify({"success": True})
+    except Exception:
+        return jsonify({"success": False}), 500
 
 
 # =========================
