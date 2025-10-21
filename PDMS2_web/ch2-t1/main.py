@@ -116,10 +116,10 @@ def get_pixel_per_cm_from_a4(
         print(f"A4區域已儲存至: {cropped_path}")
 
     # 儲存像素比例資料
-    json_path = r"PDMS2_web/px2cm.json"
+    json_path = rf"PDMS2_web/px2cm.json"
     current_time = datetime.now()  # Define current_time
     # json_path = r"PDMS2_web/px2cm.json"
-
+    print(f"儲存像素比例資料至: {json_path}")
     os.makedirs(os.path.dirname(json_path), exist_ok=True)
     data = {
         "datetime": current_time.strftime("%Y-%m-%d %H:%M:%S"),
@@ -284,13 +284,11 @@ def main(img_path):
 
 
 if __name__ == "__main__":
-    # if len(sys.argv) > 2:
-    #     # 使用傳入的 uid 和 id 作為圖片路徑
-    #     uid = sys.argv[1]
-    #     img_id = sys.argv[2]
-    #     # uid = "lull222"
-    #     # img_id = "ch3-t1"
-    #     image_path = rf"kid\{uid}\{img_id}.jpg"
-    image_path = r"ch2-t1.jpg"
+    if len(sys.argv) > 2:
+        # 使用傳入的 uid 和 id 作為圖片路徑
+        uid = sys.argv[1]
+        img_id = sys.argv[2]
+        image_path = rf"kid\{uid}\{img_id}.jpg"
+    # image_path = rf"PDMS2_web\ch2-t1\ch2-t2.jpg"
     score = main(image_path)
     print(score)
