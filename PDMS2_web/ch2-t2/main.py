@@ -268,7 +268,7 @@ if __name__ == "__main__":
     #     # uid = "lull222"
     #     # img_id = "ch3-t1"
     #     image_path = rf"kid\{uid}\{img_id}.jpg"
-    img_path = r"ch2-t1.jpg"
-    score = main(img_path)
+    image_path = r"ch2-t1.jpg"
+    score = main(image_path)
     print(f"score = {score}")
     return_score(score)
