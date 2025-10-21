@@ -42,7 +42,11 @@ if __name__ == "__main__":
                 detector.show_results()
 
             if detector_path:
-                min_dist_cm, max_dist_cm = BoxDistanceAnalyzer(detector_path)
+                result_img, min_dist_cm, max_dist_cm = BoxDistanceAnalyzer(
+                    detector_path
+                )
+                result_path = rf"kid\{uid}\{img_id}_result.jpg"
+                cv2.imwrite(result_path, result_img)
             if min_dist_cm is not None and max_dist_cm is not None:
                 correct = 4.0
                 kid = max(abs(min_dist_cm - correct), abs(max_dist_cm - correct))
