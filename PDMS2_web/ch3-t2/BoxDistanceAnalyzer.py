@@ -267,7 +267,9 @@ class BoxDistanceAnalyzer:
         path = f"ch3-t2/{out_path}/{name}_max_dist.png"
         cv2.imwrite(path, img_draw)
         print(f"最長距離線段與方框、最大輪廓邊緣已畫出並存檔於 {path}")
-        return max(best_abs_signed / pixel_per_cm, best_corner_min_dist / pixel_per_cm)
+        return img_draw, max(
+            best_abs_signed / pixel_per_cm, best_corner_min_dist / pixel_per_cm
+        )
 
 
 if __name__ == "__main__":

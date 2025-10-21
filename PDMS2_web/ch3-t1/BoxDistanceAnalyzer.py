@@ -89,7 +89,7 @@ def BoxDistanceAnalyzer(img_path=None, output_path="ch3-t1\result"):
         print(
             f"ArUco中心到黃色邊框\n最短距離: {min_dist_cm:.2f}cm, 最長距離: {max_dist_cm:.2f}cm"
         )
-        return min_dist_cm, max_dist_cm
+        return img, min_dist_cm, max_dist_cm
     else:
         print("未偵測到任何 ArUco marker")
         return

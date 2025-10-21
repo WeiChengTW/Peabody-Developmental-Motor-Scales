@@ -206,6 +206,10 @@ def analyze_image_side(img_path, initial_score, ori_type, model):
 
         # ========== 繪製空隙 ==========
         if gap_pairs:
+
+            print(f"gap_pairs 內容: {gap_pairs}")
+            print(f"gap_pairs[0] 型別: {type(gap_pairs[0])}")
+
             IS_GAP = True if (len(gap_pairs) // 2 == 3) else False
             print(f"偵測到空隙: {len(gap_pairs) // 2} 組")
             
@@ -236,17 +240,35 @@ def analyze_image_side(img_path, initial_score, ori_type, model):
         grouper = LayerGrouping(layer_ratio=0.2)
         layers = grouper.group_by_y(centroids, boxes=boxes)
 
+
+        print(f"layers 內容: {layers}")
+        print(f"layers[0] 型別: {type(layers[0])}")
+        if len(layers) > 0 and len(layers[0]) > 0:
+            print(f"layers[0][0] 型別: {type(layers[0][0])}")
+            
         # ========== 繪製分層 ==========
         colors = [(255, 0, 0), (0, 255, 0), (0, 0, 255), (255, 255, 0), 
                   (255, 0, 255), (0, 255, 255)]
         for layer_idx, layer in enumerate(layers):
             color = colors[layer_idx % len(colors)]
-            for block_idx in layer:
-                if block_idx < len(boxes):
-                    x1, y1, x2, y2 = map(int, boxes[block_idx])
-                    cv2.rectangle(annotated_frame, (x1, y1), (x2, y2), color, 3)
-                    cv2.putText(annotated_frame, f"L{layer_idx+1}", (x1, y2+20), 
-                               cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 2)
+            
+            # ✅ layer 裡面是質心座標 (cx, cy)
+            for centroid in layer:
+                if isinstance(centroid, tuple) and len(centroid) == 2:
+                    cx, cy = centroid
+                    
+                    # 找到這個質心對應的 box
+                    for box_idx, box in enumerate(boxes):
+                        x1, y1, x2, y2 = map(int, box)
+                        box_cx = (x1 + x2) / 2
+                        box_cy = (y1 + y2) / 2
+                        
+                        # 如果質心和 box 中心很接近，就是對應的 box
+                        if abs(box_cx - cx) < 30 and abs(box_cy - cy) < 30:
+                            cv2.rectangle(annotated_frame, (x1, y1), (x2, y2), color, 3)
+                            cv2.putText(annotated_frame, f"L{layer_idx+1}", (x1, y2+20), 
+                                    cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 2)
+                            break  # 找到就跳出，避免重複繪製
 
         stair_checker = StairChecker()
         result, msg = stair_checker.check(layers)

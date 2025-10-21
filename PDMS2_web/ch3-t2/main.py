@@ -58,8 +58,9 @@ if __name__ == "__main__":
                     analyzer = BoxDistanceAnalyzer(
                         box1=black_corners_int, image_path=detector_path
                     )
-                    kid = analyzer.analyze(pixel_per_cm=pixel_per_cm)
-
+                    result_img, kid = analyzer.analyze(pixel_per_cm=pixel_per_cm)
+                    result_path = rf"kid\{uid}\{img_id}_result.jpg"
+                    cv2.imwrite(result_path, result_img)
                 if kid is not None:
                     if kid < 0.6:
                         print(f"kid = {kid:.2f}, score = 2")

@@ -106,7 +106,7 @@ function startVideoStream() {
     } catch (err) {
       console.error("獲取幀錯誤:", err);
     }
-  }, 60); // 約 60ms 更新一次
+  }, 120); // 約 60ms 更新一次
 }
 
 // 開啟 OpenCV 相機（靜態拍照用）
@@ -114,11 +114,14 @@ async function openCamera() {
   try {
     updateStatus('正在開啟相機...', 'loading');
 
-    // 靜態拍照預覽一律用 TOP 鏡頭 (索引 1)
+    if(["ch1-t2", "ch1-t3"].includes(id))CAM_INDEX = SIDE;
+    else CAM_INDEX = TOP;
+
+    // 靜態拍照預覽一律用 TOP 鏡頭
     const response = await fetch('/opencv-camera/start', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ task_id: id, camera_index: TOP }) // 使用 TOP
+      body: JSON.stringify({ task_id: id, camera_index: CAM_INDEX }) // 使用 CAM_INDEX
     });
 
     if (!response.ok) throw new Error('無法開啟相機');
@@ -143,34 +146,44 @@ async function openCamera() {
   }
 }
 
-// === [修正] 輔助函式 (開鏡頭並拍照，回傳 analysis_task_id) ===
-async function captureWithCamera(cameraIndex, fileSuffix, uid) {
-  // 切換鏡頭（或確保指定鏡頭已開）
-  const startRes = await fetch('/opencv-camera/start', {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({ task_id: id, camera_index: cameraIndex })
-  });
-  if (!startRes.ok) throw new Error('相機切換失敗');
 
-  // 稍等讓鏡頭穩定
-  await new Promise(r => setTimeout(r, 300));
+async function captureWithCamera(cameraIndex, fullTaskId, uid) {
+  try {
+    // 1. 切換相機
+    const switchResponse = await fetch('/opencv-camera/start', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ camera_index: cameraIndex })
+    });
 
-  // 拍照並觸發背景分析
-  const capRes = await fetch('/opencv-camera/capture', {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({ task_id: fileSuffix, uid: uid })
-  });
+    if (!switchResponse.ok) {
+      throw new Error('切換相機失敗');
+    }
 
-  if (!capRes.ok) throw new Error('拍照失敗');
-  const result = await capRes.json();
-  if (!result.success) throw new Error(result.error || '拍照失敗');
+    // 2. 等待相機穩定
+    await new Promise(r => setTimeout(r, 500));
 
-  console.log(`已拍攝鏡頭 ${cameraIndex}: ${result.filename}`);
-  
-  // 回傳分析任務 ID，讓 takeShot 可以 poll
-  return result.analysis_task_id;
+    // 3. 拍照（傳入完整的 task_id，例如 "ch1-t2-side"）
+    const captureResponse = await fetch('/opencv-camera/capture', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        task_id: fullTaskId,  // ✅ 完整檔名
+        uid: uid 
+      })
+    });
+
+    if (!captureResponse.ok) {
+      throw new Error('拍照失敗');
+    }
+
+    const result = await captureResponse.json();
+    return result.analysis_task_id; // 回傳分析任務 ID
+
+  } catch (error) {
+    console.error('拍照錯誤:', error);
+    throw error;
+  }
 }
 
 
@@ -223,53 +236,61 @@ function redirectToNextTask(currentId) {
   }
 }
 
-
-// === [修正] takeShot (只處理靜態拍照，並使用 poll) ===
 async function takeShot() {
   try {
     const currentUid = await getUid() || 'default';
-    els.shotBtn.disabled = true; // 禁用按鈕
-
-    let analysisTaskId = null; // 儲存要輪詢的任務 ID
+    els.shotBtn.disabled = true;
 
     if (["ch1-t2", "ch1-t3"].includes(id)) {
+      // ✅ 拍攝側面鏡頭，檔名帶 -side
       updateStatus('正在拍攝側面鏡頭...', 'loading');
-      await captureWithCamera(SIDE, `${id}-side`, currentUid); // [cf: 1, line 1030]
+      await captureWithCamera(SIDE, `${id}-side`, currentUid);
 
+      // ✅ 拍攝上方鏡頭，檔名帶 -top
       updateStatus('側面完成，切換上方鏡頭...', 'loading');
-      // 儲存最後一個拍照任務的 ID
-      analysisTaskId = await captureWithCamera(TOP, `${id}-top`, currentUid); // [cf: 1, line 1030]
+      await captureWithCamera(TOP, `${id}-top`, currentUid);
+
     } else {
+      // ✅ 單張照片（不加後綴）
       updateStatus('正在拍照（上方鏡頭）...', 'loading');
-      // 儲存拍照任務的 ID
-      analysisTaskId = await captureWithCamera(TOP, id, currentUid); // [cf: 1, line 1030]
+      await captureWithCamera(TOP, id, currentUid);
     }
 
     updateStatus('照片拍攝完成，開始分析...', 'success');
 
-    // [修正] 不再呼叫 /run-python，因為 /capture 已經觸發了
-    
-    // [修正] 改為輪詢 capture 回傳的 analysis_task_id
-    if (analysisTaskId) {
-      await pollTaskStatus(analysisTaskId);
-    } else {
-      // 萬一後端沒有回傳 task_id (例如腳本不存在) [cf: 1, line 1051]
-      updateStatus('照片已儲存(無分析腳本)，準備跳轉...', 'info');
-      await new Promise(r => setTimeout(r, 1000)); // 短暫延遲
+    // ✅ 所有照片都拍完後，才呼叫 /run-python
+    const analysisResponse = await fetch('/run-python', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        id: id,  // ⚠️ 注意：這裡傳原始的 id（不帶 -side/-top）
+        uid: currentUid 
+      })
+    });
+
+    if (!analysisResponse.ok) {
+      throw new Error('分析請求失敗');
     }
 
-    // 關閉相機
-    await closeCamera();
+    const analysisResult = await analysisResponse.json();
 
-    // 跳轉到下一個任務
+    if (analysisResult.task_id) {
+      await pollTaskStatus(analysisResult.task_id);
+    } else {
+      updateStatus('照片已儲存（無分析腳本），準備跳轉...', 'info');
+      await new Promise(r => setTimeout(r, 1000));
+    }
+
+    await closeCamera();
     redirectToNextTask(id);
 
   } catch (error) {
     console.error('拍照錯誤:', error);
     updateStatus(`拍照失敗: ${error.message}`, 'error');
-    els.shotBtn.disabled = false; // 失敗時重新啟用按鈕
+    els.shotBtn.disabled = false;
   }
 }
+
 
 // === [新增] Ch5-t1 遊戲自動執行函數 ===
 async function runGame() {

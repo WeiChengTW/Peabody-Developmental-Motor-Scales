@@ -675,7 +675,6 @@ def check_task_status(task_id):
         return jsonify({"success": False, "error": "任務不存在"}), 404
     return jsonify({"success": True, **processing_tasks[task_id], "task_id": task_id})
 
-
 # 接收階梯狀態 左或右階梯
 @app.post("/save-stair-type")
 def save_stair_type():
