@@ -20,8 +20,7 @@ if __name__ == "__main__":
         img_id = sys.argv[2]
         image_path = rf"kid\{uid}\{img_id}.jpg"
     image_path = rf"kid\cgu\ch2-t6.jpg"
-    uid = "cgu"
-    img_id = "ch2-t6"
+
     output_folder = "new"
 
     os.makedirs(output_folder, exist_ok=True)
