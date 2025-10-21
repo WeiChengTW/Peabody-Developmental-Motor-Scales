@@ -114,14 +114,14 @@ def get_pixel_per_cm_from_a4(
         print(f"A4區域已儲存至: {cropped_path}")
 
     # 儲存像素比例資料
-    json_path = "px2cm.json"
-    data = {
-        "pixel_per_cm": pixel_per_cm,
-        "image_path": image_path,
-        "cropped_path": cropped_path,
-    }
-    with open(json_path, "w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
+    json_path = "PDMS2_web/px2cm.json"
+    # data = {
+    #     "pixel_per_cm": pixel_per_cm,
+    #     "image_path": image_path,
+    #     "cropped_path": cropped_path,
+    # }
+    # with open(json_path, "w", encoding="utf-8") as f:
+    #     json.dump(data, f, ensure_ascii=False, indent=2)
 
     return pixel_per_cm, json_path, cropped_path
 
@@ -200,12 +200,18 @@ def main(img_path):
 
     # 得出 px->cm
     try:
-        pixel_per_cm, _, cropped_path = get_pixel_per_cm_from_a4(
+        _, _, cropped_path = get_pixel_per_cm_from_a4(
             img_path,
             show_debug=False,  # 關掉視覺化避免卡住
             save_cropped=True,
             output_folder=target_dir / "cropped_a4",
         )
+        try:
+            with open("PDMS2_web/px2cm.json", "r") as f:
+                data = json.load(f)
+                pixel_per_cm = data["pixel_per_cm"]
+        except FileNotFoundError:
+            pixel_per_cm = 47.4416628993705  # 預設值
         print(f"{img_path} pixel_per_cm = {pixel_per_cm}")
     except ValueError as e:
         print(f"⚠️ 跳過 {img_path}：{e}")

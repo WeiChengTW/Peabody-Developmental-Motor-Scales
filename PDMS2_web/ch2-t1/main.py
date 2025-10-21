@@ -116,8 +116,9 @@ def get_pixel_per_cm_from_a4(
         print(f"A4區域已儲存至: {cropped_path}")
 
     # 儲存像素比例資料
-    json_path = "px2cm.json"
+    json_path = "PDMS2_web/px2cm.json"
     data = {
+        "timestamp": str(os.path.getmtime(image_path)),
         "pixel_per_cm": pixel_per_cm,
         "image_path": image_path,
         "cropped_path": cropped_path,
