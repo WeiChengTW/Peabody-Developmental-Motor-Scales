@@ -1,6 +1,6 @@
 import cv2
 import os
-from cut_paper import crop_paper
+from cut_paper import get_pixel_per_cm_from_a4
 from exceed_correct import detect_horizontal_lines
 from draw_range_correct import analyze_paint  # 或 analyze_image
 import json
@@ -20,13 +20,16 @@ if __name__ == "__main__":
         # uid = "lull222"
         # img_id = "ch3-t1"
         image_path = rf"kid\{uid}\{img_id}.jpg"
-    # img = 1
+    img = 3
+    image_path = rf"PDMS2_web\ch2-t5\image\{img}.jpg"
     # in_path = os.path.join("image", f"{img}.jpg")  # ✅ 跨平台路徑
 
-    out_path = rf"ch2-t5\new\{img_id}.jpg"
+    out_path = rf"PDMS2_web\ch2-t5\new\new{img}.jpg"
 
     # 1) 裁切
-    warped = crop_paper(image_path, output_path=out_path, show_debug=False)
+    warped = get_pixel_per_cm_from_a4(image_path, show_debug=False)
+    cv2.imwrite(out_path, warped)
+    print(f"裁切後圖片已儲存至: {out_path}")
     if warped is None:
         # 若你的 crop_paper 只存檔不回傳，可改成：warped = cv2.imread(out_path)
         warped = cv2.imread(out_path)
@@ -40,7 +43,7 @@ if __name__ == "__main__":
 
     # 3) 分析塗色 + 超出
     result = analyze_paint(warped, int(y_top), int(y_bot), show_windows=True)
-    # print("得分：", result["score"])
+    print("得分：", result["score"])
     # print("說明：", result["rule"])
     score = result["score"]
     return_score(score)

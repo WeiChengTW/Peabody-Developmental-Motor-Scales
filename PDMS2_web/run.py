@@ -318,23 +318,38 @@ def logs_tail():
 
 @app.before_request
 def _log_request():
+    # 不記錄的路徑
+    if request.path.startswith(
+        ("/css/", "/js/", "/images/", "/video/", "/favicon.ico", "/opencv-camera/")
+    ):
+        return
+
     try:
-        write_to_console(
-            f"[REQ] {request.method} {request.path} "
-            f"CT={request.headers.get('Content-Type')} "
-            f"Origin={request.headers.get('Origin')} "  # 保留 Origin
-            f"Body={request.get_data(as_text=True)[:300]}"
-        )
+        # 只記錄重要的API請求
+        if request.path.startswith(
+            ("/run-python", "/create-uid-folder", "/test-score")
+        ):
+            write_to_console(f"[REQ] {request.method} {request.path}")
     except Exception as e:
         write_to_console(f"[REQ] log failed: {e}", "ERROR")
 
 
 @app.after_request
 def _log_response(resp):
+    # 不記錄的路徑
+    if request.path.startswith(
+        ("/css/", "/js/", "/images/", "/video/", "/favicon.ico", "/opencv-camera/")
+    ):
+        return resp
+
     try:
-        write_to_console(
-            f"[RESP] {request.method} {request.path} -> {resp.status_code}"
-        )
+        # 只記錄錯誤回應和重要的API回應
+        if resp.status_code >= 400 or request.path.startswith(
+            ("/run-python", "/create-uid-folder", "/test-score")
+        ):
+            write_to_console(
+                f"[RESP] {request.method} {request.path} -> {resp.status_code}"
+            )
     except Exception as e:
         write_to_console(f"[RESP] log failed: {e}", "ERROR")
     return resp
@@ -723,8 +738,8 @@ def release_camera():
     if camera is not None:
         try:  # 增加 try-except
             camera.release()
-        except Exception as e:
-            write_to_console(f"釋放相機時發生錯誤: {e}", "WARN")
+        except Exception:
+            pass
         camera = None
     camera_active = False
 
@@ -750,11 +765,9 @@ def init_camera(camera_index=TOP):
             raise Exception(f"成功開啟相機 {camera_index} 但無法讀取畫面")
 
         camera_active = True
-        write_to_console(f"相機 {camera_index} 初始化成功", "INFO")
         return True
     except Exception as e:
         print(f"相機初始化失敗: {e}")  # 保留 print 給開發者看
-        write_to_console(f"相機初始化失敗 (Index={camera_index}): {e}", "ERROR")
         release_camera()  # 確保失敗時釋放資源
         return False
 
