@@ -6,7 +6,7 @@ import json
 class MaxAreaQuadFinder:
     def __init__(self, image_path):
         try:
-            with open("px2cm.json", "r") as f:
+            with open("PDMS2_web/px2cm.json", "r") as f:
                 data = json.load(f)
                 self.px2cm = data["px2cm"]
         except FileNotFoundError:

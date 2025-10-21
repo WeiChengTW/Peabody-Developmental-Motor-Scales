@@ -64,7 +64,17 @@ def sort_corners(pts):
 
 # 主流程
 def analyze_image(img_path):
-    cm_per_pixel = 0.02068
+    # 確保結果目錄存在
+    result_dir = "PDMS2_web/ch4-t1/result"
+    os.makedirs(result_dir, exist_ok=True)
+
+    try:
+        with open("PDMS2_web/px2cm.json", "r") as f:
+            data = json.load(f)
+            px2cm = data["pixel_per_cm"]
+    except FileNotFoundError:
+        px2cm = 47.4416628993705  # 預設值
+    cm_per_pixel = 1 / px2cm
     actual_length_cm = 7.5
 
     img_color_raw = cv2.imread(img_path)
@@ -118,6 +128,53 @@ def analyze_image(img_path):
     else:
         score = 0
 
+    # 儲存分析結果
+    result_path = os.path.join("PDMS2_web/ch4-t1/result", os.path.basename(img_path))
+    result_img = img_color_raw.copy()
+
+    # 繪製偵測到的邊界和詳細資訊
+    if max_contour is not None:
+        # 繪製邊界
+        cv2.drawContours(result_img, [max_contour], -1, (0, 255, 0), 2)
+
+        # 在圖片上標示每個邊的長度
+        for i, (p1, p2, length_cm) in enumerate(edges_info):
+            center = ((p1[0] + p2[0]) // 2, (p1[1] + p2[1]) // 2)
+            cv2.putText(
+                result_img,
+                f"{length_cm:.1f}cm",
+                center,
+                cv2.FONT_HERSHEY_SIMPLEX,
+                0.8,
+                (0, 0, 255),
+                2,
+            )
+
+        # 在圖片左上角添加詳細資訊
+        info_text = [
+            f"得分: {score}",
+            f"比例尺: {px2cm:.2f} px/cm",
+            "邊長(由短到長):",
+            *[
+                f"邊 {i+1}: {length:.1f}cm"
+                for i, (_, _, length) in enumerate(edges_info)
+            ],
+        ]
+
+        for i, text in enumerate(info_text):
+            cv2.putText(
+                result_img,
+                text,
+                (20, 30 + i * 30),  # 位置從左上角開始，每行間隔30像素
+                cv2.FONT_HERSHEY_SIMPLEX,
+                0.7,
+                (255, 255, 0),  # 黃色文字
+                2,
+            )
+
+    # 儲存結果圖片
+    cv2.imwrite(result_path, result_img)
+
     return score
 
 
@@ -130,3 +187,7 @@ if __name__ == "__main__":
         score = analyze_image(image_path)
         print(f"score : {score}")
         return_score(score)
+
+    image_path = rf"PDMS2_web\ch4-t1\ch4-t1.jpg"
+    score = analyze_image(image_path)
+    print(f"score : {score}")
