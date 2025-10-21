@@ -15,7 +15,7 @@ import shutil
 import sys
 import os
 from pathlib import Path
-
+from datetime import datetime
 
 BASE_DIR = Path(__file__).resolve().parent
 target_dir = BASE_DIR.parent / "ch2-t1"
@@ -116,9 +116,10 @@ def get_pixel_per_cm_from_a4(
         print(f"A4區域已儲存至: {cropped_path}")
 
     # 儲存像素比例資料
-    json_path = "PDMS2_web/px2cm.json"
+    json_path = r"PDMS2_web/px2cm.json"
+    current_time = datetime.now()  # Define current_time
     data = {
-        "timestamp": str(os.path.getmtime(image_path)),
+        "datetime": current_time.strftime("%Y-%m-%d %H:%M:%S"),
         "pixel_per_cm": pixel_per_cm,
         "image_path": image_path,
         "cropped_path": cropped_path,
@@ -287,6 +288,6 @@ if __name__ == "__main__":
     #     # uid = "lull222"
     #     # img_id = "ch3-t1"
     #     image_path = rf"kid\{uid}\{img_id}.jpg"
-    image_path = r'ch2-t1.jpg'
+    image_path = r"ch2-t1.jpg"
     score = main(image_path)
     print(score)
