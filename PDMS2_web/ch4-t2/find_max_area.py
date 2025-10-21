@@ -85,7 +85,7 @@ class MaxAreaQuadFinder:
                         max_diff = diff
                         max_diff_side = side_name
                 print(f"與7.5cm差距最大的邊: {max_diff_side}, 差距: {max_diff:.2f} cm")
-                return max_diff
+                return self.img, max_diff
         else:
             print("找不到四邊形")
 

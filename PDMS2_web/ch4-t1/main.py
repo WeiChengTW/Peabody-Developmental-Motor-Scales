@@ -173,8 +173,8 @@ def analyze_image(img_path):
             )
 
     # 儲存結果圖片
+    result_path = rf"kid\{uid}\{img_id}_result.jpg"
     cv2.imwrite(result_path, result_img)
-
     return score
 
 

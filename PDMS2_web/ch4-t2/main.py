@@ -28,7 +28,9 @@ if __name__ == "__main__":
         if edges_path is not None:
             finder = MaxAreaQuadFinder(edges_path)
             finder.find_max_area_quad()
-            kid = finder.draw_and_show()
+            result_img, kid = finder.draw_and_show()
+            result_path = rf"kid\{uid}\{img_id}_result.jpg"
+            cv2.imwrite(result_path, result_img)
         if kid is not None:
             if kid < 0.3:
                 print(f"kid = {kid:.2f}, score = 2")
