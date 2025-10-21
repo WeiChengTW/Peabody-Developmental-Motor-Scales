@@ -14,8 +14,8 @@ import traceback
 from typing import Optional
 
 # ======相機參數=====
-TOP = 1
-SIDE = 2 # <-- Ch5-t1 會使用這個索引
+TOP = 2
+SIDE = 1 # <-- Ch5-t1 會使用這個索引
 # =================
 
 

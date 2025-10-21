@@ -14,9 +14,9 @@ except Exception as e:
     print(f"錯誤：無法載入模型 {model_path}。請檢查路徑是否正確。錯誤訊息：{e}")
     sys.exit(-1) # 回傳 -1 代表模型載入失敗
 
-CONF = 0.6
-DIST_THRESHOLD = 5
-CHECK_INTERVAL = 0.1
+CONF = 0.5
+DIST_THRESHOLD = 3
+CHECK_INTERVAL = 0.5
 GAME_DURATION = 63 # 你之前改成了 63 秒
 
 class RaisinsGameEngine:

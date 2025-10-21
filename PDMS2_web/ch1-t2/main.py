@@ -4,8 +4,7 @@ from ultralytics import YOLO
 import os
 import sys
 
-# 載入 main_side.py 所需的模組 (假設它們在同一資料夾)
-# 如果這些模組不存在，程式會報錯。
+# 載入 main_side.py 所需的模組
 try:
     from check_gap import CheckGap
     from MaskAnalyzer import MaskAnalyzer
@@ -20,15 +19,14 @@ except ImportError as e:
 def return_score(score):
     sys.exit(int(score))
 
+MODE_SIDE = 1  # 0 = 階梯, 1 = 金字塔
 
 # ====================================================================
 # === 俯視圖 (TOP View) 分析函數
 # ====================================================================
 
-
 CONF_TOP = 0.8
-CROP_RATIO = 0.5  # 中央區域比例
-
+CROP_RATIO = 0.5
 
 def analyze_image_top(frame, model, initial_get_point=2):
     """
@@ -41,17 +39,15 @@ def analyze_image_top(frame, model, initial_get_point=2):
     y1 = (H - crop_h) // 2
     x2, y2 = x1 + crop_w, y1 + crop_h
 
-    # 裁切中央區域
-    cropped = frame[y1:y2, x1:x2].copy()  # 使用 .copy() 確保操作的是裁剪區域的獨立副本
+    cropped = frame[y1:y2, x1:x2].copy()
 
-    # YOLO 推理
     results = model.predict(source=cropped, conf=CONF_TOP, verbose=False)
     masks = results[0].masks.data.cpu().numpy() if results[0].masks is not None else []
 
     centers = []
     max_mask_side = 0
     rotate_ok_list = []
-    GET_POINT = initial_get_point  # 初始得分
+    GET_POINT = initial_get_point
 
     for mask in masks:
         binary_mask = (mask * 255).astype(np.uint8)
@@ -71,14 +67,11 @@ def analyze_image_top(frame, model, initial_get_point=2):
             scale_x = crop_w / mask_W
             scale_y = crop_h / mask_H
 
-            # 中心點位置
             M = cv2.moments(cnt)
             if M["m00"] != 0:
-                # 注意：這裡的 cx, cy 是在 cropped 座標系中的縮放位置
                 cx = int(M["m10"] / M["m00"] * scale_x)
                 cy = int(M["m01"] / M["m00"] * scale_y)
                 centers.append((cx, cy))
-                # 繪製中心點 (在 cropped 圖像上)
                 cv2.circle(cropped, (cx, cy), 5, (0, 0, 0), -1)
 
             if len(cnt) >= 5:
@@ -88,7 +81,6 @@ def analyze_image_top(frame, model, initial_get_point=2):
                 box[:, 1] = box[:, 1] * scale_y
                 box = np.intp(box)
 
-                # === 找出主邊方向（最長的邊）===
                 max_len = -1
                 main_angle = 0
                 for i in range(4):
@@ -105,20 +97,17 @@ def analyze_image_top(frame, model, initial_get_point=2):
 
                 main_angle = abs(main_angle)
 
-                # === 比對是否「近似水平」或「近似垂直」 ===
-                angle_diff_to_horizontal = abs(main_angle)  # 跟 0 度比
-                angle_diff_to_vertical = abs(main_angle - 90)  # 跟 90 度比
+                angle_diff_to_horizontal = abs(main_angle)
+                angle_diff_to_vertical = abs(main_angle - 90)
 
                 rotate_ok = (
                     angle_diff_to_horizontal <= 10 or angle_diff_to_vertical <= 10
                 )
                 rotate_ok_list.append(rotate_ok)
 
-                # === 畫框、標角度 ===
-                color = (0, 255, 0) if rotate_ok else (0, 0, 255)  # OK = 綠，NG = 紅
+                color = (0, 255, 0) if rotate_ok else (0, 0, 255)
                 cv2.drawContours(cropped, [box], 0, color, 2)
 
-    # === 判斷邏輯：偏移 (Offset) ===
     offset = False
     if len(centers) >= 2 and max_mask_side > 0:
         threshold = max_mask_side // 8
@@ -128,11 +117,8 @@ def analyze_image_top(frame, model, initial_get_point=2):
         std_x = np.std(x_vals)
         std_y = np.std(y_vals)
 
-        offset = (
-            std_x < threshold or std_y < threshold
-        )  # std 越小代表越集中 (越對齊)，即 No Offset
+        offset = std_x < threshold or std_y < threshold
 
-        # 繪製 std/threshold (在 cropped 圖像上)
         cv2.putText(
             cropped,
             f"std_x = {std_x:.2f}",
@@ -161,7 +147,6 @@ def analyze_image_top(frame, model, initial_get_point=2):
             2,
         )
 
-    # === 判斷邏輯：旋轉 (Rotate) ===
     status_rotate = "?"
     is_rotate_ng = False
     if rotate_ok_list:
@@ -171,21 +156,17 @@ def analyze_image_top(frame, model, initial_get_point=2):
             status_rotate = "Rotate !"
             is_rotate_ng = True
 
-    status_offset = (
-        "Offset !" if not offset else "No Offset"
-    )  # 這裡與原碼邏輯 'offset = (std_x < threshold or std_y < threshold)' 相反
-    is_offset_ng = not offset  # 'offset' 變數在原碼中為 True 表示 No Offset
+    status_offset = "Offset !" if not offset else "No Offset"
+    is_offset_ng = not offset
 
     summary = f"{status_offset} | {status_rotate}"
 
-    # === 判斷總分 ===
     if is_offset_ng or is_rotate_ng:
-        GET_POINT = 1  # 只要有問題，就扣一分
+        GET_POINT = 1
         color = (0, 0, 255)
     else:
         color = (0, 0, 0)
 
-    # 繪製總體狀態 (在 cropped 圖像上)
     cv2.putText(cropped, summary, (230, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, color, 3)
 
     return cropped, summary, GET_POINT
@@ -195,75 +176,159 @@ def analyze_image_top(frame, model, initial_get_point=2):
 # === 側視圖 (SIDE View) 分析函數
 # ====================================================================
 
-# ===== 參數 =====
-MODE_SIDE = 1  # 0 = 階梯, 1 = 金字塔(一定要有空隙)
-CONF_SIDE = 0.8
-GAP_THRESHOLD_RATIO = 0.222  # 用平均 bbox 寬度 * 這個比例
 
+CONF_SIDE = 0.8
+GAP_THRESHOLD_RATIO = 1.05
 
 def analyze_image_side(IMG_PATH, model):
     """
     分析側視圖 (SIDE View) 影像，檢查間隙和結構。
-    返回: score_side (0, 1, 或 2)
+    返回: (annotated_frame, score_side)
     """
-
-    # ===== 讀圖 =====
     frame = cv2.imread(IMG_PATH)
     if frame is None:
         raise ValueError(f"讀不到圖片：{IMG_PATH}")
 
-    # ===== YOLO 偵測 =====
-    # model = YOLO(MODEL_PATH) # 已在 main 區塊讀取
+    annotated_frame = frame.copy()
+
     results = model.predict(source=frame, conf=CONF_SIDE, verbose=False)
     r0 = results[0]
 
     masks = r0.masks.data.cpu().numpy() if r0.masks is not None else []
     boxes = r0.boxes.xyxy.cpu().numpy() if r0.boxes is not None else np.empty((0, 4))
-    centroids = MaskAnalyzer.get_centroids(masks)
+    
+    # ✅ 修正：直接從 boxes 計算質心，確保座標一致
+    centroids = []
+    for box in boxes:
+        x1, y1, x2, y2 = box
+        cx = (x1 + x2) / 2
+        cy = (y1 + y2) / 2
+        centroids.append((cx, cy))
 
-    # ===== 計分 =====
     SCORE = 2
     IS_GAP = False
 
-    # 空隙檢測（需要物件 bbox 寬度估計 gap threshold）
+    # ========== 繪製所有偵測到的框框 ==========
+    for i, box in enumerate(boxes):
+        x1, y1, x2, y2 = map(int, box)
+        cv2.rectangle(annotated_frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
+        cv2.putText(annotated_frame, f"Block {i+1}", (x1, y1-5), 
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1)
+
+    # ========== 繪製質心（先不繪製，避免遮擋） ==========
+    # for i, (cx, cy) in enumerate(centroids):
+    #     cv2.circle(annotated_frame, (int(cx), int(cy)), 8, (255, 0, 0), -1)
+    #     cv2.putText(annotated_frame, f"C{i+1}", (int(cx)+10, int(cy)-10), 
+    #                 cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 2)
+
+    # 空隙檢測
     bbox_widths = [b[2] - b[0] for b in boxes] if len(boxes) > 0 else []
     avg_width = np.mean(bbox_widths) if len(bbox_widths) > 0 else 1.0
     GAP_THRESHOLD = GAP_THRESHOLD_RATIO * avg_width
 
     if len(centroids) >= 2:
         gap_checker = CheckGap(gap_threshold=GAP_THRESHOLD, y_layer_threshold=30)
-        gap_pairs = gap_checker.check(centroids)  # 回傳 [(p1, p2, d), ...]
+        gap_pairs = gap_checker.check(centroids)
 
-        # print(f"gap : {len(gap_pairs)}")
+        # ========== 繪製空隙 ==========
         if gap_pairs:
-            # 原程式：若成對的空隙數量為 3 視為有空隙（6 顆積木情境）
             IS_GAP = len(gap_pairs) // 2 == 3
-            if MODE_SIDE == 0:  # 階梯模式遇到空隙降為 1 分
+            print(f"偵測到空隙: {len(gap_pairs) // 2} 組")
+            
+            try:
+                for pair in gap_pairs:
+                    # gap_pairs 格式: ((x1, y1), (x2, y2), distance)
+                    if isinstance(pair, tuple) and len(pair) >= 2:
+                        point1, point2 = pair[0], pair[1]
+                        
+                        # 確保 point1 和 point2 是座標元組
+                        if isinstance(point1, tuple) and isinstance(point2, tuple):
+                            cx1, cy1 = float(point1[0]), float(point1[1])
+                            cx2, cy2 = float(point2[0]), float(point2[1])
+                            
+                            # 繪製空隙連線
+                            cv2.line(annotated_frame, (int(cx1), int(cy1)), (int(cx2), int(cy2)), 
+                                    (0, 0, 255), 3)
+                            
+                            # 在中點標註 GAP
+                            mid_x, mid_y = int((cx1 + cx2) / 2), int((cy1 + cy2) / 2)
+                            cv2.putText(annotated_frame, "GAP", (mid_x, mid_y), 
+                                    cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
+                            
+            except Exception as e:
+                print(f"繪製空隙時發生錯誤: {e}")
+                import traceback
+                traceback.print_exc()
+            
+            if MODE_SIDE == 0:
                 SCORE = 1
         else:
-            if MODE_SIDE == 1:  # 金字塔模式沒空隙降為 1 分
+            print("無空隙")
+            if MODE_SIDE == 1:
                 SCORE = 1
 
     # 分層並做模式判定
     grouper = LayerGrouping(layer_ratio=0.2)
     layers = grouper.group_by_y(centroids, boxes=boxes)
 
+    # ========== 繪製分層（同時繪製質心）==========
+    colors = [(255, 0, 0), (0, 255, 0), (0, 0, 255), (255, 255, 0), 
+              (255, 0, 255), (0, 255, 255)]
+    
+    for layer_idx, layer in enumerate(layers):
+        color = colors[layer_idx % len(colors)]
+        
+        # layer 中的每個元素是質心座標
+        for centroid in layer:
+            if isinstance(centroid, tuple) and len(centroid) == 2:
+                cx, cy = centroid
+                
+                # 找到這個質心對應的 box 索引
+                for box_idx, (bcx, bcy) in enumerate(centroids):
+                    if abs(bcx - cx) < 5 and abs(bcy - cy) < 5:  # 找到匹配的質心
+                        if box_idx < len(boxes):
+                            x1, y1, x2, y2 = map(int, boxes[box_idx])
+                            # 繪製分層框框（粗框）
+                            cv2.rectangle(annotated_frame, (x1, y1), (x2, y2), color, 3)
+                            # 繪製分層標籤
+                            cv2.putText(annotated_frame, f"L{layer_idx+1}", (x1, y2+20), 
+                                       cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 2)
+                            # 繪製質心點（在框框中心）
+                            cv2.circle(annotated_frame, (int(cx), int(cy)), 8, (255, 0, 0), -1)
+                            # 繪製質心編號
+                            cv2.putText(annotated_frame, f"C{box_idx+1}", (int(cx)+10, int(cy)-10), 
+                                       cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
+                            break
+
     if MODE_SIDE == 0:  # 階梯模式
         stair_checker = StairChecker()
-        result, _ = stair_checker.check(layers)
+        result, msg = stair_checker.check(layers)
         if not result:
             SCORE = 0
+        
+        # 顯示階梯檢測結果
+        cv2.putText(annotated_frame, f"Stair: {msg}", (10, 30), 
+                   cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 255), 2)
+        
     elif MODE_SIDE == 1:  # 金字塔模式
-        # 估計單塊寬度
         block_width = (
             (np.mean([b[2] - b[0] for b in boxes]) // 2) if len(boxes) > 0 else 0
         )
         pyramid_checker = PyramidCheck()
-        is_pyramid, _ = pyramid_checker.check_pyramid(layers, block_width, IS_GAP)
+        is_pyramid, pyramid_msg = pyramid_checker.check_pyramid(layers, block_width, IS_GAP)
         if not is_pyramid:
             SCORE = 0
+        
+        # 顯示金字塔檢測結果
+        cv2.putText(annotated_frame, f"Pyramid: {pyramid_msg}", (10, 30), 
+                   cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 255), 2)
 
-    return SCORE
+    # ========== 顯示得分 ==========
+    score_text = f"Score: {SCORE}/2"
+    cv2.putText(annotated_frame, score_text, (10, annotated_frame.shape[0] - 20), 
+               cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 255, 255), 2)
+
+    return annotated_frame, SCORE
 
 
 # ====================================================================
@@ -272,17 +337,15 @@ def analyze_image_side(IMG_PATH, model):
 
 if __name__ == "__main__":
     if len(sys.argv) > 2:
-        # 使用傳入的 uid 和 id 作為圖片路徑
         uid = sys.argv[1]
         img_id = sys.argv[2]
-        # uid = "lull222"
-        # img_id = "ch3-t1"
-        # image_path = rf"kid\{uid}\{img_id}.jpg"
-        # --- 圖片路徑設定 ---
-        # 請根據您的實際情況修改這些路徑
+        
         SIDE_IMG_PATH = rf"kid\{uid}\{img_id}-side.jpg"
         TOP_IMG_PATH = rf"kid\{uid}\{img_id}-top.jpg"
         MODEL_PATH = r"ch1-t2/toybrick.pt"
+    else:
+        print("請提供 uid 和 img_id 參數")
+        sys.exit(1)
 
     # --- 載入模型 ---
     try:
@@ -291,17 +354,23 @@ if __name__ == "__main__":
         print(f"錯誤：載入 YOLO 模型失敗 (路徑: {MODEL_PATH})。請確保檔案存在。")
         sys.exit(1)
 
-    # --- 1. 執行側視圖分析 (main_side.py 的邏輯) ---
+    # --- 1. 執行側視圖分析 ---
     score_side = -1
     try:
-        score_side = analyze_image_side(SIDE_IMG_PATH, yolo_model)
+        annotated_side, score_side = analyze_image_side(SIDE_IMG_PATH, yolo_model)
         print(f"側視圖 ({SIDE_IMG_PATH}) 得分: {score_side}")
+        
+        # ✅ 儲存側視圖結果
+        side_result_path = rf"kid\{uid}\{img_id}-side_result.jpg"
+        cv2.imwrite(side_result_path, annotated_side)
+        print(f"側視圖結果已儲存至: {side_result_path}")
+        
     except ValueError as e:
         print(f"側視圖分析失敗: {e}")
     except Exception as e:
         print(f"側視圖分析時發生錯誤: {e}")
 
-    # --- 2. 執行俯視圖分析 (main_top.py 的邏輯) ---
+    # --- 2. 執行俯視圖分析 ---
     score_top = -1
     try:
         frame_top = cv2.imread(TOP_IMG_PATH)
@@ -315,10 +384,10 @@ if __name__ == "__main__":
         print(f"俯視圖 ({TOP_IMG_PATH}) 檢測結果: {summary}")
         print(f"俯視圖得分: {score_top}")
 
-        # 顯示結果 (可選，但為了排版，將此註解)
-        # cv2.imshow("TOP Detection Result", analyzed_frame)
-        # cv2.waitKey(0)
-        # cv2.destroyAllWindows()
+        # ✅ 儲存俯視圖結果
+        top_result_path = rf"kid\{uid}\{img_id}-top_result.jpg"
+        cv2.imwrite(top_result_path, analyzed_frame)
+        print(f"俯視圖結果已儲存至: {top_result_path}")
 
     except ValueError as e:
         print(f"俯視圖分析失敗: {e}")
@@ -326,7 +395,9 @@ if __name__ == "__main__":
         print(f"俯視圖分析時發生錯誤: {e}")
 
     # --- 3. 輸出最低得分 ---
-
+    if score_side == 0 or score_top == 0:
+        print("\n總結：有一項分析得分為 0，最終得分為 0。")
+        return_score(0)
     valid_scores = [s for s in [score_side, score_top] if s != -1]
 
     if not valid_scores:
@@ -335,4 +406,5 @@ if __name__ == "__main__":
     else:
         final_score = min(valid_scores)
         print(f"\n最終最低得分：{final_score}")
-        return_score(final_score)
+        
+    return_score(final_score if final_score != -1 else 0)

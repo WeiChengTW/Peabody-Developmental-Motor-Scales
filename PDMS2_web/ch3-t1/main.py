@@ -42,10 +42,7 @@ if __name__ == "__main__":
                 detector.show_results()
 
             if detector_path:
-
-                min_dist_cm, max_dist_cm = BoxDistanceAnalyzer(detector_path)
-                
-
+            
                 result_img, min_dist_cm, max_dist_cm = BoxDistanceAnalyzer(
                     detector_path
                 )

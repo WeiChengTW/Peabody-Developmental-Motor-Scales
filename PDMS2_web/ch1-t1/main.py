@@ -7,7 +7,7 @@ import sys
 CROP_RATIO = 0.85  
 
 # ================== YOLO 模型 ==================
-model = YOLO(r"toybrick.pt")
+model = YOLO(r"ch1-t1/toybrick.pt")
 CONF = 0.5
 
 
@@ -216,12 +216,14 @@ def score_from_image(img_path, conf=CONF):
 
     # 這裡的顯示程式碼已經被註釋，如果需要預覽，請取消註釋
     # # 顯示所有結果圖
-    display_frame_resized = cv2.resize(display_frame_with_markers, (0, 0), fx=0.3, fy=0.3)
-    cv2.imshow('Original with Markers', display_frame_resized)
-    binary_resized = cv2.resize(binary_with_markers, (0, 0), fx=0.3, fy=0.3)
-    cv2.imshow('Binary Masked', binary_resized)
-    skeleton_resized = cv2.resize(skeleton_with_markers, (0, 0), fx=0.3, fy=0.3)
-    cv2.imshow('Skeleton Line', skeleton_resized)
+    # display_frame_resized = cv2.resize(display_frame_with_markers, (0, 0), fx=0.3, fy=0.3)
+    # cv2.imshow('Original with Markers', display_frame_resized)
+    # binary_resized = cv2.resize(binary_with_markers, (0, 0), fx=0.3, fy=0.3)
+    # cv2.imshow('Binary Masked', binary_resized)
+    # skeleton_resized = cv2.resize(skeleton_with_markers, (0, 0), fx=0.3, fy=0.3)
+    # cv2.imshow('Skeleton Line', skeleton_resized)
+
+    
 
     # 計算分數 (沿用您的計分邏輯)
     correct_num_for_score = correct_num
@@ -238,7 +240,7 @@ def score_from_image(img_path, conf=CONF):
     cv2.waitKey(0)
     cv2.destroyAllWindows()
 
-    return score, correct_num
+    return score, correct_num, display_frame_with_markers
 
 
 if __name__ == "__main__":
@@ -252,9 +254,10 @@ if __name__ == "__main__":
         print("請提供 uid 和 img_id 參數或在程式碼中設定測試路徑。")
         sys.exit(0) 
 
-    # test_img = r"ch1-t1.jpg"  # 讀取圖片
-    score, num = score_from_image(image_path)
+    # image_path = r"ch1-t1.jpg"  # 讀取圖片
+    score, num, result_img = score_from_image(image_path)
+    cv2.imwrite(rf"kid\{uid}\{img_id}_result.jpg", result_img)
     # score, num = score_from_image(test_img)
     print("score =", score)
     print("num =", num)
-    return_score(score)
+    # return_score(score)

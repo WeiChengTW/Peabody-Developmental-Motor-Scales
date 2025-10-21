@@ -177,7 +177,6 @@ def main(img_path):
     SCALE = 2
     SCORE = -1
 
-    input_folder = "input"  # <-- 資料夾
     CLASS_NAMES = ["Other", "circle_or_oval"]
     # ==參數==#
 
@@ -280,13 +279,13 @@ def main(img_path):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) > 2:
-        # 使用傳入的 uid 和 id 作為圖片路徑
-        uid = sys.argv[1]
-        img_id = sys.argv[2]
-        # uid = "lull222"
-        # img_id = "ch3-t1"
-        image_path = rf"kid\{uid}\{img_id}.jpg"
-    # img_path = r'realtest\S__75472905_0.jpg'
+    # if len(sys.argv) > 2:
+    #     # 使用傳入的 uid 和 id 作為圖片路徑
+    #     uid = sys.argv[1]
+    #     img_id = sys.argv[2]
+    #     # uid = "lull222"
+    #     # img_id = "ch3-t1"
+    #     image_path = rf"kid\{uid}\{img_id}.jpg"
+    image_path = r'ch2-t1.jpg'
     score = main(image_path)
     print(score)

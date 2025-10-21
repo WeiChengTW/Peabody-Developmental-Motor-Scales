@@ -133,6 +133,7 @@ class Analyze_graphics:
         canvas[y:y+new_h, x:x+new_w] = resized
         return canvas
 
+    
     def save_224_pair(self, cropped_img, ready_path, ready_binary_path, keep_ratio=True):
         """將彩色與二值圖都存成 224×224，並立即印出 shape 驗證。"""
         if keep_ratio:
@@ -143,17 +144,41 @@ class Analyze_graphics:
         # 彩色 224×224
         cv2.imwrite(ready_path, img224)
 
-        # Binary 以 224×224 來做
+        # ✅ 修改：產生黑底白圖的二值化
         gray = cv2.cvtColor(img224, cv2.COLOR_BGR2GRAY)
+        
+        # 使用 Otsu 自動閾值
         _, binary = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-        binary_inverted = cv2.bitwise_not(binary)
-        cv2.imwrite(ready_binary_path, binary_inverted)
+        
+        # ✅ 智能判斷：根據圖案顏色決定是否反轉
+        mean_val = cv2.mean(gray)[0]
+        
+        if mean_val > 128:
+            # 原圖是亮底暗圖（常見情況：白紙藍筆）
+            # binary 會讓圖案變黑、背景變白 → 需要反轉
+            binary_output = cv2.bitwise_not(binary)
+        else:
+            # 原圖是暗底亮圖
+            binary_output = binary
+        
+        # ✅ 二次驗證：確保背景（黑色）佔多數
+        black_pixels = np.sum(binary_output == 0)
+        white_pixels = np.sum(binary_output == 255)
+        total_pixels = binary_output.shape[0] * binary_output.shape[1]
+        
+        # 如果黑色像素少於 30%，代表判斷錯誤，再反轉一次
+        if black_pixels < total_pixels * 0.3:
+            binary_output = cv2.bitwise_not(binary_output)
+            print(f"  ⚠️ 二次反轉 (黑:{black_pixels} 白:{white_pixels})")
+        
+        cv2.imwrite(ready_binary_path, binary_output)
 
         # 驗證
         color_shape = cv2.imread(ready_path).shape
         bin_shape = cv2.imread(ready_binary_path, cv2.IMREAD_GRAYSCALE).shape
         print(f"  - 寫出彩色: {ready_path} shape={color_shape}")
         print(f"  - 寫出二值: {ready_binary_path} shape={bin_shape}")
+        print(f"  - 灰度均值: {mean_val:.1f}, 黑像素比例: {black_pixels/total_pixels*100:.1f}%")
 
     # ------------ 推論＋切割 ------------
     def infer_and_draw(self, image_path, save_results=True, expand_ratio=0.15, clear_dir=False):
@@ -167,7 +192,7 @@ class Analyze_graphics:
 
         ready_dir_name = "ready"
         ready_dir = self.base_dir / ready_dir_name
-        
+
         if save_results:
             if clear_dir:
                 self.reset_dir(ready_dir)  # 建議第一次測試用 True，避免舊檔干擾
@@ -251,7 +276,9 @@ class Analyze_graphics:
         image_name = os.path.splitext(os.path.basename(image_path))[0]
         ori_img = cv2.imread(image_path)
 
-        ready_dir = "ready"
+        ready_dir_name = "ready"
+        ready_dir = self.base_dir / ready_dir_name
+
         if clear_dir:
             self.reset_dir(ready_dir)
             index = 0
@@ -289,13 +316,13 @@ class Analyze_graphics:
             cropped_img = ori_img[y1:y2, x1:x2]
             class_name = detection["class_name"]
 
-            ready_path = os.path.join(ready_dir, f"{image_name}_{index}_{class_name}.jpg")
-            ready_binary_path = os.path.join(ready_dir, f"{image_name}_{index}_{class_name}_binary.jpg")
+            ready_path = ready_dir / f"{image_name}_{index}_{class_name}.jpg"
+            ready_binary_path = ready_dir / f"{image_name}_{index}_{class_name}_binary.jpg"
 
             ready_path = self.get_unique_filename(ready_path)
             ready_binary_path = self.get_unique_filename(ready_binary_path)
 
-            # 一樣固定 224×224
+            # ★ 一樣固定 224×224
             self.save_224_pair(cropped_img, ready_path, ready_binary_path, keep_ratio=True)
 
             index += 1
