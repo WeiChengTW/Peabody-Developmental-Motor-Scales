@@ -182,9 +182,9 @@ def main(img_path):
     # all_images = read_all_images_from_folder(input_folder)
 
     ## 先建立分類資料夾
-    cross_dir = target_dir / "cross"
+    cross_dir = target_dir / "Cross"
     other_dir = target_dir / "other"
-    os.makedirs(cross_dir / "cross", exist_ok=True)
+    os.makedirs(cross_dir / "Cross", exist_ok=True)
     os.makedirs(other_dir / "other", exist_ok=True)
 
     classifier = ImageClassifier(MODEL_PATH, CLASS_NAMES)
@@ -229,7 +229,7 @@ def main(img_path):
     # 裁切圖形
     print("\n==裁切圖形==")
     # print(cropped_path)
-    ready = segmenter.infer_and_draw(cropped_path, expand_ratio=0.15)
+    ready = segmenter.infer_and_draw(img_path, expand_ratio=0.15)
 
     # 分類圖形
     print("\n==分類圖形==\n")
@@ -269,15 +269,15 @@ def main(img_path):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) > 2:
-        # 使用傳入的 uid 和 id 作為圖片路徑
-        uid = sys.argv[1]
-        img_id = sys.argv[2]
-        # uid = "lull222"
-        # img_id = "ch3-t1"
-        image_path = rf"kid\{uid}\{img_id}.jpg"
+    # if len(sys.argv) > 2:
+    #     # 使用傳入的 uid 和 id 作為圖片路徑
+    #     uid = sys.argv[1]
+    #     img_id = sys.argv[2]
+    #     # uid = "lull222"
+    #     # img_id = "ch3-t1"
+    #     image_path = rf"kid\{uid}\{img_id}.jpg"
     # img_path = r'S__75628564.jpg'
-    # img_path = 'test01.jpg'
+    image_path = r'ch2-t3.jpg'
     score = main(image_path)
     print(score)
     return_score(score)

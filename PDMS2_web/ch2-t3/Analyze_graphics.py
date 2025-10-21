@@ -15,7 +15,7 @@ class Analyze_graphics:
     def __init__(
         self,
         model_path=MODEL_PATH,
-        base_output_dir=target_dir,
+        base_output_dir = target_dir,
         class_names=["Circle", "Cross", "Diamond", "Square", "Triangle"],
     ):
         self.model = YOLO(model_path)
@@ -64,7 +64,7 @@ class Analyze_graphics:
 
     def initialize_workspace(self, clear_all=True):
         # 這裡只保留資料夾名稱
-        workspace_dirs = ["cross", "Other", "cropped_a4", "ready"]
+        workspace_dirs = ["Cross", "Other", "cropped_a4", "ready"]
         if clear_all:
             print("=== 初始化工作空間，清空所有資料夾 ===")
             self.clear_multiple_dirs(workspace_dirs)
@@ -225,7 +225,7 @@ class Analyze_graphics:
                 ready_path = ready_dir / f"{image_name}_{index}_{class_name}.jpg"
                 ready_binary_path = ready_dir / f"{image_name}_{index}_{class_name}_binary.jpg"
 
-                #
+                # 若你不想版本尾碼，可改成 clear_dir=True 或移除下面兩行
                 ready_path = self.get_unique_filename(ready_path)
                 ready_binary_path = self.get_unique_filename(ready_binary_path)
 
@@ -251,7 +251,9 @@ class Analyze_graphics:
         image_name = os.path.splitext(os.path.basename(image_path))[0]
         ori_img = cv2.imread(image_path)
 
-        ready_dir = "ready"
+        ready_dir_name = "ready"
+        ready_dir = self.base_dir / ready_dir_name
+
         if clear_dir:
             self.reset_dir(ready_dir)
             index = 0
@@ -289,13 +291,13 @@ class Analyze_graphics:
             cropped_img = ori_img[y1:y2, x1:x2]
             class_name = detection["class_name"]
 
-            ready_path = os.path.join(ready_dir, f"{image_name}_{index}_{class_name}.jpg")
-            ready_binary_path = os.path.join(ready_dir, f"{image_name}_{index}_{class_name}_binary.jpg")
+            ready_path = ready_dir / f"{image_name}_{index}_{class_name}.jpg"
+            ready_binary_path = ready_dir / f"{image_name}_{index}_{class_name}_binary.jpg"
 
             ready_path = self.get_unique_filename(ready_path)
             ready_binary_path = self.get_unique_filename(ready_binary_path)
 
-            # 一樣固定 224×224
+            # ★ 一樣固定 224×224
             self.save_224_pair(cropped_img, ready_path, ready_binary_path, keep_ratio=True)
 
             index += 1
