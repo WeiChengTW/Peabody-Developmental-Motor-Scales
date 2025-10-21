@@ -62,6 +62,8 @@ const els = {
 // 狀態變量
 let cameraActive = false;
 let streamInterval = null;
+let isRecording = false;
+let recordingTimer = null;
 const id = getId();
 // 更新狀態信息
 function updateStatus(message, type = 'info') {
@@ -75,7 +77,7 @@ function updateStatus(message, type = 'info') {
   if(meta.title) els.taskTitle.textContent = meta.title;
   
   if (id === "ch5-t1") {
-    els.shotBtn.style.display = 'none'; // Ch5-t1 不顯示按鈕
+    els.shotBtn.textContent = "開始錄影"; // 改按鈕文字
   }
 })();
 // 串流預覽
@@ -158,22 +160,157 @@ async function captureWithCamera(cameraIndex, fullTaskId, uid) {
   }
 }
 
+// === [新增] 開始錄影 1 分鐘 ===
+async function startRecording() {
+  try {
+    const currentUid = await getUid() || 'default';
+    els.shotBtn.disabled = true;
+    isRecording = true;
+    
+    updateStatus('正在開始錄影...', 'loading');
+    
+    // 發送錄影開始請求到後端
+    const startResponse = await fetch('/opencv-camera/record-start', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        task_id: id,
+        uid: currentUid,
+        duration: 60
+      })
+    });
+    
+    if (!startResponse.ok) {
+      throw new Error('錄影啟動失敗');
+    }
+    
+    const startResult = await startResponse.json();
+    if (!startResult.success) {
+      throw new Error(startResult.error || '錄影啟動失敗');
+    }
+    
+    updateStatus('錄影中... 60 秒', 'success');
+    
+    // 倒計時 60 秒
+    let remainingSeconds = 60;
+    recordingTimer = setInterval(() => {
+      remainingSeconds--;
+      if (remainingSeconds > 0) {
+        updateStatus(`錄影中... ${remainingSeconds} 秒`, 'success');
+      } else {
+        clearInterval(recordingTimer);
+        recordingTimer = null;
+        stopRecording(currentUid);
+      }
+    }, 1000);
+    
+  } catch (error) {
+    console.error('錄影錯誤:', error);
+    updateStatus(`錄影失敗: ${error.message}`, 'error');
+    isRecording = false;
+    els.shotBtn.disabled = false;
+  }
+}
+
+// === [新增] 結束錄影 ===
+async function stopRecording(uid) {
+  try {
+    if (recordingTimer) {
+      clearInterval(recordingTimer);
+      recordingTimer = null;
+    }
+    
+    updateStatus('正在結束錄影並保存...', 'loading');
+    
+    // 發送錄影停止請求到後端
+    const stopResponse = await fetch('/opencv-camera/record-stop', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        task_id: id,
+        uid: uid,
+        save_to_file: true
+      })
+    });
+    
+    if (!stopResponse.ok) {
+      throw new Error('結束錄影失敗');
+    }
+    
+    const stopResult = await stopResponse.json();
+    if (!stopResult.success) {
+      throw new Error(stopResult.error || '結束錄影失敗');
+    }
+    
+    // 取得影片保存信息
+    const videoPath = stopResult.video_path || '影片已保存';
+    updateStatus(`錄影完成！${videoPath}`, 'success');
+    isRecording = false;
+    
+    // 關閉相機
+    await closeCamera();
+    
+    // 錄完影之後執行 run-python 分析（等待結果）
+    updateStatus('正在分析錄影內容...', 'loading');
+    try {
+      const analysisResponse = await fetch('/run-python', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          id: id,
+          uid: uid,
+          video_path: stopResult.video_path
+        })
+      });
+      
+      if (analysisResponse.ok) {
+        const analysisResult = await analysisResponse.json();
+        console.log('分析完成:', analysisResult);
+        updateStatus('分析完成！準備跳轉...', 'success');
+      } else {
+        console.warn('分析失敗');
+        updateStatus('分析完成，準備跳轉...', 'success');
+      }
+    } catch (error) {
+      console.warn('分析錯誤:', error);
+      updateStatus('分析完成，準備跳轉...', 'success');
+    }
+    
+    // 短暫延遲後直接跳轉
+    await new Promise(r => setTimeout(r, 800));
+    redirectToNextTask(id);
+    
+  } catch (error) {
+    console.error('停止錄影錯誤:', error);
+    updateStatus(`停止錄影失敗: ${error.message}`, 'error');
+    isRecording = false;
+    els.shotBtn.disabled = false;
+  }
+}
+
 // === [修改] 背景觸發分析（不等待結果）===
 async function triggerBackgroundAnalysis(taskId, uid) {
   try {
-    // 發送分析請求，但不等待結果
-    fetch('/run-python', {
+    // 發送分析請求到後端
+    const response = await fetch('/run-python', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ 
         id: taskId,
         uid: uid 
       })
-    }).catch(err => {
-      console.warn('背景分析請求失敗:', err);
     });
+    
+    if (!response.ok) {
+      console.warn('分析請求失敗');
+      return;
+    }
+    
+    const result = await response.json();
+    console.log('分析已觸發:', result);
+    
   } catch (error) {
-    console.warn('觸發背景分析時發生錯誤:', error);
+    console.warn('觸發分析時發生錯誤:', error);
   }
 }
 
@@ -227,66 +364,6 @@ async function takeShot() {
   }
 }
 
-// === [保留] Ch5-t1 遊戲需要等待完成 ===
-async function runGame() {
-  try {
-    updateStatus('正在啟動遊戲...請稍候...', 'loading');
-    els.placeholderText.style.display = 'block';
-    els.cameraStream.style.display = 'none';
-    const currentUid = await getUid() || 'default';
-    
-    const analysisResponse = await fetch('/run-python', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({ id: id, uid: currentUid })
-    });
-    
-    if (!analysisResponse.ok) throw new Error('啟動遊戲失敗');
-    
-    const analysisResult = await analysisResponse.json();
-    if (!analysisResult.success) throw new Error(analysisResult.error || '啟動遊戲失敗');
-    
-    updateStatus('遊戲執行中...請查看彈出視窗。完成後將自動跳轉。', 'info');
-    
-    // ✅ 遊戲需要等待完成
-    await pollTaskStatus(analysisResult.task_id);
-    redirectToNextTask(id);
-    
-  } catch (error) {
-    console.error('遊戲執行錯誤:', error);
-    updateStatus(`遊戲失敗: ${error.message}`, 'error');
-  }
-}
-
-// === [保留] 遊戲用的輪詢函數 ===
-async function pollTaskStatus(taskId) {
-  updateStatus('遊戲執行中...請查看彈出視窗。', 'loading');
-  const startTime = Date.now();
-  const timeout = 150000; // 150 秒
-  
-  while (Date.now() - startTime < timeout) {
-    try {
-      const res = await fetch(`/check-task/${taskId}`);
-      if (res.ok) {
-        const data = await res.json();
-        if (data.status === 'completed') {
-          updateStatus(`遊戲完成！準備跳轉...`, 'success');
-          await new Promise(r => setTimeout(r, 1500));
-          return;
-        } else if (data.status === 'error') {
-          throw new Error(data.error || '遊戲執行失敗');
-        }
-      }
-    } catch (e) {
-      console.warn("Poll error:", e.message);
-    }
-    await new Promise(r => setTimeout(r, 2000));
-  }
-  
-  updateStatus('遊戲逾時，將在背景繼續。準備跳轉...', 'info');
-  await new Promise(r => setTimeout(r, 1500));
-}
-
 // 關閉相機
 async function closeCamera() {
   try {
@@ -307,22 +384,24 @@ async function closeCamera() {
   }
 }
 
-// 綁定事件
-els.shotBtn.addEventListener("click", takeShot);
+// === [修改] 按鈕點擊事件 ===
+els.shotBtn.addEventListener("click", () => {
+  if (id === "ch5-t1") {
+    startRecording(); // Ch5-t1 觸發錄影
+  } else {
+    takeShot(); // 其他任務觸發拍照
+  }
+});
 
 // 進入畫面時的初始化
 document.addEventListener("DOMContentLoaded", async () => {
-  if (id === "ch5-t1") {
-    // Ch5-t1: 自動執行遊戲（需要等待）
-    await runGame();
-  } else {
-    // 其他任務: 開啟網頁相機預覽
-    await openCamera();
-  }
+  // Ch5-t1 也開啟相機預覽（不自動錄影，等待按鈕）
+  await openCamera();
 });
 
 // 頁面卸載時清理資源
 window.addEventListener("beforeunload", () => {
   if (streamInterval) clearInterval(streamInterval);
+  if (recordingTimer) clearInterval(recordingTimer);
   if (cameraActive) closeCamera();
 });

@@ -1,4 +1,4 @@
-# ch5-t1/main.py (已修正：接收來自 app.py 的相機索引)
+# ch5-t1/main.py (修改為讀取影片檔案)
 
 from ultralytics import YOLO
 import cv2
@@ -12,12 +12,12 @@ try:
     model = YOLO(model_path)
 except Exception as e:
     print(f"錯誤：無法載入模型 {model_path}。請檢查路徑是否正確。錯誤訊息：{e}")
-    sys.exit(-1) # 回傳 -1 代表模型載入失敗
+    sys.exit(-1)
 
 CONF = 0.5
 DIST_THRESHOLD = 3
 CHECK_INTERVAL = 0.5
-GAME_DURATION = 63 # 你之前改成了 63 秒
+GAME_DURATION = 63
 
 class RaisinsGameEngine:
     def __init__(self):
@@ -35,7 +35,7 @@ class RaisinsGameEngine:
                 return 1 if warning_flag else 2
             else:
                 return 0
-        else: # 31 秒到遊戲結束
+        else:
             if total_count >= 5:
                 return 1
             else:
@@ -99,8 +99,6 @@ class RaisinsGameEngine:
             self.current_score = self.calculate_score(self.total_count, self.warning_flag, elapsed)
             status = {"status": "FINISHED", "score": self.current_score, "total_placed": self.total_count, "time": int(elapsed)}
             cv2.putText(annotated, "Game Over!", (50, 100), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 255, 255), 3)
-            # 你把顯示最終分數註解掉了，保留
-            # cv2.putText(annotated, f"Final Score: {self.current_score}", (50, 150), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 255), 2)
             return annotated, status
 
         cv2.putText(annotated, f'SoyBean count: {count}', (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
@@ -113,44 +111,44 @@ class RaisinsGameEngine:
         status = {"status": "RUNNING", "score": None, "total_placed": self.total_count, "time": int(elapsed)}
         return annotated, status
 
-# --- (Class 結束) ---
-
 
 if __name__ == "__main__":
     
     # ==========================================================
-    # === 修正點：從命令列參數讀取相機索引 ===
+    # === 修改點：從命令列參數讀取影片路徑 ===
     # ==========================================================
-    CAMERA_INDEX = 1 # 預設值 (如果 app.py 沒有傳參數)
+    VIDEO_PATH = None
     
-    # app.py 會傳入 3 個參數: script_name, uid, camera_index
+    # app.py 會傳入 3 個參數: script_name, uid, video_path
     if len(sys.argv) >= 3:
         try:
             # sys.argv[0] 是腳本名稱 ('ch5-t1/main.py')
-            # sys.argv[1] 是 uid (目前沒用到，但保留)
-            # sys.argv[2] 是 app.py 傳來的 SIDE (字串)
-            CAMERA_INDEX = int(sys.argv[2])
-            print(f"從 app.py 接收到相機索引: {CAMERA_INDEX}")
-        except ValueError:
-            print(f"錯誤：app.py 傳來的相機索引 '{sys.argv[2]}' 不是有效的數字。使用預設值 {CAMERA_INDEX}。")
+            # sys.argv[1] 是 uid 
+            # sys.argv[2] 是影片路徑
+            VIDEO_PATH = sys.argv[2]
+            print(f"從 app.py 接收到影片路徑: {VIDEO_PATH}")
+        except Exception as e:
+            print(f"錯誤：無法解析參數: {e}")
+            sys.exit(-1)
     else:
-        print(f"警告：未從 app.py 接收到足夠的參數。使用預設相機索引 {CAMERA_INDEX}。")
-        
+        print(f"錯誤：缺少影片路徑參數")
+        sys.exit(-1)
+    
     WINDOW_NAME = "Ch5-t1 Raisins Game"
     DISPLAY_WIDTH = 1280
 
-    cap = cv2.VideoCapture(CAMERA_INDEX)
+    # 開啟影片檔案（而不是相機）
+    cap = cv2.VideoCapture(VIDEO_PATH)
     if not cap.isOpened():
-        print(f"錯誤：無法開啟相機索引 {CAMERA_INDEX}")
-        sys.exit(-1) 
+        print(f"錯誤：無法開啟影片檔案 {VIDEO_PATH}")
+        sys.exit(-1)
 
     original_width = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
     original_height = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
     
     # 檢查是否成功讀取到寬高
     if original_width == 0 or original_height == 0:
-        print(f"警告：無法讀取相機 {CAMERA_INDEX} 的原始解析度。")
-        # 給定一個預設的 16:9 比例
+        print(f"警告：無法讀取影片的原始解析度。")
         aspect_ratio = 9.0 / 16.0 
     else:
         aspect_ratio = original_height / original_width
@@ -178,7 +176,16 @@ if __name__ == "__main__":
         while True:
             ret, frame = cap.read()
             if not ret:
-                print("讀取畫面失敗，結束中...")
+                print("影片已播放完畢或讀取失敗，結束中...")
+                # 影片結束也當作遊戲結束
+                if not game_engine.game_over:
+                    game_engine.game_over = True
+                    game_engine.current_score = game_engine.calculate_score(
+                        game_engine.total_count, 
+                        game_engine.warning_flag, 
+                        time.time() - game_engine.start_time
+                    )
+                    final_score = game_engine.current_score
                 break
                 
             annotated_frame, status = game_engine.process_frame(frame)

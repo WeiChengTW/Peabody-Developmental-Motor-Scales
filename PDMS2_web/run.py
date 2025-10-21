@@ -11,6 +11,7 @@ from PIL import Image  # 保留相機相關依賴
 from flask_cors import CORS
 import traceback
 from typing import Optional
+import time
 
 # ======相機參數 (使用 runFortest.py 的值) =====
 TOP = 1
@@ -603,29 +604,27 @@ def run_analysis_in_background(task_id, uid, img_id, script_path, stair_type=Non
         write_to_console(f"背景任務 {task_id} 發生嚴重錯誤：{e}\n{tb}", "ERROR")
 
 
-# === [修正] run_python_script (移除 Ch5-t1 特殊處理) ===
 @app.post("/run-python")
 def run_python_script():
     try:
         data = request.get_json() or {}
         img_id = (data.get("id") or "").strip()
         uid = (data.get("uid") or "").strip() or session.get("uid")
+        video_path = data.get("video_path")  # 新增：接收影片路徑
 
         if not img_id:
             return jsonify({"success": False, "error": "缺少 id(task_id)"}), 400
         if not uid:
             return jsonify({"success": False, "error": "缺少 uid"}), 400
 
-        # Ch5-t1 的特殊 if 區塊已被移除
-
         # 所有任務，包括 Ch5-t1，都走這個標準流程
         script_path = resolve_script_path(img_id)
         if not script_path or not script_path.exists():
-            write_to_console(f"腳本不存在：{script_path}", "ERROR")
+            write_to_console(f"腳本不存在: {script_path}", "ERROR")
             return jsonify({"success": False, "error": "腳本檔案不存在"}), 404
 
         task_id = str(uuid.uuid4())
-        stair_type = session.get("stair_type")  # 取階梯參數
+        stair_type = session.get("stair_type")
 
         processing_tasks[task_id] = {
             "status": "pending",
@@ -634,12 +633,23 @@ def run_python_script():
             "progress": 0,
         }
 
-        t = Thread(
-            target=run_analysis_in_background,
-            args=(task_id, uid, img_id, script_path, stair_type),  # 傳入 stair_type
-        )
+        # 如果有影片路徑（Ch5-t1 錄影），傳給分析函數
+        if video_path:
+            write_to_console(f"收到影片分析請求: task_id={task_id}, uid={uid}, video_path={video_path}", "INFO")
+            t = Thread(
+                target=run_analysis_in_background_with_video,
+                args=(task_id, uid, img_id, script_path, video_path, stair_type),
+            )
+        else:
+            # 原有的圖片分析
+            t = Thread(
+                target=run_analysis_in_background,
+                args=(task_id, uid, img_id, script_path, stair_type),
+            )
+        
         t.daemon = True
         t.start()
+        
         return jsonify(
             {
                 "success": True,
@@ -648,9 +658,102 @@ def run_python_script():
             }
         )
     except Exception as e:
-        write_to_console(f"/run-python 發生錯誤：{e}", "ERROR")
+        write_to_console(f"/run-python 發生錯誤: {e}", "ERROR")
         return jsonify({"success": False, "error": str(e)}), 500
 
+
+# ===== 新增：支援影片的分析函數 =====
+def run_analysis_in_background_with_video(task_id, uid, img_id, script_path, video_path, stair_type=None):
+    """執行影片分析（用於 Ch5-t1）"""
+    try:
+        processing_tasks[task_id] = {
+            "status": "running",
+            "uid": uid,
+            "img_id": img_id,
+            "video_path": video_path,
+            "start_time": datetime.now().isoformat(),
+            "progress": 0,
+        }
+        write_to_console(f"開始背景任務 {task_id}: uid={uid}, video_path={video_path}", "INFO")
+
+        # 基礎命令
+        base_cmd = [sys.executable, str(script_path)]
+
+        # Ch5-t1 遊戲模式：傳遞 uid 和 影片路徑
+        cmd = base_cmd + [uid, video_path]
+
+        write_to_console(f"執行命令: {' '.join(cmd)}", "INFO")
+
+        # 前景執行遊戲（直接顯示視窗）
+        env = os.environ.copy()
+        env["PYTHONIOENCODING"] = "utf-8"
+        env["PYTHONUTF8"] = "1"
+
+        creation_flags = 0
+        if sys.platform == "win32":
+            creation_flags = subprocess.CREATE_NO_WINDOW
+
+        result = subprocess.run(
+            cmd,
+            cwd=ROOT,
+            env=env,
+            capture_output=False,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            creationflags=creation_flags,
+        )
+
+        score = int(result.returncode)
+        stdout_str = f"Game executed with video: {video_path}"
+        stderr_str = ""
+
+        write_to_console(f"腳本執行完成: returncode={score}", "INFO")
+
+        task_id_std = normalize_task_id(img_id)
+        uid_eff = uid or "unknown"
+
+        score_id = None
+        try:
+            score_id = insert_score(uid_eff, task_id_std, score)
+        except Exception as e:
+            write_to_console(f"寫分數失敗: {e}", "ERROR")
+
+        processing_tasks[task_id] = {
+            "status": "completed",
+            "uid": uid_eff,
+            "img_id": img_id,
+            "video_path": video_path,
+            "start_time": processing_tasks[task_id]["start_time"],
+            "end_time": datetime.now().isoformat(),
+            "progress": 100,
+            "result": {
+                "success": True,
+                "stdout": stdout_str,
+                "stderr": stderr_str,
+                "returncode": score,
+                "score_id": score_id,
+                "task_id": task_id_std,
+            },
+        }
+        write_to_console(
+            f"任務 {task_id} 完成: uid={uid_eff}, task={task_id_std}, score={score}, score_id={score_id}",
+            "INFO",
+        )
+
+    except Exception as e:
+        tb = traceback.format_exc()
+        processing_tasks[task_id] = {
+            "status": "error",
+            "uid": uid,
+            "img_id": img_id,
+            "video_path": video_path,
+            "start_time": processing_tasks[task_id].get("start_time"),
+            "end_time": datetime.now().isoformat(),
+            "progress": 0,
+            "error": str(e),
+        }
+        write_to_console(f"背景任務 {task_id} 發生嚴重錯誤: {e}\n{tb}", "ERROR")
 
 @app.get("/check-task/<task_id>")
 def check_task_status(task_id):
@@ -878,13 +981,307 @@ def capture_opencv_photo():
         return jsonify({"success": False}), 500
 
 
-@app.post("/opencv-camera/stop")
-def stop_opencv_camera():
+# ===== 影片錄製狀態管理 =====
+video_recording_state = {
+    'is_recording': False,
+    'video_writer': None,
+    'cap': None,
+    'thread': None,
+    'start_time': None,
+    'duration': 60,
+    'current_uid': None,
+    'current_task_id': None,
+    'video_path': None
+}
+
+video_recording_lock = threading.Lock()
+
+def recording_thread_func():
+    """在背景線程執行錄影"""
+    state = video_recording_state
+    
     try:
-        release_camera()
-        return jsonify({"success": True})
-    except Exception:
-        return jsonify({"success": False}), 500
+        # 使用現有的 camera 物件
+        global camera, camera_active
+        if not camera_active or camera is None:
+            write_to_console("相機未初始化，無法錄影", "ERROR")
+            state['is_recording'] = False
+            return
+        
+        # 設定相機參數
+        frame_width = int(camera.get(cv2.CAP_PROP_FRAME_WIDTH))
+        frame_height = int(camera.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        
+        # 【修正點 1】從 camera 物件上獲取實際的 FPS
+        # 如果無法獲取，使用預設值 30 (應該在 init_camera 中處理過了)
+        fps = getattr(camera, '_actual_fps', 30) 
+        
+        # 建立 VideoWriter
+        fourcc = cv2.VideoWriter_fourcc(*'mp4v')  # H.264 編碼
+        out = cv2.VideoWriter(
+            state['video_path'],
+            fourcc,
+            fps, # 【修正點 2】使用獲取到的 FPS
+            (frame_width, frame_height)
+        )
+
+        # 【新增】檢查 VideoWriter 是否成功開啟
+        if not out.isOpened():
+             # 'mp4v' 在某些環境可能有問題，嘗試 H.264 (X264, H264, avc1)
+             write_to_console("VideoWriter (mp4v) 開啟失敗，嘗試改用 'XVID' 寫入 .avi", "WARN")
+             # 嘗試切換為 XVID 編碼並更改檔案擴展名
+             fourcc_fallback = cv2.VideoWriter_fourcc(*'XVID')
+             video_path_fallback = state['video_path'].replace(".mp4", ".avi")
+             out = cv2.VideoWriter(
+                 video_path_fallback,
+                 fourcc_fallback,
+                 fps,
+                 (frame_width, frame_height)
+             )
+             if not out.isOpened():
+                  raise Exception("VideoWriter 無論如何都無法開啟，請檢查 OpenCV/FFMPEG")
+             state['video_path'] = video_path_fallback # 更新影片路徑
+             write_to_console(f"已切換至備用影片路徑: {video_path_fallback}", "INFO")
+
+        state['video_writer'] = out
+        state['start_time'] = time.time()
+        
+        write_to_console(f"開始錄影: {state['video_path']} (FPS: {fps})", "INFO")
+        
+        # 錄影循環
+        while state['is_recording']:
+            # 【修正點 3】確保循環速度不要超過 FPS 太多，但這裡主要是依靠 out.write(frame) 的速度
+            with camera_lock:
+                ret, frame = camera.read()
+            
+            if not ret:
+                write_to_console("無法讀取幀", "WARN")
+                # 這裡不 break，讓它繼續嘗試讀取，直到時間到
+                continue 
+            
+            # 檢查是否超過時長
+            elapsed = time.time() - state['start_time']
+            if elapsed >= state['duration']:
+                write_to_console(f"錄影時長已達 {state['duration']} 秒", "INFO")
+                state['is_recording'] = False
+                break
+            
+            # 寫入幀
+            out.write(frame)
+            
+            # 【新增】主動休眠：若 FPS 很高，可以減少 CPU 佔用，並確保錄影時長準確
+            # time.sleep(1 / fps) # 這裡不加 time.sleep，讓它盡可能快，避免丟幀
+                   
+        # 釋放資源
+        if out:
+            out.release()
+            write_to_console(f"影片已保存: {state['video_path']}", "INFO")
+        
+    except Exception as e:
+        # ... (後續程式碼不變)
+        write_to_console(f"錄影錯誤: {e}", "ERROR")
+    finally:
+        state['video_writer'] = None
+        state['is_recording'] = False
+
+
+@app.route('/opencv-camera/record-start', methods=['POST'])
+def record_start():
+    """開始錄影"""
+    try:
+        data = request.get_json() or {}
+        task_id = data.get('task_id', 'unknown')
+        uid = data.get('uid', 'default')
+        duration = data.get('duration', 60)
+        
+        state = video_recording_state
+        
+        # 如果已在錄影，先停止
+        if state['is_recording']:
+            return jsonify({
+                'success': False,
+                'error': '已在錄影中'
+            }), 400
+        
+        # 建立錄影資料夾
+        recordings_dir = ROOT / "recordings" / uid
+        if not recordings_dir.exists():
+            recordings_dir.mkdir(parents=True, exist_ok=True)
+        
+        # 生成影片檔名
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        video_filename = f"{task_id}_{timestamp}.mp4"
+        video_path = recordings_dir / video_filename
+        
+        # 更新狀態
+        state['is_recording'] = True
+        state['duration'] = duration
+        state['current_uid'] = uid
+        state['current_task_id'] = task_id
+        state['video_path'] = str(video_path)
+        
+        # 啟動錄影線程
+        state['thread'] = threading.Thread(target=recording_thread_func, daemon=True)
+        state['thread'].start()
+        
+        write_to_console(f"錄影已開始: task_id={task_id}, uid={uid}", "INFO")
+        
+        return jsonify({
+            'success': True,
+            'message': '錄影已開始',
+            'video_path': str(video_path)
+        })
+    
+    except Exception as e:
+        write_to_console(f"record_start 錯誤: {e}", "ERROR")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
+@app.route('/opencv-camera/record-stop', methods=['POST'])
+def record_stop():
+    """停止錄影並保存"""
+    try:
+        data = request.get_json() or {}
+        save_to_file = data.get('save_to_file', True)
+        
+        state = video_recording_state
+        
+        if not state['is_recording']:
+            return jsonify({
+                'success': False,
+                'error': '沒有進行中的錄影'
+            }), 400
+        
+        # 停止錄影
+        state['is_recording'] = False
+        
+        # 等待線程完成
+        if state['thread'] and state['thread'].is_alive():
+            state['thread'].join(timeout=5)
+        
+        video_path = state['video_path']
+        
+        # 驗證檔案是否存在
+        if os.path.exists(video_path):
+            file_size = os.path.getsize(video_path)
+            write_to_console(f"影片已保存: {video_path} (大小: {file_size} 字節)", "INFO")
+            
+            return jsonify({
+                'success': True,
+                'message': '錄影已完成',
+                'video_path': video_path,
+                'file_size': file_size
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'error': '影片保存失敗'
+            }), 500
+    
+    except Exception as e:
+        write_to_console(f"record_stop 錯誤: {e}", "ERROR")
+        state['is_recording'] = False
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
+# ===== 新增：支援影片的分析函數 =====
+def run_analysis_in_background_with_video(task_id, uid, img_id, script_path, video_path, stair_type=None):
+    """執行影片分析（用於 Ch5-t1）"""
+    try:
+        processing_tasks[task_id] = {
+            "status": "running",
+            "uid": uid,
+            "img_id": img_id,
+            "video_path": video_path,
+            "start_time": datetime.now().isoformat(),
+            "progress": 0,
+        }
+        write_to_console(f"開始背景任務 {task_id}: uid={uid}, video_path={video_path}", "INFO")
+
+        # 基礎命令
+        base_cmd = [sys.executable, str(script_path)]
+
+        # Ch5-t1 遊戲模式：傳遞 uid 和 影片路徑
+        cmd = base_cmd + [uid, video_path]
+
+        write_to_console(f"執行命令: {' '.join(cmd)}", "INFO")
+
+        # 前景執行遊戲（直接顯示視窗）
+        env = os.environ.copy()
+        env["PYTHONIOENCODING"] = "utf-8"
+        env["PYTHONUTF8"] = "1"
+
+        creation_flags = 0
+        if sys.platform == "win32":
+            creation_flags = subprocess.CREATE_NO_WINDOW
+
+        result = subprocess.run(
+            cmd,
+            cwd=ROOT,
+            env=env,
+            capture_output=False,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            creationflags=creation_flags,
+        )
+
+        score = int(result.returncode)
+        stdout_str = f"Game executed with video: {video_path}"
+        stderr_str = ""
+
+        write_to_console(f"腳本執行完成: returncode={score}", "INFO")
+
+        task_id_std = normalize_task_id(img_id)
+        uid_eff = uid or "unknown"
+
+        score_id = None
+        try:
+            score_id = insert_score(uid_eff, task_id_std, score)
+        except Exception as e:
+            write_to_console(f"寫分數失敗: {e}", "ERROR")
+
+        processing_tasks[task_id] = {
+            "status": "completed",
+            "uid": uid_eff,
+            "img_id": img_id,
+            "video_path": video_path,
+            "start_time": processing_tasks[task_id]["start_time"],
+            "end_time": datetime.now().isoformat(),
+            "progress": 100,
+            "result": {
+                "success": True,
+                "stdout": stdout_str,
+                "stderr": stderr_str,
+                "returncode": score,
+                "score_id": score_id,
+                "task_id": task_id_std,
+            },
+        }
+        write_to_console(
+            f"任務 {task_id} 完成: uid={uid_eff}, task={task_id_std}, score={score}, score_id={score_id}",
+            "INFO",
+        )
+
+    except Exception as e:
+        tb = traceback.format_exc()
+        processing_tasks[task_id] = {
+            "status": "error",
+            "uid": uid,
+            "img_id": img_id,
+            "video_path": video_path,
+            "start_time": processing_tasks[task_id].get("start_time"),
+            "end_time": datetime.now().isoformat(),
+            "progress": 0,
+            "error": str(e),
+        }
+        write_to_console(f"背景任務 {task_id} 發生嚴重錯誤: {e}\n{tb}", "ERROR")
 
 
 # =========================
