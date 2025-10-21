@@ -118,6 +118,9 @@ def get_pixel_per_cm_from_a4(
     # 儲存像素比例資料
     json_path = r"PDMS2_web/px2cm.json"
     current_time = datetime.now()  # Define current_time
+    # json_path = r"PDMS2_web/px2cm.json"
+
+    os.makedirs(os.path.dirname(json_path), exist_ok=True)
     data = {
         "datetime": current_time.strftime("%Y-%m-%d %H:%M:%S"),
         "pixel_per_cm": pixel_per_cm,
