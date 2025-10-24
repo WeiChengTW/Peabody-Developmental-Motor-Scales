@@ -245,8 +245,8 @@ def main(img_path):
             # 直接分類存檔
             if predicted_class_name == "cross":
                 shutil.copy(url, cross_dir / os.path.basename(url))
-                results, _, _, _ = cs.score_image(url)
-                return results["score"]
+                results, result_img, _, _, _ = cs.score_image(url)
+                return results["score"], result_img
 
             else:
                 # 讀取圖片並加上標記
@@ -263,21 +263,22 @@ def main(img_path):
                 save_path = other_dir / os.path.basename(url)
                 cv2.imwrite(save_path, img)  # 直接存檔，不用手動關視窗
                 print(f"{url} 已存入 Other 資料夾並加上標記")
-                return 0
+                return 0, img
 
     return SCORE
 
 
 if __name__ == "__main__":
-    # if len(sys.argv) > 2:
-    #     # 使用傳入的 uid 和 id 作為圖片路徑
-    #     uid = sys.argv[1]
-    #     img_id = sys.argv[2]
-    #     # uid = "lull222"
-    #     # img_id = "ch3-t1"
-    #     image_path = rf"kid\{uid}\{img_id}.jpg"
+    if len(sys.argv) > 2:
+        # 使用傳入的 uid 和 id 作為圖片路徑
+        uid = sys.argv[1]
+        img_id = sys.argv[2]
+        # uid = "lull222"
+        # img_id = "ch3-t1"
+        image_path = rf"kid\{uid}\{img_id}.jpg"
     # img_path = r'S__75628564.jpg'
-    image_path = r'ch2-t3.jpg'
-    score = main(image_path)
+    # image_path = r'ch2-t3.jpg'
+    score, result_img = main(image_path)
+    cv2.imwrite(rf"kid\{uid}\{img_id}_result.jpg", result_img)
     print(score)
     return_score(score)

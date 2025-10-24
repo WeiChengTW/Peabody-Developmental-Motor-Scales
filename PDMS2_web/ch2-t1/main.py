@@ -180,7 +180,6 @@ def main(img_path):
     # ==參數==#
     real_width_cm = 29.7
     SCALE = 2
-    SCORE = -1
 
     CLASS_NAMES = ["Other", "circle_or_oval"]
     # ==參數==#
@@ -256,18 +255,19 @@ def main(img_path):
     print("\n==計算端點距離==\n")
     for url, u_type in result.items():
         if u_type == "circle_or_oval":
-            px = cp.check_point(url)
+            px, result_img = cp.check_point(url)
             if px == 0.0:
                 print(f"{url} : Perfect!")
+                return 2, result_img
             else:
                 offset = px / pixel_per_cm
                 print(f"{url} : {offset}cm")
                 if offset <= 1.2:
-                    SCORE = 2
+                    return 2, result_img
                 elif offset > 1.2 and offset <= 2.5:
-                    SCORE = 1
+                    return 1, result_img
                 else:
-                    SCORE = 0
+                    return 0, result_img
 
         else:
             img = cv2.imread(url)
@@ -276,11 +276,8 @@ def main(img_path):
             )
             # cv2.imshow('Other', img)
             print(f"{url} is {result[url]}!")
-            SCORE = 0
-            cv2.waitKey(0)
-            cv2.destroyAllWindows()
-
-    return SCORE
+            return 0, result_img
+    return 0, result_img
 
 
 if __name__ == "__main__":
@@ -289,6 +286,8 @@ if __name__ == "__main__":
         uid = sys.argv[1]
         img_id = sys.argv[2]
         image_path = rf"kid\{uid}\{img_id}.jpg"
-    # image_path = rf"PDMS2_web\ch2-t1\ch2-t2.jpg"
-    score = main(image_path)
+    # image_path = rf"ch2-t1.jpg"
+    score, result_img = main(image_path)
+    cv2.imwrite(rf"kid\{uid}\{img_id}_result.jpg", result_img)
     print(score)
+    return_score(score)

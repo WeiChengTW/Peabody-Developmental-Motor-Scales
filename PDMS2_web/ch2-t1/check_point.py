@@ -101,12 +101,12 @@ class check_point:
                 # 把二值化圖像轉成可顯示彩色的 BGR 圖片
                 binary_bgr = cv2.cvtColor(binary, cv2.COLOR_GRAY2BGR)
 
-                # # 畫紅色端點
-                # for (x, y) in endpoints:
-                #     cv2.circle(binary_bgr, (x, y), 3, (0, 0, 255), -1)
+                # 畫紅色端點
+                for (x, y) in endpoints:
+                    cv2.circle(binary_bgr, (x, y), 3, (0, 0, 255), -1)
                 
-                # # 用綠色線連接它
-                # cv2.line(binary_bgr, endpoints[0], endpoints[1], (0, 255, 0), 2)
+                # 用綠色線連接它
+                cv2.line(binary_bgr, endpoints[0], endpoints[1], (0, 255, 0), 2)
 
                 # 把骨架轉成可顯示的 BGR 圖片（用於對比）
                 skeleton_bgr = cv2.cvtColor(skeleton * 255, cv2.COLOR_GRAY2BGR)
@@ -122,10 +122,10 @@ class check_point:
                 binary_bgr = cv2.resize(binary_bgr, (0, 0), fx=self.SCALE, fy=self.SCALE)
                 # cv2.imshow('binary_with_endpoints', binary_bgr)  # 在二值化圖像上顯示
                 skeleton_bgr = cv2.resize(skeleton_bgr, (0, 0), fx=self.SCALE, fy=self.SCALE)
-                # cv2.imshow('skeleton_with_endpoints', skeleton_bgr)  # 在骨架圖像上顯示
+                cv2.imshow('skeleton_with_endpoints', skeleton_bgr)  # 在骨架圖像上顯示
                 cv2.waitKey(0)
                 cv2.destroyAllWindows()
-                return float(dist_specific)
+                return float(dist_specific), skeleton_bgr
             
             #只有一個突出的線段
             elif len(endpoints) == 1:
@@ -175,12 +175,12 @@ class check_point:
                 img = cv2.resize(img, (0, 0), fx=self.SCALE, fy=self.SCALE)
                 # cv2.imshow('img', img)
                 binary = cv2.resize(binary, (0, 0), fx=self.SCALE, fy=self.SCALE)
-                # cv2.imshow('binary_with_endpoints', binary)  # 在二值化圖像上顯示
+                cv2.imshow('binary_with_endpoints', binary)  # 在二值化圖像上顯示
                 skeleton_bgr = cv2.resize(skeleton_bgr, (0, 0), fx=self.SCALE, fy=self.SCALE)
                 # cv2.imshow('skeleton_with_endpoints', skeleton_bgr)  # 在骨架圖像上顯示
                 cv2.waitKey(0)
                 cv2.destroyAllWindows()
-                return float(dist_specific)
+                return float(dist_specific), skeleton_bgr
             
             else:
                 dist_specific = calculate_distance_numpy(endpoints[0], endpoints[1])
@@ -205,12 +205,12 @@ class check_point:
                 img = cv2.resize(img, (0, 0), fx=self.SCALE, fy=self.SCALE)
                 # cv2.imshow('img', img)
                 binary_bgr = cv2.resize(binary_bgr, (0, 0), fx=self.SCALE, fy=self.SCALE)
-                # cv2.imshow('binary_with_endpoints', binary_bgr)  # 在二值化圖像上顯示
+                cv2.imshow('binary_with_endpoints', binary_bgr)  # 在二值化圖像上顯示
                 skeleton_bgr = cv2.resize(skeleton_bgr, (0, 0), fx=self.SCALE, fy=self.SCALE)
-                # cv2.imshow('skeleton_with_endpoints', skeleton_bgr)  # 在骨架圖像上顯示
+                cv2.imshow('skeleton_with_endpoints', skeleton_bgr)  # 在骨架圖像上顯示
                 cv2.waitKey(0)
                 cv2.destroyAllWindows()
-                return float(dist_specific)
+                return float(dist_specific), skeleton_bgr
         #完美連接的圖形
         else:
 
@@ -221,13 +221,13 @@ class check_point:
             cv2.putText(binary, 'Perfect !', (20, 50), cv2.FONT_HERSHEY_COMPLEX, 0.3, (0, 255, 0), 1)
             skeleton_bgr = cv2.resize(skeleton_bgr, (0, 0), fx=self.SCALE, fy = self.SCALE) 
 
-            # cv2.imshow('Origin pic', img)
-            # cv2.imshow('binary', binary)
-            # cv2.imshow('path_tracing_result', skeleton_bgr)
+            cv2.imshow('Origin pic', img)
+            cv2.imshow('binary', binary)
+            cv2.imshow('path_tracing_result', skeleton_bgr)
 
             cv2.waitKey(0)
             cv2.destroyAllWindows()
-            return float(0.0)
+            return float(0.0), skeleton_bgr
 
 if __name__ == "__main__":
 

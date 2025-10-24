@@ -264,13 +264,15 @@ class CrossScorer:
         skel_path= os.path.join(self.OUT_DIR, f"skeleton_{base}")
         vis_path = os.path.join(self.OUT_DIR, f"processed_{base}")
 
+        # cv2.imshow('vis', vis)
+        # cv2.waitKey(0)
         # 輸出
         cv2.imwrite(img_path, img)
         cv2.imwrite(bin_path, binary)
         cv2.imwrite(skel_path, skel)
         cv2.imwrite(vis_path, vis, [cv2.IMWRITE_JPEG_QUALITY, self.OUTPUT_JPG_QUALITY])
 
-        return result, bin_path, skel_path, vis_path
+        return result, vis, bin_path, skel_path, vis_path
 
     # ---------- 批次處理 ----------
     def score_folder(self, image_folder, pattern):

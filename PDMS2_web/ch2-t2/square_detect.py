@@ -236,6 +236,7 @@ class SquareGapAnalyzer:
                 cv2.putText(vis, f"{thetas[i]:.1f}", (x + 6, y - 6),
                             cv2.FONT_HERSHEY_SIMPLEX, fs_c, (0, 255, 0), th_c, cv2.LINE_AA)
         cv2.imwrite(out_path, vis)
+        return vis
 
     # ===================== 評分 =====================
     def score_from_gaps_and_angles(self, gaps, thetas):
@@ -263,9 +264,9 @@ class SquareGapAnalyzer:
 
     # ===================== 單張處理 =====================
     def process_image(self, img_path: str):
-        SCORE = -1
+        SCORE = 0
 
-        #讀不到圖片直接回傳 -1
+        #讀不到圖片直接回傳 0
         img = cv2.imread(img_path)
         if img is None:
             return dict(ok=False, error=f"read fail: {img_path}", score = SCORE)
@@ -299,11 +300,11 @@ class SquareGapAnalyzer:
             out_score = os.path.join(self.OUT_DIR, f"score_{base}")
 
             self.draw_gap_image(skel, endpoints, self.pair_greedy(endpoints), gaps, out_gap)
-            self.draw_score_image(img, score, reason, None, None, gaps, out_score)
+            result_img = self.draw_score_image(img, score, reason, None, None, gaps, out_score)
 
             return dict(ok=True, gaps=gaps, score=score, reason=reason,
                         thetas=None, corners=None,
-                        out_skeleton=out_skel, out_gap=out_gap, out_score=out_score)
+                        out_skeleton=out_skel, out_gap=out_gap, out_score=out_score), result_img
 
         # 4) 只有 <2 缺口才去算角度
         angle_res = self.get_angles_from_skeleton(skel, img.shape)
@@ -317,11 +318,11 @@ class SquareGapAnalyzer:
         out_gap = os.path.join(self.OUT_DIR, f"gap_{base}")
         out_score = os.path.join(self.OUT_DIR, f"score_{base}")
         self.draw_gap_image(skel, endpoints, self.pair_greedy(endpoints), gaps, out_gap)
-        self.draw_score_image(img, score, reason, thetas, corners, gaps, out_score)
+        result_img = self.draw_score_image(img, score, reason, thetas, corners, gaps, out_score)
 
         return dict(ok=True, gaps=gaps, score=score, reason=reason,
                     thetas=thetas, corners=corners,
-                    out_skeleton=out_skel, out_gap=out_gap, out_score=out_score)
+                    out_skeleton=out_skel, out_gap=out_gap, out_score=out_score), result_img
 
 
 # ===================== 最底下跑流程（示例） =====================
