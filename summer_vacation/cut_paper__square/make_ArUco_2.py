@@ -25,24 +25,34 @@ square_size_px = mm2px(square_size_mm)
 border_width_px = mm2px(border_width_mm)
 
 
-# 四個角落的中心座標（往中間靠一點）
-offset = mm2px(20)  # 距離邊緣 2cm
+# 六個點的中心座標（2x3 排列）
+offset_x = mm2px(30)  # 水平距離邊緣 3cm
+offset_y = mm2px(30)  # 垂直距離邊緣 3cm
+
+# 計算垂直間距
+vertical_spacing = (a4_height_px - 2 * offset_y - square_size_px) // 2
+
+# 計算水平位置（增加左右間距，更靠近邊緣）
+margin = mm2px(15)  # 只留 1.5cm 的邊距
+left_x = margin + square_size_px // 2
+right_x = a4_width_px - margin - square_size_px // 2
+
+# 計算三個垂直位置（也稍微調整垂直間距）
+top_margin = mm2px(20)  # 上下邊距 2cm
+available_height = a4_height_px - 2 * top_margin - square_size_px
+vertical_spacing = available_height // 2  # 平均分配剩餘空間
+
+top_y = top_margin + square_size_px // 2
+middle_y = top_y + vertical_spacing
+bottom_y = middle_y + vertical_spacing
+
 centers = [
-    (square_size_px // 2 + offset, square_size_px // 2 + offset),  # 左上
-    (a4_width_px - square_size_px // 2 - offset, square_size_px // 2 + offset),  # 右上
-    (square_size_px // 2 + offset, a4_height_px - square_size_px // 2 - offset),  # 左下
-    (
-        a4_width_px - square_size_px // 2 - offset,
-        a4_height_px - square_size_px // 2 - offset,
-    ),  # 右下
-]
-# 只畫左上與右下
-centers = [
-    (square_size_px // 2 + offset, square_size_px // 2 + offset),  # 左上
-    (
-        a4_width_px - square_size_px // 2 - offset,
-        a4_height_px - square_size_px // 2 - offset,
-    ),  # 右下
+    (left_x, top_y),  # 左上
+    (right_x, top_y),  # 右上
+    (left_x, middle_y),  # 左中
+    (right_x, middle_y),  # 右中
+    (left_x, bottom_y),  # 左下
+    (right_x, bottom_y),  # 右下
 ]
 
 # ArUco marker parameters
