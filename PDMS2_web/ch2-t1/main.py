@@ -289,5 +289,6 @@ if __name__ == "__main__":
     # image_path = rf"ch2-t1.jpg"
     score, result_img = main(image_path)
     cv2.imwrite(rf"kid\{uid}\{img_id}_result.jpg", result_img)
+    # cv2.imwrite(rf"result.jpg", result_img)
     print(score)
     return_score(score)

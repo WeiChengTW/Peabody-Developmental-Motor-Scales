@@ -122,7 +122,7 @@ class check_point:
                 binary_bgr = cv2.resize(binary_bgr, (0, 0), fx=self.SCALE, fy=self.SCALE)
                 # cv2.imshow('binary_with_endpoints', binary_bgr)  # 在二值化圖像上顯示
                 skeleton_bgr = cv2.resize(skeleton_bgr, (0, 0), fx=self.SCALE, fy=self.SCALE)
-                cv2.imshow('skeleton_with_endpoints', skeleton_bgr)  # 在骨架圖像上顯示
+                # cv2.imshow('skeleton_with_endpoints', skeleton_bgr)  # 在骨架圖像上顯示
                 cv2.waitKey(0)
                 cv2.destroyAllWindows()
                 return float(dist_specific), skeleton_bgr
@@ -175,7 +175,7 @@ class check_point:
                 img = cv2.resize(img, (0, 0), fx=self.SCALE, fy=self.SCALE)
                 # cv2.imshow('img', img)
                 binary = cv2.resize(binary, (0, 0), fx=self.SCALE, fy=self.SCALE)
-                cv2.imshow('binary_with_endpoints', binary)  # 在二值化圖像上顯示
+                # cv2.imshow('binary_with_endpoints', binary)  # 在二值化圖像上顯示
                 skeleton_bgr = cv2.resize(skeleton_bgr, (0, 0), fx=self.SCALE, fy=self.SCALE)
                 # cv2.imshow('skeleton_with_endpoints', skeleton_bgr)  # 在骨架圖像上顯示
                 cv2.waitKey(0)
@@ -205,9 +205,10 @@ class check_point:
                 img = cv2.resize(img, (0, 0), fx=self.SCALE, fy=self.SCALE)
                 # cv2.imshow('img', img)
                 binary_bgr = cv2.resize(binary_bgr, (0, 0), fx=self.SCALE, fy=self.SCALE)
-                cv2.imshow('binary_with_endpoints', binary_bgr)  # 在二值化圖像上顯示
+                # cv2.imshow('binary_with_endpoints', binary_bgr)  # 在二值化圖像上顯示
                 skeleton_bgr = cv2.resize(skeleton_bgr, (0, 0), fx=self.SCALE, fy=self.SCALE)
-                cv2.imshow('skeleton_with_endpoints', skeleton_bgr)  # 在骨架圖像上顯示
+                # cv2.imshow('skeleton_with_endpoints', skeleton_bgr)  # 在骨架圖像上顯示
+        
                 cv2.waitKey(0)
                 cv2.destroyAllWindows()
                 return float(dist_specific), skeleton_bgr
@@ -221,9 +222,9 @@ class check_point:
             cv2.putText(binary, 'Perfect !', (20, 50), cv2.FONT_HERSHEY_COMPLEX, 0.3, (0, 255, 0), 1)
             skeleton_bgr = cv2.resize(skeleton_bgr, (0, 0), fx=self.SCALE, fy = self.SCALE) 
 
-            cv2.imshow('Origin pic', img)
-            cv2.imshow('binary', binary)
-            cv2.imshow('path_tracing_result', skeleton_bgr)
+            # cv2.imshow('Origin pic', img)
+            # cv2.imshow('binary', binary)
+            # cv2.imshow('path_tracing_result', skeleton_bgr)
 
             cv2.waitKey(0)
             cv2.destroyAllWindows()

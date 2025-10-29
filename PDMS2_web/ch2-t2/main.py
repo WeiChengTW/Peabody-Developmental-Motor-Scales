@@ -9,7 +9,6 @@ from Analyze_graphics import Analyze_graphics
 import glob
 from PIL import Image
 import os
-from check_point import check_point
 from q_or_other import ImageClassifier
 import shutil
 from square_detect import SquareGapAnalyzer
@@ -191,7 +190,6 @@ def main(img_path):
     os.makedirs(other_dir, exist_ok=True)
 
     classifier = ImageClassifier(MODEL_PATH, CLASS_NAMES)
-    cp = check_point(SCALE=SCALE)
 
     # 資料夾初始化
     segmenter = Analyze_graphics()
@@ -271,5 +269,6 @@ if __name__ == "__main__":
     # image_path = r"ch2-t2.jpg"
     score, result_img = main(image_path)
     cv2.imwrite(rf"kid\{uid}\{img_id}_result.jpg", result_img)
+    # cv2.imwrite(rf"result.jpg", result_img)
     print(f"score = {score}")
     return_score(score)
