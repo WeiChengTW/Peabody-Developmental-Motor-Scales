@@ -9,6 +9,14 @@ import cv2
 import json
 import sys
 import os
+from pathlib import Path
+
+# base directory for resolving relative resources (parent of this file's directory)
+BASE_DIR = Path(__file__).resolve().parent
+
+
+def return_score(score):
+    sys.exit(int(score))
 
 
 if __name__ == "__main__":
@@ -24,7 +32,7 @@ if __name__ == "__main__":
         # for img in range(1, 5):
         #     image_path = rf"raw\img{img}.jpg"
         # _, json_path = get_pixel_per_cm_from_a4(rf"a4.jpg", show_debug=False)
-        json_path = "px2cm.json"
+        json_path = BASE_DIR.parent / "px2cm.json"
         if json_path is not None:
             with open(json_path, "r") as f:
                 data = json.load(f)
@@ -54,8 +62,9 @@ if __name__ == "__main__":
                     analyzer = BoxDistanceAnalyzer(
                         box1=black_corners_int, image_path=detector_path
                     )
-                    kid = analyzer.analyze(pixel_per_cm=pixel_per_cm)
-
+                    result_img, kid = analyzer.analyze(pixel_per_cm=pixel_per_cm)
+                    result_path = rf"kid\{uid}\{img_id}_result.jpg"
+                    cv2.imwrite(result_path, result_img)
                 if kid is not None:
                     if kid < 0.6:
                         print(f"kid = {kid:.2f}, score = 2")
@@ -66,28 +75,4 @@ if __name__ == "__main__":
                     else:
                         print(f"kid = {kid:.2f}, score = 0")
                         score = 0
-                        # 讀取現有的 result.json 或建立新的
-                result_file = "result.json"
-                try:
-                    if os.path.exists(result_file):
-                        with open(result_file, "r", encoding="utf-8") as f:
-                            results = json.load(f)
-                    else:
-                        results = {}
-                except (json.JSONDecodeError, FileNotFoundError):
-                    results = {}
-
-                # 確保 uid 存在於結果中
-                if uid not in results:
-                    results[uid] = {}
-
-                # 更新對應 uid 的關卡分數
-                results[uid][img_id] = score
-
-                # 儲存到 result.json
-                with open(result_file, "w", encoding="utf-8") as f:
-                    json.dump(results, f, ensure_ascii=False, indent=2)
-
-                print(
-                    f"結果已儲存到 {result_file} - 用戶 {uid} 的關卡 {img_id} 分數: {score}"
-                )
+                return_score(score)

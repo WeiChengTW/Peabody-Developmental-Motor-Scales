@@ -1,118 +1,274 @@
-# app.py
+# run.py (已合併 Ch5-t1 彈出視窗 + PyMySQL, 移除內建錄影)
 # -*- coding: utf-8 -*-
 from pathlib import Path
-from flask import Flask, send_from_directory, redirect, request, jsonify, session
-import webbrowser
-import threading  # 修正：使用正確的 import
-from threading import Thread  # 新增：用於背景執行
-import subprocess
-import sys
-import logging
-import json
-import secrets
-from datetime import datetime
-import uuid
-import os
-import cv2
-import numpy as np
-import io
+from flask import Flask, send_from_directory, request, jsonify, session
+import webbrowser, threading
+from threading import Thread
+import subprocess, sys, logging, json, secrets, uuid, os, base64, re
+from datetime import datetime, date
+import cv2, numpy as np
 from PIL import Image
-import base64
 from flask_cors import CORS
+import traceback
+from typing import Optional
+import time
 
-# 設定環境變數強制使用 UTF-8（可選）
+# 移除 imageio 依賴，因為錄影功能已移除
+
+# ======相機參數 (使用 runFortest.py 的值) =====
+TOP = 2
+SIDE = 3  # <-- Ch5-t1 會使用這個索引
+# ============================================
+
+# =========================
+# 1) 資料庫設定（PyMySQL 模式）
+# =========================
+import pymysql
+
+DB = dict(
+    host="16.176.187.101",
+    port=3306,
+    user="project",
+    password="project",
+    database="pdms2",
+    charset="utf8mb4",
+    cursorclass=pymysql.cursors.DictCursor,
+    autocommit=True,
+)
+
+
+def db_exec(sql, params=None, fetch="none"):
+    """簡易 DB 執行器 (PyMySQL)"""
+    conn = pymysql.connect(**DB)
+    try:
+        with conn.cursor() as cur:
+            cur.execute(sql, params or ())
+            if fetch == "one":
+                return cur.fetchone()
+            if fetch == "all":
+                return cur.fetchall()
+            return None
+    except Exception as e:
+        # 增加錯誤日誌
+        write_to_console(
+            f"[DB] PyMySQL 執行失敗: {sql}\nParams: {params}\nError: {e}", "ERROR"
+        )
+        raise  # 重新拋出錯誤，讓 Flask 的 error handler 處理
+    finally:
+        conn.close()
+
+
+# 任務對照
+TASK_MAP = {
+    "Ch1-t1": "string_blocks",
+    "Ch1-t2": "pyramid",
+    "Ch1-t3": "stair",
+    "Ch2-t1": "draw_circle",
+    "Ch2-t2": "draw_square",
+    "Ch2-t3": "draw_cross",
+    "Ch2-t4": "draw_line",
+    "Ch2-t5": "color",
+    "Ch2-t6": "connect_dots",
+    "Ch3-t1": "cut_circle",
+    "Ch3-t2": "cut_square",
+    "Ch4-t1": "one_fold",
+    "Ch4-t2": "two_fold",
+    "Ch5-t1": "collect_raisins",
+}
+
+
+def ensure_user(uid: str, name: Optional[str] = None, birthday: Optional[str] = None):
+    """如果 user_list 沒有該 uid，就建立；有則略過/可補 name/birthday (PyMySQL)"""
+    try:
+        db_exec(
+            "INSERT INTO user_list(uid, name, birthday) VALUES (%s,%s,%s) "
+            "ON DUPLICATE KEY UPDATE name=COALESCE(VALUES(name),name), birthday=COALESCE(VALUES(birthday),birthday)",
+            (uid, name, birthday),
+        )
+        write_to_console(f"[DB] ensure_user ok: uid={uid}", "INFO")
+    except Exception as e:
+        # 錯誤已在 db_exec 中記錄，此處只需 raise
+        raise
+
+
+def get_conn():
+    """相容舊的 get_conn() 呼叫 (PyMySQL)"""
+    return pymysql.connect(**DB)
+
+
+def task_id_to_table(task_id: str) -> str:
+    if task_id in TASK_MAP:
+        return TASK_MAP[task_id]
+    raise ValueError(f"未知的 task_id: {task_id}")
+
+
+def insert_task_payload(task_id: str, score_id: str, data1=None, data2=None):
+    """寫入任務子表 (PyMySQL)"""
+    table = task_id_to_table(task_id)
+    try:
+        db_exec(
+            f"INSERT INTO `{table}` (score_id, data1, data2) VALUES (%s, %s, %s)",
+            (score_id, data1, data2),
+        )
+    except Exception as e:
+        # 錯誤已在 db_exec 中記錄，此處只需 raise
+        raise
+
+
+def ensure_task(task_id: str):
+    """如果 task_list 沒有該 task_id，就依 TASK_MAP 補上 (PyMySQL)"""
+    if task_id not in TASK_MAP:
+        raise ValueError(f"未知的 task_id：{task_id}")
+    task_name = TASK_MAP[task_id]
+    try:
+        db_exec(
+            "INSERT INTO task_list(task_id, task_name) VALUES (%s,%s) "
+            "ON DUPLICATE KEY UPDATE task_name=VALUES(task_name)",
+            (task_id, task_name),
+        )
+        write_to_console(f"[DB] ensure_task ok: {task_id} -> {task_name}", "INFO")
+    except Exception as e:
+        # 錯誤已在 db_exec 中記錄，此處只需 raise
+        raise
+
+
+# ... (_read_score_from_result_json 和 _parse_score_from_stdout 不變) ...
+def _read_score_from_result_json(root: Path, uid: str, img_id: str):
+    p = root / "result.json"
+    if not p.exists():
+        return None
+    try:
+        with open(p, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        if uid in data and img_id in data[uid]:
+            return int(data[uid][img_id])
+        return None
+    except Exception:
+        return None
+
+
+def _parse_score_from_stdout(stdout: str):
+    if not stdout:
+        return None
+    m = re.search(r"score\s*[:=]\s*(\d+)", stdout, re.IGNORECASE)
+    if m:
+        try:
+            return int(m.group(1))
+        except Exception:
+            return None
+    return None
+
+
+def insert_score(
+    uid: str,
+    task_id: str,
+    score: int,
+    no: Optional[int] = None,
+    test_date: Optional[date] = None,
+) -> str:
+    """在 score_list 新增一筆分數 (PyMySQL)"""
+    ensure_user(uid)
+    ensure_task(task_id)
+
+    if no is None:
+        row = db_exec(
+            "SELECT COUNT(*) AS cnt FROM score_list WHERE uid=%s AND task_id=%s",
+            (uid, task_id),
+            fetch="one",
+        )
+        # PyMySQL 的 COUNT(*) 可能回傳 None 或 {'cnt': 0}
+        no = (int(row["cnt"]) + 1) if row and row.get("cnt") is not None else 1
+
+    score_id = uuid.uuid4().hex
+    if test_date is None:
+        test_date = date.today()
+
+    try:
+        db_exec(
+            "INSERT INTO score_list(score_id, task_id, uid, score, no, test_date) VALUES (%s,%s,%s,%s,%s,%s)",
+            (score_id, task_id, uid, int(score), no, test_date),
+        )
+        write_to_console(
+            f"[DB] insert_score ok: uid={uid}, task_id={task_id}, score={score}, score_id={score_id}",
+            "INFO",
+        )
+        return score_id
+    except Exception as e:
+        # 錯誤已在 db_exec 中記錄，此處只需 raise
+        raise
+
+
+# =========================
+# 2) 基礎環境/日誌/靜態路由 (不變)
+# =========================
 os.environ["PYTHONIOENCODING"] = "utf-8"
 os.environ["PYTHONUTF8"] = "1"
 
-
-# 設定日誌輸出到 console.txt
-def setup_console_logging():
-    console_path = Path(__file__).parent / "console.txt"
-
-    # 創建一個格式化器
-    formatter = logging.Formatter(
-        "%(asctime)s - %(levelname)s - %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
-    )
-
-    # 創建文件處理器，只記錄我們的應用程式日誌
-    file_handler = logging.FileHandler(console_path, mode="a", encoding="utf-8")
-    file_handler.setFormatter(formatter)
-
-    # 禁用 Flask 和 Werkzeug 的 HTTP 請求日誌
-    werkzeug_logger = logging.getLogger("werkzeug")
-    werkzeug_logger.setLevel(logging.ERROR)  # 只記錄錯誤，不記錄 INFO 級別的請求日誌
-
-    # 設定應用程式專用的日誌記錄器
-    app_logger = logging.getLogger("app")
-    app_logger.setLevel(logging.INFO)
-    app_logger.addHandler(file_handler)
-
-    # 防止日誌向上傳播到根記錄器
-    app_logger.propagate = False
-
-    return app_logger
-
-
-# 寫入結果到 console.txt 的函數
-def write_to_console(message, level="INFO"):
-    """將訊息寫入 console.txt，不包含 HTTP 請求日誌"""
-    console_path = Path(__file__).parent / "console.txt"
-    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    formatted_message = f"{timestamp} - {level} - {message}\n"
-
-    with open(console_path, "a", encoding="utf-8") as f:
-        f.write(formatted_message)
-
-
 PORT = 8000
-HOST = "127.0.0.1"  # 只允許本機存取；要給同網段看可改 "0.0.0.0"
-ROOT = Path(__file__).parent.resolve()  # 專案根：有 css/, js/, html/
+HOST = "127.0.0.1"
+ROOT = Path(__file__).parent.resolve()
 
-app = Flask(__name__, static_folder=None)  # 不用預設 /static，改用我們自己的資料夾
-app.secret_key = secrets.token_hex(16)  # 為 session 設置安全密鑰
+app = Flask(__name__, static_folder=None)
+app.secret_key = secrets.token_hex(16)
 CORS(app)
 
-# 清除上次的 console.txt 內容
-def clear_console_log():
-    """在應用程式啟動時清除上次的日誌內容"""
+
+def setup_console_logging():
     console_path = Path(__file__).parent / "console.txt"
+    fmt = logging.Formatter(
+        "%(asctime)s - %(levelname)s - %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
+    )
+    fh = logging.FileHandler(console_path, mode="a", encoding="utf-8")
+    fh.setFormatter(fmt)
+    logging.getLogger("werkzeug").setLevel(logging.ERROR)
+    lg = logging.getLogger("app")
+    lg.setLevel(logging.INFO)
+    lg.addHandler(fh)
+    lg.propagate = False
+    return lg
+
+
+def write_to_console(message, level="INFO"):
+    # 確保 console.txt 路徑正確
+    console_path = ROOT / "console.txt"
+    ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    try:
+        with open(console_path, "a", encoding="utf-8") as f:
+            f.write(f"{ts} - {level} - {message}\n")
+    except Exception as e:
+        print(f"寫入 console.txt 失敗: {e}")  # 如果連 log 都寫不了，印在主控台
+
+
+def clear_console_log():
+    console_path = ROOT / "console.txt"
     try:
         with open(console_path, "w", encoding="utf-8") as f:
-            f.write("")  # 清空文件內容
+            f.write("")
     except Exception:
-        pass  # 如果文件不存在或無法寫入，忽略錯誤
+        pass
 
 
-# 啟動時清除上次的日誌
 clear_console_log()
-
-# 初始化日誌系統
 logger = setup_console_logging()
-
-# 禁用 Flask 應用程式的日誌輸出
 app.logger.disabled = True
 logging.getLogger("flask.app").disabled = True
-
+write_to_console("=== 遠端 PyMySQL 模式 ===", "INFO")
 write_to_console("Flask 應用程式啟動", "INFO")
-
-# 用於儲存任務狀態的字典
 processing_tasks = {}
 
 
-# === 改動 1：首頁直送入口頁 start.html（原本是導到 /html/index.html） ===
 @app.route("/")
 def home():
     return send_from_directory(ROOT / "html", "start.html")
 
 
-# （可選）若有人直接打 /index 或 /index.html，都能進到故事首頁
+# ... (其他靜態路由不變) ...
 @app.route("/index")
 @app.route("/index.html")
 def index_shortcut():
     return send_from_directory(ROOT / "html", "index.html")
 
 
-# ---- 靜態檔路由（沿用你的資料夾結構）----
 @app.route("/html/<path:filename>")
 def html_files(filename):
     return send_from_directory(ROOT / "html", filename)
@@ -138,172 +294,210 @@ def video_files(filename):
     return send_from_directory(ROOT / "video", filename)
 
 
-# （可選）favicon，如果你把檔案放在 html/ 或專案根
 @app.route("/favicon.ico")
 def favicon():
     return ("", 204)
 
 
-# 處理 Chrome 開發者工具的請求
 @app.route("/.well-known/appspecific/com.chrome.devtools.json")
 def chrome_devtools():
     return ("", 204)
 
 
-# === 改動 2：啟動時開首頁 "/"（原本開 /html/index.html） ===
+@app.get("/logs/tail")
+def logs_tail():
+    try:
+        n = int(request.args.get("n", 200))
+        p = ROOT / "console.txt"
+        if not p.exists():
+            return jsonify({"ok": False, "msg": "console.txt not found"}), 404
+        with open(p, "r", encoding="utf-8") as f:
+            lines = f.readlines()[-n:]
+        return jsonify({"ok": True, "lines": lines})
+    except Exception as e:
+        return jsonify({"ok": False, "err": str(e)}), 500
+
+
+@app.before_request
+def _log_request():
+    # 不記錄的路徑
+    if request.path.startswith(
+        ("/css/", "/js/", "/images/", "/video/", "/favicon.ico", "/opencv-camera/")
+    ):
+        return
+
+    try:
+        # 只記錄重要的API請求
+        if request.path.startswith(
+            ("/run-python", "/create-uid-folder", "/test-score")
+        ):
+            write_to_console(f"[REQ] {request.method} {request.path}")
+    except Exception as e:
+        write_to_console(f"[REQ] log failed: {e}", "ERROR")
+
+
+@app.after_request
+def _log_response(resp):
+    # 不記錄的路徑
+    if request.path.startswith(
+        ("/css/", "/js/", "/images/", "/video/", "/favicon.ico", "/opencv-camera/")
+    ):
+        return resp
+
+    try:
+        # 只記錄錯誤回應和重要的API回應
+        if resp.status_code >= 400 or request.path.startswith(
+            ("/run-python", "/create-uid-folder", "/test-score")
+        ):
+            write_to_console(
+                f"[RESP] {request.method} {request.path} -> {resp.status_code}"
+            )
+    except Exception as e:
+        write_to_console(f"[RESP] log failed: {e}", "ERROR")
+    return resp
+
+
+@app.errorhandler(Exception)
+def _handle_err(e):
+    tb = traceback.format_exc()
+    write_to_console(f"[ERR] {request.method} {request.path}\n{tb}", "ERROR")
+    return jsonify({"success": False, "error": str(e)}), 500
+
+
 def _open_browser():
     webbrowser.open(f"http://{HOST}:{PORT}/")
 
 
-# Session 管理 API
-@app.route("/session/set-uid", methods=["POST"])
+# ... (Session 路由不變) ...
+# =========================
+# 3) Session：UID
+# =========================
+@app.post("/session/set-uid")
 def set_session_uid():
-    """設置當前 session 的 UID"""
     try:
-        data = request.get_json()
-        uid = data.get("uid", "").strip()
-
+        data = request.get_json() or {}
+        uid = (data.get("uid") or "").strip()
         if not uid:
-            write_to_console("設置 UID 失敗：UID 不能為空", "ERROR")
             return jsonify({"success": False, "error": "UID 不能為空"}), 400
-
-        # 檢查UID是否包含無效字符
-        invalid_chars = ["/", "\\", ":", "*", "?", '"', "<", ">", "|"]
-        if any(char in uid for char in invalid_chars):
-            write_to_console(f"設置 UID 失敗：UID '{uid}' 包含無效字符", "ERROR")
+        if any(c in uid for c in ["/", "\\", ":", "*", "?", '"', "<", ">", "|"]):
             return jsonify({"success": False, "error": "UID 包含無效字符"}), 400
-
-        # 將 UID 存儲在 session 中
         session["uid"] = uid
         write_to_console(f"成功設置 UID：{uid}", "INFO")
-        return jsonify({"success": True, "message": f"UID {uid} 已設置到 session"})
-
+        return jsonify({"success": True, "uid": uid})
     except Exception as e:
-        write_to_console(f"設置 UID 時發生錯誤：{str(e)}", "ERROR")
+        write_to_console(f"設置 UID 時發生錯誤：{e}", "ERROR")
         return jsonify({"success": False, "error": str(e)}), 500
 
 
-@app.route("/session/get-uid", methods=["GET"])
+@app.get("/session/get-uid")
 def get_session_uid():
-    """獲取當前 session 的 UID"""
     uid = session.get("uid")
-    if uid:
-        return jsonify({"success": True, "uid": uid})
-    else:
-        return jsonify({"success": False, "message": "未找到 UID"}), 404
+    return (
+        jsonify({"success": True, "uid": uid})
+        if uid
+        else (jsonify({"success": False, "message": "未找到 UID"}), 404)
+    )
 
 
-@app.route("/session/clear-uid", methods=["POST"])
+@app.post("/create-uid-folder")
+def create_uid_folder():
+    data = request.get_json(silent=True) or {}
+    uid = (data.get("uid") or "").strip()
+    if not uid:
+        write_to_console("create_uid_folder: UID 不能為空", "ERROR")
+        return jsonify({"success": False, "error": "UID 不能為空"}), 400
+    bad = ["/", "\\", ":", "*", "?", '"', "<", ">", "|"]
+    if any(c in uid for c in bad):
+        write_to_console(f"create_uid_folder: UID 非法 -> {uid}", "ERROR")
+        return jsonify({"success": False, "error": "UID 包含無效字符"}), 400
+    ensure_user(uid)
+    kid_dir = ROOT / "kid" / uid
+    if not kid_dir.exists():
+        kid_dir.mkdir(parents=True, exist_ok=True)
+        write_to_console(f"[FS] 建立資料夾：{kid_dir}", "INFO")
+    session["uid"] = uid
+    return jsonify({"success": True, "uid": uid, "message": "使用者建立完成"})
+
+
+@app.post("/session/clear-uid")
 def clear_session_uid():
-    """清除當前 session 的 UID"""
     if "uid" in session:
         del session["uid"]
-    return jsonify({"success": True, "message": "UID 已從 session 中清除"})
+    return jsonify({"success": True, "message": "UID 已清除"})
 
 
-@app.route("/create-uid-folder", methods=["POST"])
-def create_uid_folder():
+@app.route("/test-score", methods=["POST"])
+def test_score():
     try:
         data = request.get_json()
-        uid = data.get("uid", "").strip()
-
-        if not uid:
-            write_to_console("創建 UID 資料夾失敗：UID 不能為空", "ERROR")
-            return jsonify({"success": False, "error": "UID 不能為空"}), 400
-
-        # 檢查UID是否包含無效字符
-        invalid_chars = ["/", "\\", ":", "*", "?", '"', "<", ">", "|"]
-        if any(char in uid for char in invalid_chars):
-            write_to_console(f"創建 UID 資料夾失敗：UID '{uid}' 包含無效字符", "ERROR")
-            return jsonify({"success": False, "error": "UID 包含無效字符"}), 400
-
-        # 將 UID 存儲在 session 中
-        session["uid"] = uid
-
-        # 創建 kid/{uid} 資料夾
-        kid_dir = ROOT / "kid" / uid
-        folder_already_exists = kid_dir.exists()
-
-        if not folder_already_exists:
-            kid_dir.mkdir(parents=True, exist_ok=True)
-            write_to_console(f"成功創建使用者資料夾：{kid_dir}", "INFO")
-
-        # 創建或更新結果JSON文件
-        result_file = ROOT / f"result.json"
-
-        # 讀取現有的JSON文件或創建新的
-        if result_file.exists():
-            with open(result_file, "r", encoding="utf-8") as f:
-                try:
-                    result_data = json.load(f)
-                except json.JSONDecodeError:
-                    result_data = {}
-        else:
-            result_data = {}
-
-        # 如果該UID還沒有記錄，添加初始化進度
-        if uid not in result_data:
-            result_data[uid] = {
-                "ch1-t1": -1,
-                "ch1-t2": -1,
-                "ch1-t3": -1,
-                "ch2-t1": -1,
-                "ch2-t2": -1,
-                "ch2-t3": -1,
-                "ch2-t4": -1,
-                "ch2-t5": -1,
-                "ch2-t6": -1,
-                "ch3-t1": -1,
-                "ch3-t2": -1,
-                "ch4-t1": -1,
-                "ch4-t2": -1,
-                "ch5-t1": -1,
-            }
-
-            # 寫回JSON文件
-            with open(result_file, "w", encoding="utf-8") as f:
-                json.dump(result_data, f, ensure_ascii=False, indent=2)
-
-            write_to_console(f"為使用者 {uid} 初始化進度記錄", "INFO")
-
-        if folder_already_exists:
-            write_to_console(f"資料夾 {uid} 已存在，確認結果文件", "INFO")
-            return jsonify(
-                {"success": True, "message": f"資料夾 {uid} 已存在，結果文件已確認"}
-            )
-        else:
-            write_to_console(f"成功創建資料夾 {uid} 和結果文件", "INFO")
-            return jsonify(
-                {"success": True, "message": f"成功創建資料夾 {uid} 和結果文件"}
-            )
-
+        uid = data["uid"]
+        task_id = data["task_id"]
+        score = 3
+        score_id = insert_score(uid, task_id, score)
+        insert_task_payload(task_id, score_id, None, None)  # 寫入子表
+        return jsonify({"success": True, "score_id": score_id, "score": score})
     except Exception as e:
-        write_to_console(f"創建 UID 資料夾時發生錯誤：{str(e)}", "ERROR")
+        write_to_console(f"/test-score 錯誤: {e}", "ERROR")
         return jsonify({"success": False, "error": str(e)}), 500
 
 
-# 安全的 subprocess 呼叫函數（解決編碼問題）
+# =========================
+# 4) 背景執行 main.py
+# =========================
 def safe_subprocess_run(cmd, **kwargs):
-    """安全的 subprocess 呼叫，處理編碼問題"""
+    """
+    用於靜態分析：擷取 stdout/stderr，隱藏視窗
+    """
     env = os.environ.copy()
     env["PYTHONIOENCODING"] = "utf-8"
     env["PYTHONUTF8"] = "1"
 
-    default_kwargs = {
-        "capture_output": True,
-        "text": True,
-        "encoding": "utf-8",
-        "errors": "replace",
-        "env": env,
-    }
-    default_kwargs.update(kwargs)
+    # 為靜態分析加入 CREATE_NO_WINDOW
+    creation_flags = 0
+    if sys.platform == "win32":
+        creation_flags = subprocess.CREATE_NO_WINDOW  # 0x08000000
 
+    default_kwargs = dict(
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        env=env,
+        creationflags=creation_flags,
+    )
+    default_kwargs.update(kwargs)
     return subprocess.run(cmd, **default_kwargs)
 
-def run_analysis_in_background(task_id, uid, img_id, script_path):
-    """在背景執行分析的函數"""
+
+def normalize_task_id(task_code_raw: str) -> str:
+    if task_code_raw in TASK_MAP:
+        return task_code_raw
+    parts = task_code_raw.split("-")
+    if len(parts) == 2:
+        guess = parts[0][:1].upper() + parts[0][1:] + "-" + parts[1]
+        if guess in TASK_MAP:
+            return guess
+    return task_code_raw
+
+
+def resolve_script_path(task_code: str) -> Optional[Path]:
+    guesses = [
+        ROOT / task_code / "main.py",
+        ROOT / task_code.lower() / "main.py",
+        ROOT / normalize_task_id(task_code) / "main.py",
+        ROOT / normalize_task_id(task_code).lower() / "main.py",
+    ]
+    for p in guesses:
+        if p.exists():
+            return p
+    return None
+
+
+# === [修正] run_analysis_in_background (簡化，移除 video_path 邏輯，強制顯示 Ch5-t1 視窗) ===
+def run_analysis_in_background(
+    task_id, uid, img_id, script_path, stair_type=None, cam_index_input=None
+):
     try:
-        # 更新任務狀態為進行中
         processing_tasks[task_id] = {
             "status": "running",
             "uid": uid,
@@ -311,52 +505,125 @@ def run_analysis_in_background(task_id, uid, img_id, script_path):
             "start_time": datetime.now().isoformat(),
             "progress": 0,
         }
+        write_to_console(f"開始背景任務 {task_id}: uid={uid}, task={img_id}", "INFO")
 
-        write_to_console(
-            f"開始背景分析任務 {task_id}：使用者={uid}, 圖片ID={img_id}", "INFO"
-        )
+        # 基礎命令
+        base_cmd = [sys.executable, str(script_path)]
 
-        # 執行 Python 腳本
-        if uid:
-            cmd = [sys.executable, str(script_path), uid, img_id]
+        # 判斷是否為遊戲，並決定參數
+        is_game = normalize_task_id(img_id) == "Ch5-t1"
+
+        camera_to_use = SIDE  # Ch5-t1 的預設值
+        if is_game and cam_index_input is not None:
+            # 如果是 Ch5-t1 且前端有傳 cam_index，則使用傳入的值
+            try:
+                camera_to_use = int(cam_index_input)
+            except ValueError:
+                write_to_console(
+                    f"無效的 cam_index: {cam_index_input}，使用預設 SIDE={SIDE}", "WARN"
+                )
+                pass  # 使用預設的 SIDE
+
+        if is_game:
+            # 遊戲模式：傳遞 uid 和 SIDE 相機索引
+            cmd = base_cmd + [uid, str(camera_to_use)]  # <-- 使用全域 SIDE
         else:
-            cmd = [sys.executable, str(script_path), img_id]
+            # 靜態分析模式：傳遞 uid 和 img_id (檔名)
+            cmd = base_cmd + [uid, img_id]
+            # 如果是階梯任務，再加入 stair_type
+            if stair_type:
+                cmd.append(stair_type)
 
         write_to_console(f"執行命令：{' '.join(cmd)}", "INFO")
-        result = safe_subprocess_run(cmd, cwd=ROOT)
+        env = os.environ.copy()
+        env["PYTHONIOENCODING"] = "utf-8"
+        env["PYTHONUTF8"] = "1"
 
-        # 將腳本輸出寫入 console.txt
-        if result.stdout:
-            write_to_console(f"腳本輸出 (任務 {task_id})：\n{result.stdout}", "INFO")
-        if result.stderr:
-            write_to_console(
-                f"腳本錯誤輸出 (任務 {task_id})：\n{result.stderr}", "ERROR"
-            )
+        # 決定 creationflags
+        creation_flags = 0
+        if sys.platform == "win32":
+            # 靜態任務使用 CREATE_NO_WINDOW 隱藏主控台
+            if not is_game:
+                creation_flags = subprocess.CREATE_NO_WINDOW
+            # 遊戲任務也使用 CREATE_NO_WINDOW 隱藏主控台，但會彈出 OpenCV 視窗
+            else:
+                creation_flags = subprocess.CREATE_NO_WINDOW
 
-        # 更新任務狀態為完成
+        # 決定是否擷取輸出
+        capture_output_flag = (
+            not is_game
+        )  # 靜態任務擷取，遊戲任務不擷取 (因為 stdout 可能被 opencv 阻塞)
+
+        # 執行子程序
+        result = subprocess.run(
+            cmd,
+            cwd=ROOT,
+            env=env,
+            capture_output=capture_output_flag,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            creationflags=creation_flags,
+        )
+
+        # 從執行結果中取得分數和輸出
+        score = int(result.returncode)
+
+        if is_game:
+            stdout_str = "Game executed in foreground (Console Hidden)."
+            stderr_str = ""
+        else:
+            stdout_str = result.stdout
+            stderr_str = result.stderr
+
+        if stdout_str:
+            write_to_console(f"腳本輸出 (任務 {task_id})：\n{stdout_str}", "INFO")
+        if stderr_str:
+            write_to_console(f"腳本錯誤輸出 (任務 {task_id})：\n{stderr_str}", "ERROR")
+        task_id_std = normalize_task_id(img_id)
+        uid_eff = uid or "unknown"
+
+        score_id = None
+        try:
+            score_id = insert_score(uid_eff, task_id_std, score)
+        except Exception as e:
+            write_to_console(f"寫分數失敗：{e}", "ERROR")
+
+        if score_id:
+            try:
+                # 遊戲(Ch5-t1)不需要寫入子表
+                if not is_game:
+                    insert_task_payload(task_id_std, score_id, None, None)
+            except Exception as e:
+                # 子表寫入失敗也只記錄錯誤
+                write_to_console(
+                    f"寫入子表失敗 (score_id={score_id}, task={task_id_std}): {e}",
+                    "ERROR",
+                )
+
         processing_tasks[task_id] = {
             "status": "completed",
-            "uid": uid,
+            "uid": uid_eff,
             "img_id": img_id,
             "start_time": processing_tasks[task_id]["start_time"],
             "end_time": datetime.now().isoformat(),
             "progress": 100,
             "result": {
-                "success": result.returncode == 0,
-                "stdout": result.stdout,
-                "stderr": result.stderr,
-                "returncode": result.returncode,
+                "success": True,
+                "stdout": stdout_str,
+                "stderr": stderr_str,
+                "returncode": score,
+                "score_id": score_id,
+                "task_id": task_id_std,
             },
         }
-
-        status = "成功" if result.returncode == 0 else "失敗"
         write_to_console(
-            f"背景分析任務 {task_id} 完成，狀態：{status} (返回碼: {result.returncode})",
+            f"任務 {task_id} 完成：uid={uid_eff}, task={task_id_std}, score={score}, score_id={score_id}",
             "INFO",
         )
 
     except Exception as e:
-        # 更新任務狀態為錯誤
+        tb = traceback.format_exc()
         processing_tasks[task_id] = {
             "status": "error",
             "uid": uid,
@@ -366,36 +633,31 @@ def run_analysis_in_background(task_id, uid, img_id, script_path):
             "progress": 0,
             "error": str(e),
         }
+        write_to_console(f"背景任務 {task_id} 發生嚴重錯誤：{e}\n{tb}", "ERROR")
 
-        write_to_console(f"背景分析任務 {task_id} 發生錯誤：{str(e)}", "ERROR")
 
-
-# 修正：只保留一個 /run-python 路由（非同步版本）
-@app.route("/run-python", methods=["POST"])
+@app.post("/run-python")
 def run_python_script():
     try:
-        data = request.get_json()
-        img_id = data.get("id", "")
+        data = request.get_json() or {}
+        img_id = (data.get("id") or "").strip()
+        uid = (data.get("uid") or "").strip() or session.get("uid")
 
-        # 優先從 session 獲取 UID
-        uid = session.get("uid")
+        cam_index_input = data.get("cam_index")
+
+        if not img_id:
+            return jsonify({"success": False, "error": "缺少 id(task_id)"}), 400
         if not uid:
-            uid = data.get("uid", "") if data else ""
+            return jsonify({"success": False, "error": "缺少 uid"}), 400
 
-        write_to_console(
-            f"收到 Python 腳本執行請求：使用者={uid}, 圖片ID={img_id}", "INFO"
-        )
-
-        # 檢查腳本是否存在
-        script_path = ROOT / f"{img_id}" / "main.py"
-        if not script_path.exists():
-            write_to_console(f"腳本檔案不存在：{script_path}", "ERROR")
+        script_path = resolve_script_path(img_id)
+        if not script_path or not script_path.exists():
+            write_to_console(f"腳本不存在: {script_path}", "ERROR")
             return jsonify({"success": False, "error": "腳本檔案不存在"}), 404
 
-        # 生成唯一的任務 ID
         task_id = str(uuid.uuid4())
+        stair_type = session.get("stair_type")
 
-        # 初始化任務狀態
         processing_tasks[task_id] = {
             "status": "pending",
             "uid": uid,
@@ -403,266 +665,295 @@ def run_python_script():
             "progress": 0,
         }
 
-        write_to_console(f"創建新任務：{task_id}，腳本路徑：{script_path}", "INFO")
-
-        # 在背景執行任務
-        thread = Thread(
-            target=run_analysis_in_background, args=(task_id, uid, img_id, script_path)
+        # 所有任務，包括 Ch5-t1，都導向 run_analysis_in_background
+        t = Thread(
+            target=run_analysis_in_background,
+            args=(task_id, uid, img_id, script_path, stair_type, cam_index_input),
         )
-        thread.daemon = True
-        thread.start()
 
-        # 立即返回任務 ID
+        t.daemon = True
+        t.start()
+
         return jsonify(
             {
                 "success": True,
                 "task_id": task_id,
-                "message": "分析已開始，正在背景處理中...",
+                "message": "分析已開始，背景處理中...",
             }
         )
-
     except Exception as e:
-        write_to_console(f"執行 Python 腳本時發生錯誤：{str(e)}", "ERROR")
+        write_to_console(f"/run-python 發生錯誤: {e}", "ERROR")
         return jsonify({"success": False, "error": str(e)}), 500
 
 
-# 新增：查詢任務狀態的 API
-@app.route("/check-task/<task_id>", methods=["GET"])
+# ===== 移除：不再需要 run_analysis_in_background_with_video 函數 =====
+
+
+@app.get("/check-task/<task_id>")
 def check_task_status(task_id):
-    """查詢任務執行狀態"""
     if task_id not in processing_tasks:
         return jsonify({"success": False, "error": "任務不存在"}), 404
-
-    task = processing_tasks[task_id]
-    return jsonify(
-        {
-            "success": True,
-            "task_id": task_id,
-            "status": task["status"],
-            "progress": task.get("progress", 0),
-            "img_id": task.get("img_id"),
-            "uid": task.get("uid"),
-            "start_time": task.get("start_time"),
-            "end_time": task.get("end_time"),
-            "result": task.get("result"),
-            "error": task.get("error"),
-        }
-    )
+    return jsonify({"success": True, **processing_tasks[task_id], "task_id": task_id})
 
 
-# 新增：獲取用戶所有任務狀態
-@app.route("/user-tasks", methods=["GET"])
-def get_user_tasks():
-    """獲取當前用戶的所有任務"""
-    uid = session.get("uid")
-    if not uid:
-        return jsonify({"success": False, "error": "未找到用戶 UID"}), 400
+@app.post("/save-stair-type")
+def save_stair_type():
+    try:
+        data = request.get_json() or {}
+        stair_type = data.get("stair_type", "").strip()
 
-    user_tasks = {}
-    for task_id, task in processing_tasks.items():
-        if task.get("uid") == uid:
-            user_tasks[task_id] = task
+        if stair_type not in ["L", "R"]:
+            return jsonify({"success": False, "error": "stair_type 只能是 L 或 R"}), 400
 
-    return jsonify(
-        {
-            "success": True,
-            "uid": uid,
-            "tasks": user_tasks,
-            "task_count": len(user_tasks),
-        }
-    )
+        session["stair_type"] = stair_type
+        write_to_console(f"stair_type: {stair_type}", "INFO")
+
+        return jsonify({"success": True, "stair_type": stair_type})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
 
 
-# 新增：清理已完成的任務（可選）
-@app.route("/cleanup-tasks", methods=["POST"])
-def cleanup_completed_tasks():
-    """清理已完成超過一小時的任務"""
-    current_time = datetime.now()
-    tasks_to_remove = []
-
-    for task_id, task in processing_tasks.items():
-        if task["status"] in ["completed", "error"] and "end_time" in task:
-            end_time = datetime.fromisoformat(task["end_time"])
-            if (current_time - end_time).total_seconds() > 3600:  # 1小時
-                tasks_to_remove.append(task_id)
-
-    for task_id in tasks_to_remove:
-        del processing_tasks[task_id]
-
-    return jsonify(
-        {
-            "success": True,
-            "cleaned_tasks": len(tasks_to_remove),
-            "remaining_tasks": len(processing_tasks),
-        }
-    )
+# =========================
+# 5) 便利檢查 API (PyMySQL 版本)
+# =========================
+@app.get("/db/ping")
+def db_ping():
+    try:
+        v = db_exec("SELECT VERSION() AS v", fetch="one")
+        version_str = v["v"] if v else "無法取得版本"
+        write_to_console(f"[DB] PyMySQL ping ok: {version_str}", "INFO")
+        return jsonify({"ok": True, "version": version_str})
+    except Exception as e:
+        return jsonify({"ok": False, "err": str(e)}), 500
 
 
-# 全局相機對象
+@app.get("/scores")
+def list_scores():
+    try:
+        rows = db_exec(
+            "SELECT score_id, uid, task_id, score, no, test_date "
+            "FROM score_list ORDER BY test_date DESC, score_id DESC LIMIT 50",
+            fetch="all",
+        )
+        return jsonify(rows or [])
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+# =========================
+# 6) OpenCV 相機
+# =========================
 camera = None
 camera_active = False
 
+
 def release_camera():
-    """釋放相機資源"""
     global camera, camera_active
     if camera is not None:
-        camera.release()
+        try:
+            camera.release()
+        except Exception:
+            pass
         camera = None
     camera_active = False
 
-def init_camera(camera_index=1):
-    """初始化相機"""
+
+CROP_RATE = 0.7
+
+
+def init_camera(camera_index=TOP):
     global camera, camera_active
     try:
         release_camera()
-        camera = cv2.VideoCapture(camera_index)  # 改用參數
+
+        # 靜態拍照模式，仍優先嘗試 MSMF
+        camera = cv2.VideoCapture(camera_index + cv2.CAP_MSMF)
 
         if not camera.isOpened():
-            # 如果指定的失敗，嘗試其他索引
-            for i in range(0, 4):
-                camera = cv2.VideoCapture(i)
-                if camera.isOpened():
-                    break
-            else:
-                raise Exception("無法找到可用的相機")
+            write_to_console(
+                f"MSMF 無法開啟相機 {camera_index}，嘗試預設後端。", "WARN"
+            )
+            camera = cv2.VideoCapture(camera_index)
+            if not camera.isOpened():
+                raise Exception(f"無法開啟指定的相機索引: {camera_index}")
 
-        camera.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
-        camera.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
-        camera.set(cv2.CAP_PROP_FPS, 120)
+        # 設定解析度和 FPS (僅用於拍照取圖，不需要強制 1280x720)
+        # 這裡保留設定，以確保相機啟動後能正常取幀
+        camera.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
+        camera.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
+        camera.set(cv2.CAP_PROP_FPS, 30)
+
+        actual_width = int(camera.get(cv2.CAP_PROP_FRAME_WIDTH))
+        actual_height = int(camera.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        actual_fps = camera.get(cv2.CAP_PROP_FPS)
+
+        write_to_console(
+            f"相機實際設定：{actual_width}x{actual_height} @ {actual_fps:.1f} FPS (用於靜態拍照)",
+            "INFO",
+        )
+
+        ret, frame = camera.read()
+        if not ret:
+            raise Exception(f"成功開啟相機 {camera_index} 但無法讀取畫面")
+
+        # 計算裁切區域
+        h, w = frame.shape[:2]
+        crop_w = int(w * CROP_RATE)
+        crop_h = int(h * CROP_RATE)
+        write_to_console(f"裁切後尺寸：{crop_w}x{crop_h} (保留中間80%)", "INFO")
 
         camera_active = True
         return True
-
     except Exception as e:
         print(f"相機初始化失敗: {e}")
         release_camera()
         return False
 
 
+def crop_center(frame, rate):
+    """裁切畫面中間區域"""
 
-camera_lock = threading.Lock()
+    h, w = frame.shape[:2]
+    crop_w = int(w * rate)
+    crop_h = int(h * rate)
+    start_x = (w - crop_w) // 2
+    start_y = (h - crop_h) // 2
+    return frame[start_y : start_y + crop_h, start_x : start_x + crop_w]
+
 
 def get_frame():
-    """獲取一幀圖像"""
     global camera, camera_active
-    
     if not camera_active or camera is None:
         return None
-    
     try:
-        with camera_lock:
-            ret, frame = camera.read()
-            if not ret:
-                return None
+        ret, frame = camera.read()
+        if not ret:
+            return None
 
-            # 轉換為 JPEG
-            _, buffer = cv2.imencode('.jpg', frame, [cv2.IMWRITE_JPEG_QUALITY, 85])
-            return buffer.tobytes()
-        
+        # 切割畫面 CROP_RATE
+        frame = crop_center(frame, CROP_RATE)
+
+        _, buffer = cv2.imencode(".jpg", frame, [cv2.IMWRITE_JPEG_QUALITY, 85])
+        return buffer.tobytes()
     except Exception as e:
-        print(f"獲取幀錯誤: {e}")
+        write_to_console(f"get_frame 錯誤: {e}", "ERROR")
         return None
 
-# === OpenCV 相機路由 ===
 
-@app.route("/opencv-camera/start", methods=["POST"])
-def start_opencv_camera():
-    try:
-        data = request.get_json()
-        task_id = data.get("task_id", "")
-        cam_index = data.get("camera_index", 1)  # 新增
-
-        if init_camera(cam_index):
-            global camera_active
-            camera_active = True
-            return jsonify({"success": True, "message": "相機已成功開啟", "task_id": task_id})
-        else:
-            return jsonify({"success": False, "error": "無法開啟相機"}), 500
-    except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
-
-
-@app.route("/opencv-camera/frame", methods=["GET"])
-def get_opencv_frame():
-    """獲取相機幀，回傳 base64 編碼的 JPEG 圖像"""
-    try:
-        if not camera_active:
-            return jsonify({"success": False, "error": "相機尚未啟動"}), 400
-
-        frame_data = get_frame()
-        if frame_data is None:
-            return jsonify({"success": False, "error": "無法獲取相機畫面"}), 500
-
-        # 將 bytes 轉成 base64 字串
-        img_base64 = base64.b64encode(frame_data).decode('utf-8')
-
-        return jsonify({
-            "success": True,
-            "image": img_base64
-        })
-
-    except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
-
-@app.route("/opencv-camera/capture", methods=["POST"])
-def capture_opencv_photo():
-    """拍照並儲存"""
-    try:
-        data = request.get_json()
-        task_id = data.get("task_id", "")
-        uid = data.get("uid", "") or session.get("uid", "default")
-        
-        if not task_id:
-            return jsonify({"success": False, "error": "缺少任務 ID"}), 400
-        
-        # 獲取當前畫面
-        frame_data = get_frame()
-        if frame_data is None:
-            return jsonify({"success": False, "error": "無法獲取相機畫面"}), 500
-        
-        target_dir = ROOT / "kid" / uid
-        target_dir.mkdir(parents=True, exist_ok=True)
-        
-        # 加上 timestamp 避免覆蓋
-        from datetime import datetime
-        filename = f"{task_id}.jpg"
-        file_path = target_dir / filename
-        
-        nparr = np.frombuffer(frame_data, np.uint8)
-        img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
-        
-        if not cv2.imwrite(str(file_path), img):
-            return jsonify({"success": False, "error": "圖像儲存失敗"}), 500
-        
-        return jsonify({
-            "success": True,
-            "filename": filename,
-            "path": str(file_path),
-            "uid": uid,
-            "task_id": task_id,
-            "message": f"照片已成功儲存到 {file_path}"
-        })
-        
-    except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
-
-
-@app.route("/opencv-camera/stop", methods=["POST"])
+# 相機路由
+@app.post("/opencv-camera/stop")
 def stop_opencv_camera():
-    """關閉 OpenCV 相機"""
     try:
         release_camera()
-        global camera_active
-        camera_active = False
-        return jsonify({"success": True, "message": "相機已關閉"})
-        
-    except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
+        return jsonify({"success": True})
+    except Exception:
+        return jsonify({"success": False}), 500
 
 
-# 在應用程式關閉時清理資源
-import atexit
-atexit.register(release_camera)
+@app.post("/opencv-camera/start")
+def start_opencv_camera():
+    try:
+        data = request.get_json() or {}
+        cam_index = data.get("camera_index", TOP)
+        if init_camera(cam_index):
+            return jsonify({"success": True})
+        else:
+            return jsonify({"success": False}), 500
+    except Exception:
+        return jsonify({"success": False}), 500
+
+
+@app.get("/opencv-camera/frame")
+def get_opencv_frame():
+    try:
+        if not camera_active:
+            return jsonify({"success": False}), 400
+        frame_data = get_frame()
+        if frame_data is None:
+            return jsonify({"success": False}), 500
+        img_b64 = base64.b64encode(frame_data).decode("utf-8")
+        return jsonify({"success": True, "image": img_b64})
+    except Exception:
+        return jsonify({"success": False}), 500
+
+
+@app.post("/opencv-camera/capture")
+def capture_opencv_photo():
+    """拍照並存儲，存儲成功後立即啟動小應任務的 main.py 做評分"""
+    try:
+        data = request.get_json() or {}
+        task_id_input = (data.get("task_id") or "").strip()
+        uid = (data.get("uid") or "").strip() or session.get("uid", "default")
+
+        if not task_id_input:
+            return jsonify({"success": False}), 400
+
+        frame_data = get_frame()
+        if frame_data is None:
+            write_to_console("capture: 無法取得畫面", "ERROR")
+            return jsonify({"success": False}), 500
+
+        target_dir = ROOT / "kid" / uid
+        target_dir.mkdir(parents=True, exist_ok=True)
+
+        filename = f"{task_id_input}.jpg"
+        file_path = target_dir / filename
+
+        nparr = np.frombuffer(frame_data, np.uint8)
+        img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+        if not cv2.imwrite(str(file_path), img):
+            write_to_console(f"圖像存儲失敗: {file_path}", "ERROR")
+            return jsonify({"success": False}), 500
+
+        write_to_console(f"圖像存儲成功: {file_path}", "INFO")
+
+        script_task_id = task_id_input.replace("-side", "").replace("-top", "")
+        script_path = resolve_script_path(script_task_id)
+
+        if not script_path:
+            return jsonify(
+                {
+                    "success": True,
+                    "uid": uid,
+                    "task_id": task_id_input,
+                    "filename": filename,
+                    "analysis_started": False,
+                }
+            )
+
+        bg_task_id = str(uuid.uuid4())
+        processing_tasks[bg_task_id] = {
+            "status": "pending",
+            "uid": uid,
+            "img_id": script_task_id,
+            "progress": 0,
+        }
+
+        stair_type = session.get("stair_type")
+
+        # 靜態拍照任務，執行背景分析
+        t = Thread(
+            target=run_analysis_in_background,
+            args=(bg_task_id, uid, script_task_id, script_path, stair_type),
+        )
+        t.daemon = True
+        t.start()
+
+        return jsonify(
+            {
+                "success": True,
+                "uid": uid,
+                "task_id": task_id_input,
+                "filename": filename,
+                "analysis_started": True,
+                "analysis_task_id": bg_task_id,
+            }
+        )
+
+    except Exception:
+        write_to_console(f"/opencv-camera/capture 錯誤", "ERROR")
+        return jsonify({"success": False}), 500
+
 
 if __name__ == "__main__":
     try:
@@ -674,7 +965,6 @@ if __name__ == "__main__":
 
     try:
         write_to_console("Flask 應用程式開始運行", "INFO")
-        # 禁用 Werkzeug 開發伺服器的啟動訊息和請求日誌
         cli = sys.modules["flask.cli"]
         cli.show_server_banner = lambda *x: None
         app.run(host=HOST, port=PORT, debug=False, use_reloader=False)

@@ -2,6 +2,10 @@ import cv2
 import numpy as np
 import os
 
+# 讓 result 資料夾固定建在這支 .py 檔同一層，不受執行時的工作目錄影響
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+RESULT_DIR = os.path.join(SCRIPT_DIR, "result")
+
 
 def analyze_image(
     img_path,
@@ -189,7 +193,7 @@ def analyze_image(
             )
         cv2.namedWindow(title, cv2.WINDOW_NORMAL)
         cv2.resizeWindow(title, img.shape[1], img.shape[0])
-        cv2.imshow(title, img)
+        # cv2.imshow(title, img)
 
     # === 讀圖 ===
     img = cv2.imread(img_path)
@@ -438,6 +442,35 @@ def analyze_image(
         2,
     )
 
+    # === 另存主視窗影像到 result/（穩健版） ===
+    os.makedirs(RESULT_DIR, exist_ok=True)
+
+    base = os.path.splitext(os.path.basename(img_path))[0]
+    dev_str2 = (
+        "{:.2f}".format(deviation_to_show)
+        if (deviation_to_show is not None and np.isfinite(deviation_to_show))
+        else "N_A"
+    )
+    out_name = f"{base}_score{score}_dev{dev_str2.replace('.', '_')}cm.jpg"
+    out_path = os.path.join(RESULT_DIR, out_name)
+
+    # 確保圖像型別正確
+    if not isinstance(img_disp, np.ndarray) or img_disp.size == 0:
+        print("❌ img_disp 無效，無法儲存")
+    else:
+        if img_disp.dtype != np.uint8:
+            img_disp = np.clip(img_disp, 0, 255).astype(np.uint8)
+        # cv2.imshow("result",img_disp)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
+        # 用 imencode 轉成 JPEG，再用 tofile 寫入，避免 Windows/路徑問題
+        # === 用 cv2.imwrite() 儲存結果影像 ===
+        ok = cv2.imwrite(out_path, img_disp)
+        if ok:
+            print(f"✅ 已儲存結果影像：{out_path}")
+        else:
+            print(f"❌ 儲存失敗：{out_path}")
+
     # === 顯示四窗（可關閉） ===
     # if show_windows:
     #     show_scaled("Dot Mask", dot_mask_clean, max_widths[0])
@@ -456,28 +489,30 @@ def analyze_image(
         f"{os.path.basename(img_path)} → score={score}, deviation={dev_str} cm, "
         f"touch=({touch1},{touch2}), same={same_component}"
     )
-
-    return {
-        "score": score,
-        "reason": reason,
-        "deviation_cm": deviation_to_show,
-        "pixel_per_cm": float(pixel_per_cm),
-        "touch1": bool(touch1),
-        "touch2": bool(touch2),
-        "same_component": bool(same_component),
-        "dots": (
-            [
-                (int(dot_points[0][0]), int(dot_points[0][1])),
-                (int(dot_points[1][0]), int(dot_points[1][1])),
-            ]
-            if len(dot_points) == 2
-            else []
-        ),
-        "img_path": img_path,
-    }
+    return score, img_disp
+    # return {
+    #     "score": score,
+    #     # "reason": reason,
+    #     # "deviation_cm": deviation_to_show,
+    #     # "pixel_per_cm": float(pixel_per_cm),
+    #     # "touch1": bool(touch1),
+    #     # "touch2": bool(touch2),
+    #     # "same_component": bool(same_component),
+    #     # "dots": (
+    #     #     [
+    #     #         (int(dot_points[0][0]), int(dot_points[0][1])),
+    #     #         (int(dot_points[1][0]), int(dot_points[1][1])),
+    #     #     ]
+    #     #     if len(dot_points) == 2
+    #     #     else []
+    #     # ),
+    #     "img_path": img_path,
+    # }
 
 
 # ===== 使用範例 =====
 if __name__ == "__main__":
-    result = analyze_image(r"image\6.jpg", dot_distance_cm=10.0, show_windows=True)
+    result = analyze_image(
+        r"PDMS2_web\ch2-t6\new\new6.jpg", dot_distance_cm=10.0, show_windows=True
+    )
     print("得分：", result["score"])

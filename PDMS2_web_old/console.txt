@@ -1,0 +1,10 @@
+2025-11-04 13:53:23 - INFO - === 遠端 PyMySQL 模式 ===
+2025-11-04 13:53:23 - INFO - Flask 應用程式啟動
+2025-11-04 13:53:23 - INFO - 準備啟動 Flask 應用程式，HOST=127.0.0.1, PORT=8000
+2025-11-04 13:53:23 - INFO - 已設定瀏覽器自動開啟
+2025-11-04 13:53:23 - INFO - Flask 應用程式開始運行
+2025-11-04 13:53:29 - INFO - [REQ] POST /create-uid-folder
+2025-11-04 13:53:30 - INFO - [DB] ensure_user ok: uid=lull222
+2025-11-04 13:53:30 - INFO - [RESP] POST /create-uid-folder -> 200
+2025-11-04 13:53:35 - INFO - stair_type: L
+2025-11-04 13:59:55 - INFO - Flask 應用程式已關閉

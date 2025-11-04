@@ -11,7 +11,19 @@ from PIL import Image
 import os
 from check_point import check_point
 from circle_or_oval import ImageClassifier
+import shutil
 import sys
+import os
+from pathlib import Path
+from datetime import datetime
+
+BASE_DIR = Path(__file__).resolve().parent
+target_dir = BASE_DIR.parent / "ch2-t1"
+MODEL_PATH = BASE_DIR.parent / "ch2-t1" / "model" / "circle_detect.h5"
+
+
+def return_score(score):
+    sys.exit(int(score))
 
 
 def get_pixel_per_cm_from_a4(
@@ -19,7 +31,7 @@ def get_pixel_per_cm_from_a4(
     real_width_cm=29.7,
     show_debug=False,
     save_cropped=True,
-    output_folder="ch2-t1\cropped_a4",
+    output_folder=target_dir / "cropped_a4",
 ):
     img = cv2.imread(image_path)
     if img is None:
@@ -42,8 +54,8 @@ def get_pixel_per_cm_from_a4(
         debug_img = img.copy()
         cv2.drawContours(debug_img, [approx], -1, (0, 0, 255), 3)
         # cv2.imshow("Detected A4 Contour", cv2.resize(debug_img, (800, 600)))
-        # cv2.waitKey(0)
-        # cv2.destroyAllWindows()
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
 
     # 整理四個角點
     pts = approx.reshape(4, 2).astype(np.float32)
@@ -97,23 +109,28 @@ def get_pixel_per_cm_from_a4(
 
         # 儲存裁切後的圖片
         image_name = os.path.splitext(os.path.basename(image_path))[0]
-        cropped_filename = rf"c{image_name}_a4_cropped.jpg"
+        cropped_filename = f"{image_name}_a4_cropped.jpg"
         cropped_path = os.path.join(output_folder, cropped_filename)
         cv2.imwrite(cropped_path, warped)
 
         print(f"A4區域已儲存至: {cropped_path}")
 
     # 儲存像素比例資料
-    # json_path = "px2cm.json"
-    # data = {
-    #     "pixel_per_cm": pixel_per_cm,
-    #     "image_path": image_path,
-    #     "cropped_path": cropped_path,
-    # }
-    # with open(json_path, "w", encoding="utf-8") as f:
-    #     json.dump(data, f, ensure_ascii=False, indent=2)
+    json_path = BASE_DIR.parent / "px2cm.json"
+    current_time = datetime.now()  # Define current_time
+    # json_path = r"PDMS2_web/px2cm.json"
+    print(f"儲存像素比例資料至: {json_path}")
+    os.makedirs(os.path.dirname(json_path), exist_ok=True)
+    data = {
+        "datetime": current_time.strftime("%Y-%m-%d %H:%M:%S"),
+        "pixel_per_cm": pixel_per_cm,
+        "image_path": image_path,
+        "cropped_path": cropped_path,
+    }
+    with open(json_path, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
 
-    return cropped_path
+    return pixel_per_cm, json_path, cropped_path
 
 
 def read_all_images_from_folder(folder_path):
@@ -159,115 +176,119 @@ def read_all_images_from_folder(folder_path):
     return all_images
 
 
-if __name__ == "__main__":
-    # 檢查是否有傳入 id 參數
-    if len(sys.argv) > 2:
-        # 使用傳入的 uid 和 id 作為圖片路徑
-        uid = sys.argv[1]
-        img_id = sys.argv[2]
-        # uid = "lull222"
-        # img_id = "ch3-t1"
-        image_path = rf"kid\{uid}\{img_id}.jpg"
+def main(img_path):
     # ==參數==#
+    real_width_cm = 29.7
     SCALE = 2
-    SCORE = -1
 
-    MODEL_PATH = r"ch2-t1\model\check_circle.h5"
     CLASS_NAMES = ["Other", "circle_or_oval"]
-    result = {}
     # ==參數==#
 
-    # 得出px->cm
-    print("\n==得出px -> cm==\n")
-    cropped_path = get_pixel_per_cm_from_a4(
-        image_path,
-        show_debug=True,
-        save_cropped=True,
-        output_folder="ch2-t1\cropped_a4",
-    )
-    # 讀取px2cm.json檔案
-    json_path = "px2cm.json"
+    # 讀取資料夾內所有圖片
+    # all_images = read_all_images_from_folder(input_folder)
+
+    # 建立分類資料夾（只建立一次）
+    circle_dir = target_dir / "circle_or_oval"
+    other_dir = target_dir / "Other"
+    os.makedirs(circle_dir, exist_ok=True)
+    os.makedirs(other_dir, exist_ok=True)
+
+    classifier = ImageClassifier(MODEL_PATH, CLASS_NAMES)
+    cp = check_point(SCALE=SCALE)
+
+    # 初始化空間
+    segmenter = Analyze_graphics()
+    segmenter.initialize_workspace()
+
+    # 單張處理
+    print(f"\n=== 處理 {img_path} ===\n")
+
+    # 得出 px->cm
     try:
-        with open(json_path, "r", encoding="utf-8") as f:
-            data = json.load(f)
-        pixel_per_cm = data["pixel_per_cm"]
-        print(f"從 {json_path} 讀取像素比例: {pixel_per_cm}")
-    except FileNotFoundError:
-        print(f"找不到 {json_path} 檔案，請先執行A4檢測")
-
-    except json.JSONDecodeError:
-        print(f"{json_path} 格式錯誤")
-
-    print(pixel_per_cm)
+        pixel_per_cm, _, cropped_path = get_pixel_per_cm_from_a4(
+            img_path,
+            show_debug=False,  # 關掉視覺化避免卡住
+            save_cropped=True,
+            output_folder=target_dir / "cropped_a4",
+        )
+        print(f"{img_path} pixel_per_cm = {pixel_per_cm}")
+    except ValueError as e:
+        print(f"⚠️ 跳過 {img_path}：{e}")
 
     # 裁切圖形
     print("\n==裁切圖形==")
     segmenter = Analyze_graphics()
-    ready = segmenter.infer_and_draw(cropped_path)
+
+    ready = segmenter.infer_and_draw(img_path)
 
     # 分類圖形(圓 橢圓 其他)
     print("\n==分類圖形==\n")
-    classifier = ImageClassifier(MODEL_PATH, CLASS_NAMES)
+    result = {}
 
     for rb in ready:
         if "binary" in rb:
             predicted_class_name, conf = classifier.predict(rb)
             url = rb.replace("_binary", "")
             print(f"{url} → {predicted_class_name} ({conf*100:.2f}%)")
-            result.update({url: predicted_class_name})
-        else:
-            continue
+            result[url] = predicted_class_name
 
-    # 計算端點距離
+            # 直接分類存檔
+            if predicted_class_name == "circle_or_oval":
+                shutil.copy(url, circle_dir / os.path.basename(url))
+            else:
+                # 讀取圖片並加上標記
+                img = cv2.imread(url)
+                cv2.putText(
+                    img,
+                    "Other !",
+                    (30, 50),
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    0.6,
+                    (0, 0, 255),
+                    2,
+                )
+                save_path = other_dir / os.path.basename(url)
+                cv2.imwrite(save_path, img)  # 直接存檔，不用手動關視窗
+                print(f"{url} 已存入 Other 資料夾並加上標記")
+
+    # 計算端點距離 & 複製到對應資料夾
     print("\n==計算端點距離==\n")
-    cp = check_point(SCALE=SCALE)
-
     for url, u_type in result.items():
         if u_type == "circle_or_oval":
-            px = cp.check_point(url)
+            px, result_img = cp.check_point(url)
             if px == 0.0:
                 print(f"{url} : Perfect!")
+                return 2, result_img
             else:
                 offset = px / pixel_per_cm
                 print(f"{url} : {offset}cm")
                 if offset <= 1.2:
-                    SCORE = 2
+                    return 2, result_img
                 elif offset > 1.2 and offset <= 2.5:
-                    SCORE = 1
+                    return 1, result_img
                 else:
-                    SCORE = 0
+                    return 0, result_img
+
         else:
             img = cv2.imread(url)
             cv2.putText(
                 img, "Other !", (30, 50), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2
             )
-            # cv2.imshow("Other", img)
+            # cv2.imshow('Other', img)
             print(f"{url} is {result[url]}!")
-            SCORE = 0
-            # cv2.waitKey(0)
-            # cv2.destroyAllWindows()
+            return 0, img
+    return 0, None
 
-    print(SCORE)
-    score = SCORE
-    result_file = "result.json"
-    try:
-        if os.path.exists(result_file):
-            with open(result_file, "r", encoding="utf-8") as f:
-                results = json.load(f)
-        else:
-            results = {}
-    except (json.JSONDecodeError, FileNotFoundError):
-        results = {}
 
-    # 確保 uid 存在於結果中
-    if uid not in results:
-        results[uid] = {}
-
-    # 更新對應 uid 的關卡分數
-    results[uid][img_id] = score
-
-    # 儲存到 result.json
-    with open(result_file, "w", encoding="utf-8") as f:
-        json.dump(results, f, ensure_ascii=False, indent=2)
-
-    print(f"結果已儲存到 {result_file} - 用戶 {uid} 的關卡 {img_id} 分數: {score}")
+if __name__ == "__main__":
+    if len(sys.argv) > 2:
+        # 使用傳入的 uid 和 id 作為圖片路徑
+        uid = sys.argv[1]
+        img_id = sys.argv[2]
+        image_path = rf"kid\{uid}\{img_id}.jpg"
+    # image_path = rf"ch2-t1.jpg"
+    score, result_img = main(image_path)
+    cv2.imwrite(rf"kid\{uid}\{img_id}_result.jpg", result_img)
+    # cv2.imwrite(rf"result.jpg", result_img)
+    print(score)
+    return_score(score)

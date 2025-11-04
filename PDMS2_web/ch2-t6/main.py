@@ -2,63 +2,69 @@ import cv2
 import numpy as np
 import glob
 import os
+from pathlib import Path
 from get_cm1 import auto_crop_paper, auto_crop_wood_board
 from correct import analyze_image
 import sys
 import json
 
+
+def return_score(score):
+    sys.exit(int(score))
+
+
 if __name__ == "__main__":
-    # 檢查是否有傳入 id 參數
     if len(sys.argv) > 2:
         # 使用傳入的 uid 和 id 作為圖片路徑
         uid = sys.argv[1]
         img_id = sys.argv[2]
-        image_path = rf"kid\{uid}\{img_id}.jpg"
-    image_path = rf"kid\cgu\ch2-t6.jpg"
-    uid = "cgu"
-    img_id = "ch2-t6"
-    output_folder = "new"
+        # uid = "lull222"
+        # img_id = "ch3-t1"
+        image_path = Path(rf"kid\{uid}\{img_id}.jpg")
+    # === 以這支 .py 所在資料夾為基準，避免工作目錄不同造成找不到檔案 ===
+    # BASE = Path(__file__).resolve().parent
+    # img = 1  # 你要處理的圖片編號
 
-    os.makedirs(output_folder, exist_ok=True)
+    # === 乾淨的輸入/輸出路徑（不要把中途資料夾夾到檔名裡）===
+    # image_path = rf"kid\{uid}\{img_id}.jpg"        # e.g. .../ch2-t6/image/6.jpg
+    output_dir = Path(rf"PDMS2_web\ch2-t6\new")  # e.g. .../ch2-t6/new/
+    # output_dir.mkdir(exist_ok=True)
+    out_path = output_dir / f"new{img_id}.jpg"  # e.g. .../ch2-t6/new/new6.jpg
 
-    # img=6
-    # img_path=rf"image\{img}.jpg"
-    image = cv2.imread(image_path)
+    # === 讀圖 ===
+    image = cv2.imread(str(image_path))
     if image is None:
         print(f"無法讀取：{image_path}")
-        # continue
+        return_score(0)  # 或者 sys.exit(1)
+
+    # === 木板偵測：失敗就用原圖（你說「不一定要偵測木板」）===
     try:
-        crop_board = auto_crop_wood_board(image, debug=False)
-        clean_paper = auto_crop_paper(crop_board, trim=12, debug=False)
-        out_path = os.path.join(output_folder, f"ch2-t6/new/{img_id}.jpg")
-        cv2.imwrite(out_path, clean_paper)
-        print(f"{image_path} → {out_path}")
+        board = auto_crop_wood_board(image, debug=False)
+    except Exception:
+        print(f"⚠️ {image_path.name} 木板偵測失敗 → 改用原圖裁紙")
+        board = image
+
+    # === 裁紙（透視校正）===
+    try:
+        paper = auto_crop_paper(board, trim=12, debug=False)
     except Exception as e:
-        print(f"{image_path} 發生錯誤：{e}")
+        print(f"裁紙失敗：{e}")
+        return_score(0)
 
-    result = analyze_image(out_path, dot_distance_cm=10.0)
-    print("得分：", result["score"])
-    score = result["score"]
+    # === 先寫檔，成功才做 analyze ===
+    ok = cv2.imwrite(out_path, paper)
+    if not ok:
+        print(f"⚠️ 影像儲存失敗：{out_path}")
+        return_score(0)
 
-    result_file = "result.json"
+    print(f"{image_path.name} → {out_path.name}")
+
+    # === 呼叫分析（傳「絕對路徑」最穩）===
     try:
-        if os.path.exists(result_file):
-            with open(result_file, "r", encoding="utf-8") as f:
-                results = json.load(f)
-        else:
-            results = {}
-    except (json.JSONDecodeError, FileNotFoundError):
-        results = {}
-
-    # 確保 uid 存在於結果中
-    if uid not in results:
-        results[uid] = {}
-
-    # 更新對應 uid 的關卡分數
-    results[uid][img_id] = score
-
-    # 儲存到 result.json
-    with open(result_file, "w", encoding="utf-8") as f:
-        json.dump(results, f, ensure_ascii=False, indent=2)
-
-    print(f"結果已儲存到 {result_file} - 用戶 {uid} 的關卡 {img_id} 分數: {score}")
+        score, result_img = analyze_image(str(out_path), dot_distance_cm=10.0)
+        result_path = rf"kid\{uid}\{img_id}_result.jpg"
+        print("得分：", score)
+        return_score(score)
+    except Exception as e:
+        print(f"分析失敗：{e}")
+        return_score(0)

@@ -1,6 +1,65 @@
 import cv2
 import numpy as np
 import os
+from pathlib import Path
+
+BASE = Path(__file__).resolve().parent  # 自動抓程式所在路徑
+img_num = 1
+img_path = BASE / "new" / f"new{img_num}.jpg"
+
+
+# === 新增：次像素拋物線與灰階/梯度細緻化 ===
+def _parabolic_subpixel(y_vals, idx):
+    """用三點拋物線內插做次像素微調"""
+    if idx <= 0 or idx >= len(y_vals) - 1:
+        return 0.0
+    y1, y2, y3 = float(y_vals[idx - 1]), float(y_vals[idx]), float(y_vals[idx + 1])
+    denom = y1 - 2 * y2 + y3
+    if abs(denom) < 1e-6:
+        return 0.0
+    return 0.5 * (y1 - y3) / denom
+
+
+def refine_line_y(gray, bw_mask, y0, search=24, mode="center"):
+    """
+    gray : 原圖灰階 (H,W)
+    bw_mask : 閉運算後二值圖 (H,W)
+    y0 : 粗定位 y
+    search : 上下搜尋窗
+    mode : 'center'（黑線中心）、'top'（上緣）、'bottom'（下緣）
+    回傳 float（可四捨五入成 int 畫線）
+    """
+    h, w = gray.shape
+    y0 = int(np.clip(y0, 0, h - 1))
+    y_lo = max(0, y0 - search)
+    y_hi = min(h - 1, y0 + search)
+
+    # 限制分析範圍：只用該水平線附近的白段，避免背景干擾
+    band = bw_mask[max(0, y0 - 2) : min(h, y0 + 3), :].max(axis=0) > 0
+    if band.sum() < max(50, int(0.1 * w)):
+        band = np.ones(w, dtype=bool)
+
+    roi_gray = gray[y_lo : y_hi + 1, :][:, band]
+
+    if mode == "center":
+        # 黑線中心：平均灰階最小處
+        prof = roi_gray.mean(axis=1)
+        idx = int(np.argmin(prof))
+        sub = _parabolic_subpixel(prof, idx)
+        y_ref = y_lo + idx + sub
+    else:
+        # 邊界：垂直梯度（Sobel Y）
+        sobel_y = cv2.Sobel(gray, cv2.CV_32F, 0, 1, ksize=3)
+        roi_gy = sobel_y[y_lo : y_hi + 1, :][:, band]
+        gprof = roi_gy.mean(axis=1)
+        if mode == "top":
+            idx = int(np.argmin(gprof))  # 上緣：白→黑（負梯度峰）
+        else:  # 'bottom'
+            idx = int(np.argmax(gprof))  # 下緣：黑→白（正梯度峰）
+        sub = _parabolic_subpixel(gprof, idx)
+        y_ref = y_lo + idx + sub
+
+    return float(np.clip(y_ref, 0, h - 1))
 
 
 def refine_y_center(bw, y0, cover_frac=0.25, search=12):
@@ -78,7 +137,7 @@ def detect_horizontal_lines(image, show_debug=False):
     bw[h - MARGIN_Y :, :] = 0
 
     # 4) 水平閉運算：補斷線
-    close_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (max(31, w // 20), 3))
+    close_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (max(45, w // 16), 3))
     bw_close = cv2.morphologyEx(bw, cv2.MORPH_CLOSE, close_kernel, iterations=1)
 
     # 5) 列投影法
@@ -101,7 +160,7 @@ def detect_horizontal_lines(image, show_debug=False):
     for y in cand_rows:
         y = int(np.clip(y, 0, h - 1))
         band_row = bw_close[max(0, y - 1) : min(h, y + 2), :].max(axis=0)
-        if longest_run(band_row) >= int(0.35 * w):
+        if longest_run(band_row) >= int(0.28 * w):
             good_rows.append(y)
 
     # Hough 輔助
@@ -125,19 +184,40 @@ def detect_horizontal_lines(image, show_debug=False):
         ylist = group_lines_1d(ylist, gap=8)
         good_rows = sorted(set(good_rows + ylist))
 
-    # 取上下兩條或一條
+    # 取上下兩條或一條（粗定位）
     if len(good_rows) >= 2:
         ylist_grouped = group_lines_1d(good_rows, gap=8)
         center_lines = [ylist_grouped[0], ylist_grouped[-1]]
     else:
         center_lines = good_rows
 
-    # 細緻化
-    center_lines = [
-        refine_y_center(bw_close, y, cover_frac=0.12, search=18) for y in center_lines
-    ]
+    # === 細緻化：改用灰階/梯度，把線貼到黑線的上/下緣 ===
+    if len(center_lines) >= 2:
+        y_top_refined = int(
+            round(refine_line_y(gray, bw_close, center_lines[0], search=24, mode="top"))
+        )
+        y_bot_refined = int(
+            round(
+                refine_line_y(
+                    gray, bw_close, center_lines[-1], search=24, mode="bottom"
+                )
+            )
+        )
+        center_lines = [y_top_refined, y_bot_refined]
+    elif len(center_lines) == 1:
+        center_lines = [
+            int(
+                round(
+                    refine_line_y(
+                        gray, bw_close, center_lines[0], search=24, mode="center"
+                    )
+                )
+            )
+        ]
+    else:
+        center_lines = []
 
-    # === 這裡改成直接回傳 y_top, y_bot ===
+    # === 回傳 y_top, y_bot ===
     if len(center_lines) >= 2:
         y_top, y_bot = int(min(center_lines)), int(max(center_lines))
     elif len(center_lines) == 1:
@@ -146,25 +226,24 @@ def detect_horizontal_lines(image, show_debug=False):
         y_top = y_bot = None
 
     if show_debug:
-        dbg = cv2.cvtColor(bw_close, cv2.COLOR_GRAY2BGR)
+        # 用原圖當底比較直觀；若想看二值圖，把 img 換成 cv2.cvtColor(bw_close, cv2.COLOR_GRAY2BGR)
+        dbg = img.copy()
         if y_top is not None:
-            cv2.line(dbg, (0, int(y_top)), (w - 1, int(y_top)), (0, 255, 255), 2)
+            cv2.line(dbg, (0, int(y_top)), (w - 1, int(y_top)), (0, 255, 255), 1)
         if y_bot is not None and y_bot != y_top:
-            cv2.line(dbg, (0, int(y_bot)), (w - 1, int(y_bot)), (0, 255, 0), 2)
+            cv2.line(dbg, (0, int(y_bot)), (w - 1, int(y_bot)), (0, 255, 0), 1)
         # cv2.imshow("Detected lines", dbg)
-        # cv2.waitKey(0)
-        # cv2.destroyAllWindows()
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
 
     return y_top, y_bot
 
 
 # 測試區：只跑單張圖片
 if __name__ == "__main__":
-    img = 1  # ← 改成你要測的圖編號
-    img_path = rf"new\new{img}.jpg"
-
-    if not os.path.exists(img_path):
-        raise FileNotFoundError(f"找不到圖片 {img_path}")
+    BASE = Path(__file__).resolve().parent
+    img_num = 2  # ← 改成你要測的圖編號
+    img_path = rf"PDMS2_web\ch2-t5\new\new{img_num}.jpg"
 
     y_top, y_bot = detect_horizontal_lines(img_path, show_debug=True)
-    print(f"{os.path.basename(img_path)} → y_top={y_top}, y_bot={y_bot}")
+    print(f"{img_path} , y_top={y_top}, y_bot={y_bot}")

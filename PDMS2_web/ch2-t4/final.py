@@ -5,8 +5,8 @@ import json
 import glob
 import os
 
-CROP_FOLDER = r"ch2-t4\new"
-PXCM_JSON = "px_cm.json"  # 單一比例檔，內容：{"pixel_per_cm": 40.47...}
+CROP_FOLDER = r"PDMS2_web\ch2-t4\new"
+PXCM_JSON = "px2cm.json"  # 單一比例檔，內容：{"pixel_per_cm": 40.47...}
 SHOW_SCALE = 0.7
 MARGIN = 40
 
