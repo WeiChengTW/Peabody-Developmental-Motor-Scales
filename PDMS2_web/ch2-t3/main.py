@@ -172,7 +172,7 @@ def read_all_images_from_folder(folder_path):
 def main(img_path):
     # ==參數==#
     real_width_cm = 29.7
-    SCORE = -1
+    SCORE = 0
 
     CLASS_NAMES = ["cross", "other"]
 
@@ -189,10 +189,7 @@ def main(img_path):
 
     classifier = ImageClassifier(MODEL_PATH, CLASS_NAMES)
 
-    # 參數要改
-    cs = CrossScorer(
-        cm_per_pixel=0.02079, angle_min=70.0, angle_max=110.0, max_spread_cm=0.6
-    )
+    
 
     # 初始化空間
     segmenter = Analyze_graphics()
@@ -216,7 +213,11 @@ def main(img_path):
     except ValueError as e:
         print(f"⚠️ 跳過 {img_path}：{e}")
         return SCORE
-
+    
+    # 參數要改
+    cs = CrossScorer(
+        cm_per_pixel=pixel_per_cm, angle_min=70.0, angle_max=110.0, max_spread_cm=0.6
+    )
         # 裁切圖形
     print("\n==裁切圖形==")
     segmenter = Analyze_graphics()

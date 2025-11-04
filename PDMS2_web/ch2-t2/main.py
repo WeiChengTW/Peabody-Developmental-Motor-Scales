@@ -215,8 +215,9 @@ def main(img_path):
     except ValueError as e:
         print(f"⚠️ 跳過 {img_path}：{e}")
 
-    cm_per_pixel = 1 / pixel_per_cm
-    actual_length_cm = 7.5
+    # cm_per_pixel = 1 / pixel_per_cm
+    # actual_length_cm = 7.5
+    
     # 裁切圖形
     print("\n==裁切圖形==")
 
