@@ -209,7 +209,7 @@ def main(img_path):
             img_path,
             show_debug=False,  # 關掉視覺化避免卡住
             save_cropped=True,
-            output_folder="PDMS2_web\ch2-t1",
+            output_folder="cropped_a4",
         )
         print(f"{img_path} pixel_per_cm = {pixel_per_cm}")
     except ValueError as e:
@@ -219,7 +219,7 @@ def main(img_path):
     print("\n==裁切圖形==")
     segmenter = Analyze_graphics()
 
-    ready = segmenter.infer_and_draw(img_path, expand_ratio=0.15)
+    ready = segmenter.infer_and_draw(img_path)
 
     # 分類圖形(圓 橢圓 其他)
     print("\n==分類圖形==\n")
@@ -281,14 +281,14 @@ def main(img_path):
 
 
 if __name__ == "__main__":
-    # if len(sys.argv) > 2:
-    #     # 使用傳入的 uid 和 id 作為圖片路徑
-    #     uid = sys.argv[1]
-    #     img_id = sys.argv[2]
-    #     image_path = rf"kid\{uid}\{img_id}.jpg"
-    image_path = rf"ch2-t1.jpg"
+    if len(sys.argv) > 2:
+        # 使用傳入的 uid 和 id 作為圖片路徑
+        uid = sys.argv[1]
+        img_id = sys.argv[2]
+        image_path = rf"kid\{uid}\{img_id}.jpg"
+    # image_path = rf"ch2-t1.jpg"
     score, result_img = main(image_path)
-    # cv2.imwrite(rf"kid\{uid}\{img_id}_result.jpg", result_img)
-    cv2.imwrite(rf"result.jpg", result_img)
+    cv2.imwrite(rf"kid\{uid}\{img_id}_result.jpg", result_img)
+    # cv2.imwrite(rf"result.jpg", result_img)
     print(score)
-    # return_score(score)
+    return_score(score)

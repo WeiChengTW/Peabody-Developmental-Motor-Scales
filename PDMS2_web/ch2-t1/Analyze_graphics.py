@@ -133,52 +133,28 @@ class Analyze_graphics:
         canvas[y:y+new_h, x:x+new_w] = resized
         return canvas
 
-    
-    def save_224_pair(self, cropped_img, ready_path, ready_binary_path, keep_ratio=True):
-        """將彩色與二值圖都存成 224×224，並立即印出 shape 驗證。"""
-        if keep_ratio:
-            img224 = self.resize_with_padding(cropped_img, 224)
-        else:
-            img224 = cv2.resize(cropped_img, (224, 224), interpolation=cv2.INTER_AREA)
+    def save_224_pair(self, cropped_img, ready_path, ready_binary_path, keep_ratio=False):
+        """將彩色與二值圖都存成 224×224"""
+        # 直接 resize 到 224x224，不保持比例，不加白邊
+        img224 = cv2.resize(cropped_img, (224, 224), interpolation=cv2.INTER_AREA)
 
         # 彩色 224×224
         cv2.imwrite(ready_path, img224)
 
-        # ✅ 修改：產生黑底白圖的二值化
+        # 二值化
         gray = cv2.cvtColor(img224, cv2.COLOR_BGR2GRAY)
         
-        # 使用 Otsu 自動閾值
-        _, binary = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+        # 使用反轉 + Otsu
+        _, binary = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
         
-        # ✅ 智能判斷：根據圖案顏色決定是否反轉
-        mean_val = cv2.mean(gray)[0]
-        
-        if mean_val > 128:
-            # 原圖是亮底暗圖（常見情況：白紙藍筆）
-            # binary 會讓圖案變黑、背景變白 → 需要反轉
-            binary_output = cv2.bitwise_not(binary)
-        else:
-            # 原圖是暗底亮圖
-            binary_output = binary
-        
-        # ✅ 二次驗證：確保背景（黑色）佔多數
-        black_pixels = np.sum(binary_output == 0)
-        white_pixels = np.sum(binary_output == 255)
-        total_pixels = binary_output.shape[0] * binary_output.shape[1]
-        
-        # 如果黑色像素少於 30%，代表判斷錯誤，再反轉一次
-        if black_pixels < total_pixels * 0.3:
-            binary_output = cv2.bitwise_not(binary_output)
-            print(f"  ⚠️ 二次反轉 (黑:{black_pixels} 白:{white_pixels})")
-        
-        cv2.imwrite(ready_binary_path, binary_output)
+        cv2.imwrite(ready_binary_path, binary)
 
         # 驗證
         color_shape = cv2.imread(ready_path).shape
         bin_shape = cv2.imread(ready_binary_path, cv2.IMREAD_GRAYSCALE).shape
         print(f"  - 寫出彩色: {ready_path} shape={color_shape}")
         print(f"  - 寫出二值: {ready_binary_path} shape={bin_shape}")
-        print(f"  - 灰度均值: {mean_val:.1f}, 黑像素比例: {black_pixels/total_pixels*100:.1f}%")
+    
 
     # ------------ 推論＋切割 ------------
     def infer_and_draw(self, image_path, save_results=True, expand_ratio=0.15, clear_dir=False):
@@ -250,7 +226,6 @@ class Analyze_graphics:
                 ready_path = ready_dir / f"{image_name}_{index}_{class_name}.jpg"
                 ready_binary_path = ready_dir / f"{image_name}_{index}_{class_name}_binary.jpg"
 
-                # 若你不想版本尾碼，可改成 clear_dir=True 或移除下面兩行
                 ready_path = self.get_unique_filename(ready_path)
                 ready_binary_path = self.get_unique_filename(ready_binary_path)
 
