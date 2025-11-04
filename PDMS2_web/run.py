@@ -7,16 +7,17 @@ from threading import Thread
 import subprocess, sys, logging, json, secrets, uuid, os, base64, re
 from datetime import datetime, date
 import cv2, numpy as np
-from PIL import Image  
+from PIL import Image
 from flask_cors import CORS
 import traceback
 from typing import Optional
 import time
+
 # 移除 imageio 依賴，因為錄影功能已移除
 
 # ======相機參數 (使用 runFortest.py 的值) =====
-TOP = 1
-SIDE = 2  # <-- Ch5-t1 會使用這個索引
+TOP = 2
+SIDE = 3  # <-- Ch5-t1 會使用這個索引
 # ============================================
 
 # =========================
@@ -462,7 +463,7 @@ def safe_subprocess_run(cmd, **kwargs):
         encoding="utf-8",
         errors="replace",
         env=env,
-        creationflags=creation_flags,  
+        creationflags=creation_flags,
     )
     default_kwargs.update(kwargs)
     return subprocess.run(cmd, **default_kwargs)
@@ -493,7 +494,9 @@ def resolve_script_path(task_code: str) -> Optional[Path]:
 
 
 # === [修正] run_analysis_in_background (簡化，移除 video_path 邏輯，強制顯示 Ch5-t1 視窗) ===
-def run_analysis_in_background(task_id, uid, img_id, script_path, stair_type=None, cam_index_input=None):
+def run_analysis_in_background(
+    task_id, uid, img_id, script_path, stair_type=None, cam_index_input=None
+):
     try:
         processing_tasks[task_id] = {
             "status": "running",
@@ -510,14 +513,16 @@ def run_analysis_in_background(task_id, uid, img_id, script_path, stair_type=Non
         # 判斷是否為遊戲，並決定參數
         is_game = normalize_task_id(img_id) == "Ch5-t1"
 
-        camera_to_use = SIDE # Ch5-t1 的預設值
+        camera_to_use = SIDE  # Ch5-t1 的預設值
         if is_game and cam_index_input is not None:
-             # 如果是 Ch5-t1 且前端有傳 cam_index，則使用傳入的值
-             try:
-                 camera_to_use = int(cam_index_input)
-             except ValueError:
-                 write_to_console(f"無效的 cam_index: {cam_index_input}，使用預設 SIDE={SIDE}", "WARN")
-                 pass # 使用預設的 SIDE
+            # 如果是 Ch5-t1 且前端有傳 cam_index，則使用傳入的值
+            try:
+                camera_to_use = int(cam_index_input)
+            except ValueError:
+                write_to_console(
+                    f"無效的 cam_index: {cam_index_input}，使用預設 SIDE={SIDE}", "WARN"
+                )
+                pass  # 使用預設的 SIDE
 
         if is_game:
             # 遊戲模式：傳遞 uid 和 SIDE 相機索引
@@ -541,11 +546,13 @@ def run_analysis_in_background(task_id, uid, img_id, script_path, stair_type=Non
             if not is_game:
                 creation_flags = subprocess.CREATE_NO_WINDOW
             # 遊戲任務也使用 CREATE_NO_WINDOW 隱藏主控台，但會彈出 OpenCV 視窗
-            else: 
+            else:
                 creation_flags = subprocess.CREATE_NO_WINDOW
 
         # 決定是否擷取輸出
-        capture_output_flag = not is_game # 靜態任務擷取，遊戲任務不擷取 (因為 stdout 可能被 opencv 阻塞)
+        capture_output_flag = (
+            not is_game
+        )  # 靜態任務擷取，遊戲任務不擷取 (因為 stdout 可能被 opencv 阻塞)
 
         # 執行子程序
         result = subprocess.run(
@@ -556,9 +563,9 @@ def run_analysis_in_background(task_id, uid, img_id, script_path, stair_type=Non
             text=True,
             encoding="utf-8",
             errors="replace",
-            creationflags=creation_flags
+            creationflags=creation_flags,
         )
-        
+
         # 從執行結果中取得分數和輸出
         score = int(result.returncode)
 
@@ -580,7 +587,7 @@ def run_analysis_in_background(task_id, uid, img_id, script_path, stair_type=Non
         try:
             score_id = insert_score(uid_eff, task_id_std, score)
         except Exception as e:
-            write_to_console(f"寫分數失敗：{e}", "ERROR")  
+            write_to_console(f"寫分數失敗：{e}", "ERROR")
 
         if score_id:
             try:
@@ -635,9 +642,8 @@ def run_python_script():
         data = request.get_json() or {}
         img_id = (data.get("id") or "").strip()
         uid = (data.get("uid") or "").strip() or session.get("uid")
-        
+
         cam_index_input = data.get("cam_index")
-        
 
         if not img_id:
             return jsonify({"success": False, "error": "缺少 id(task_id)"}), 400
@@ -664,10 +670,10 @@ def run_python_script():
             target=run_analysis_in_background,
             args=(task_id, uid, img_id, script_path, stair_type, cam_index_input),
         )
-        
+
         t.daemon = True
         t.start()
-        
+
         return jsonify(
             {
                 "success": True,
@@ -681,6 +687,7 @@ def run_python_script():
 
 
 # ===== 移除：不再需要 run_analysis_in_background_with_video 函數 =====
+
 
 @app.get("/check-task/<task_id>")
 def check_task_status(task_id):
@@ -728,7 +735,7 @@ def list_scores():
             "FROM score_list ORDER BY test_date DESC, score_id DESC LIMIT 50",
             fetch="all",
         )
-        return jsonify(rows or []) 
+        return jsonify(rows or [])
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 
@@ -739,44 +746,51 @@ def list_scores():
 camera = None
 camera_active = False
 
+
 def release_camera():
     global camera, camera_active
     if camera is not None:
-        try:  
+        try:
             camera.release()
         except Exception:
             pass
         camera = None
     camera_active = False
 
-CROP_RATE = 0.8
+
+CROP_RATE = 0.7
+
 
 def init_camera(camera_index=TOP):
     global camera, camera_active
     try:
         release_camera()
-        
+
         # 靜態拍照模式，仍優先嘗試 MSMF
-        camera = cv2.VideoCapture(camera_index + cv2.CAP_MSMF) 
+        camera = cv2.VideoCapture(camera_index + cv2.CAP_MSMF)
 
         if not camera.isOpened():
-            write_to_console(f"MSMF 無法開啟相機 {camera_index}，嘗試預設後端。", "WARN")
+            write_to_console(
+                f"MSMF 無法開啟相機 {camera_index}，嘗試預設後端。", "WARN"
+            )
             camera = cv2.VideoCapture(camera_index)
             if not camera.isOpened():
-                 raise Exception(f"無法開啟指定的相機索引: {camera_index}")
-
+                raise Exception(f"無法開啟指定的相機索引: {camera_index}")
 
         # 設定解析度和 FPS (僅用於拍照取圖，不需要強制 1280x720)
         # 這裡保留設定，以確保相機啟動後能正常取幀
         camera.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
         camera.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
-        camera.set(cv2.CAP_PROP_FPS, 30) 
+        camera.set(cv2.CAP_PROP_FPS, 30)
 
         actual_width = int(camera.get(cv2.CAP_PROP_FRAME_WIDTH))
         actual_height = int(camera.get(cv2.CAP_PROP_FRAME_HEIGHT))
         actual_fps = camera.get(cv2.CAP_PROP_FPS)
 
-        write_to_console(f"相機實際設定：{actual_width}x{actual_height} @ {actual_fps:.1f} FPS (用於靜態拍照)", "INFO")
+        write_to_console(
+            f"相機實際設定：{actual_width}x{actual_height} @ {actual_fps:.1f} FPS (用於靜態拍照)",
+            "INFO",
+        )
 
         ret, frame = camera.read()
         if not ret:
@@ -791,8 +805,8 @@ def init_camera(camera_index=TOP):
         camera_active = True
         return True
     except Exception as e:
-        print(f"相機初始化失敗: {e}")  
-        release_camera()  
+        print(f"相機初始化失敗: {e}")
+        release_camera()
         return False
 
 
@@ -804,7 +818,7 @@ def crop_center(frame, rate):
     crop_h = int(h * rate)
     start_x = (w - crop_w) // 2
     start_y = (h - crop_h) // 2
-    return frame[start_y:start_y+crop_h, start_x:start_x+crop_w]
+    return frame[start_y : start_y + crop_h, start_x : start_x + crop_w]
 
 
 def get_frame():
@@ -815,15 +829,17 @@ def get_frame():
         ret, frame = camera.read()
         if not ret:
             return None
-        
+
         # 切割畫面 CROP_RATE
         frame = crop_center(frame, CROP_RATE)
-        
+
         _, buffer = cv2.imencode(".jpg", frame, [cv2.IMWRITE_JPEG_QUALITY, 85])
         return buffer.tobytes()
     except Exception as e:
         write_to_console(f"get_frame 錯誤: {e}", "ERROR")
         return None
+
+
 # 相機路由
 @app.post("/opencv-camera/stop")
 def stop_opencv_camera():
@@ -937,6 +953,7 @@ def capture_opencv_photo():
     except Exception:
         write_to_console(f"/opencv-camera/capture 錯誤", "ERROR")
         return jsonify({"success": False}), 500
+
 
 if __name__ == "__main__":
     try:
