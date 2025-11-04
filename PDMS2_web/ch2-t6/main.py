@@ -20,16 +20,16 @@ if __name__ == "__main__":
         img_id = sys.argv[2]
         # uid = "lull222"
         # img_id = "ch3-t1"
-        image_path = rf"kid\{uid}\{img_id}.jpg"
+        image_path = Path(rf"kid\{uid}\{img_id}.jpg")
     # === 以這支 .py 所在資料夾為基準，避免工作目錄不同造成找不到檔案 ===
     # BASE = Path(__file__).resolve().parent
     # img = 1  # 你要處理的圖片編號
 
     # === 乾淨的輸入/輸出路徑（不要把中途資料夾夾到檔名裡）===
     # image_path = rf"kid\{uid}\{img_id}.jpg"        # e.g. .../ch2-t6/image/6.jpg
-    output_dir =  rf"PDMS2_web\ch2-t6\new"                      # e.g. .../ch2-t6/new/
+    output_dir = Path(rf"PDMS2_web\ch2-t6\new")  # e.g. .../ch2-t6/new/
     # output_dir.mkdir(exist_ok=True)
-    out_path = output_dir / f"new{img_id}.jpg"           # e.g. .../ch2-t6/new/new6.jpg
+    out_path = output_dir / f"new{img_id}.jpg"  # e.g. .../ch2-t6/new/new6.jpg
 
     # === 讀圖 ===
     image = cv2.imread(str(image_path))
@@ -63,9 +63,8 @@ if __name__ == "__main__":
     try:
         score, result_img = analyze_image(str(out_path), dot_distance_cm=10.0)
         result_path = rf"kid\{uid}\{img_id}_result.jpg"
-        print("得分：",score)
+        print("得分：", score)
         return_score(score)
     except Exception as e:
         print(f"分析失敗：{e}")
         return_score(0)
-

@@ -7,13 +7,16 @@ from final import find_baseline_and_show_all
 
 PXCM_JSON = "px2cm.json"
 
+
 def return_score(score: int):
     """與 ch2-t5 一樣，用 exit code 回傳分數"""
     sys.exit(int(score))
 
+
 def ensure_dir(p: str):
     if not os.path.exists(p):
         os.makedirs(p, exist_ok=True)
+
 
 def main():
     # 1) 讀比例檔
@@ -62,7 +65,7 @@ def main():
     to_save = result_img if result_img is not None else img
     ok = cv2.imwrite(out_path, to_save)
     # 顯示結果圖（可選）
-    cv2.imshow("Result", to_save)
+    # cv2.imshow("Result", to_save)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
     if not ok:
@@ -72,6 +75,7 @@ def main():
     #    這裡依你的要求只印檔名（不含路徑），若要相對路徑可改印：{uid}\\{img_id}\\{out_name}
     sys.stdout.write(out_name + "\n")
     return_score(score)
+
 
 if __name__ == "__main__":
     main()

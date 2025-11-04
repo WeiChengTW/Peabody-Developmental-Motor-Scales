@@ -11,6 +11,7 @@ MIN_BLOB_AREA = 60  # 最小面積門檻；原本 20 太小容易數到雜點
 # 改動：統一用檔案所在資料夾為路徑基準
 BASE = Path(__file__).resolve().parent
 
+
 def calc_mainline_paint_ratio(bw, y_top, y_bot, shrink=6, min_keep_frac=0.5):
     """
     只用來回傳 (x_start, x_end)。為了相容你主程式，第一個回傳值 ratio_dummy 固定 0.0。
@@ -139,15 +140,18 @@ def analyze_paint(image, y_top, y_bot, show_windows=False):
     # 3B-2) 深色鉛筆線（灰階黑線）
     #   做自適應對比＋黑帽凸顯「比背景更暗的細線」，再 Otsu 閾值
     g_eq = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8)).apply(gray)
-    bh2  = cv2.morphologyEx(
-        g_eq, cv2.MORPH_BLACKHAT,
-        cv2.getStructuringElement(cv2.MORPH_RECT, (9, 9))
+    bh2 = cv2.morphologyEx(
+        g_eq, cv2.MORPH_BLACKHAT, cv2.getStructuringElement(cv2.MORPH_RECT, (9, 9))
     )
     _, mask_dark = cv2.threshold(bh2, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-    mask_dark = cv2.morphologyEx(mask_dark, cv2.MORPH_OPEN, np.ones((3, 3), np.uint8), 1)
+    mask_dark = cv2.morphologyEx(
+        mask_dark, cv2.MORPH_OPEN, np.ones((3, 3), np.uint8), 1
+    )
 
     #   移除主水平線本體（避免把主線當成塗色）
-    mainline_thick = cv2.dilate(bw_lines, cv2.getStructuringElement(cv2.MORPH_RECT, (1, 9)), 1)
+    mainline_thick = cv2.dilate(
+        bw_lines, cv2.getStructuringElement(cv2.MORPH_RECT, (1, 9)), 1
+    )
     mask_dark[mainline_thick > 0] = 0
 
     #   限縮到畫面中間亮度偏低的像素（排除淺噪聲，可視情況開/關）
@@ -157,7 +161,6 @@ def analyze_paint(image, y_top, y_bot, show_windows=False):
 
     # 3B-3) 最終「筆劃」遮罩＝紅色 OR 深色線
     mask_paint = cv2.bitwise_or(mask_red, mask_dark)
-
 
     # 用黑線圖算 x_start, x_end
     _, x_start, x_end = calc_mainline_paint_ratio(bw_lines, y_top, y_bot)
@@ -242,7 +245,7 @@ def analyze_paint(image, y_top, y_bot, show_windows=False):
 
     score, rule_msg = grade(ratio, protrude_count)
 
-        # === Draw Area 圖建立與結果輸出 ===
+    # === Draw Area 圖建立與結果輸出 ===
     # 突出標記 + 紫線
     img_out = img.copy()
     img_out[over_ys, over_xs] = (0, 0, 255)
@@ -266,10 +269,18 @@ def analyze_paint(image, y_top, y_bot, show_windows=False):
                 return p
         return None
 
-    def draw_text_cn(bgr, text, topleft=(20, 35), font_size=28,
-                     color=(255,255,255), bg=(0,0,0), pad=8):
+    def draw_text_cn(
+        bgr,
+        text,
+        topleft=(20, 35),
+        font_size=28,
+        color=(255, 255, 255),
+        bg=(0, 0, 0),
+        pad=8,
+    ):
         try:
             from PIL import Image, ImageDraw, ImageFont
+
             font_path = _pick_font()
             if not font_path:
                 raise RuntimeError
@@ -278,17 +289,28 @@ def analyze_paint(image, y_top, y_bot, show_windows=False):
             font = ImageFont.truetype(font_path, font_size)
             x, y = topleft
             bbox = draw.textbbox((x, y), text, font=font)
-            draw.rectangle((bbox[0]-pad, bbox[1]-pad,
-                            bbox[2]+pad, bbox[3]+pad), fill=bg)
+            draw.rectangle(
+                (bbox[0] - pad, bbox[1] - pad, bbox[2] + pad, bbox[3] + pad), fill=bg
+            )
             draw.text((x, y), text, font=font, fill=color)
             return cv2.cvtColor(np.array(img_pil), cv2.COLOR_RGB2BGR)
         except Exception:
-            cv2.putText(bgr, text, (20, 35),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.7, color, 2, cv2.LINE_AA)
+            cv2.putText(
+                bgr,
+                text,
+                (20, 35),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                0.7,
+                color,
+                2,
+                cv2.LINE_AA,
+            )
             return bgr
 
     # 組合輸出文字內容
-    base_name = Path(image).name if isinstance(image, (str, os.PathLike)) else "result.jpg"
+    base_name = (
+        Path(image).name if isinstance(image, (str, os.PathLike)) else "result.jpg"
+    )
     summary = (
         f"{base_name} → 佔比: {ratio:.2%}, 突出: {protrude_count}, 分數: {score}\n"
         f"{rule_msg}"
@@ -311,10 +333,10 @@ def analyze_paint(image, y_top, y_bot, show_windows=False):
 
     # === 不顯示視窗 ===
     # （若你想要臨時預覽，把下面三行解開即可）
-    cv2.imshow("Draw Area", img_mask)
+    # cv2.imshow("Draw Area", img_mask)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
-    return score,img_mask
+    return score, img_mask
     # return {
     #     "ratio": ratio,
     #     "protrude_count": protrude_count,
@@ -329,7 +351,6 @@ def analyze_paint(image, y_top, y_bot, show_windows=False):
 
 # 兼容舊命名
 analyze_image = analyze_paint
-
 
 
 # ============ 測試區（單張）=========== #

@@ -1,10 +1,11 @@
-
 import cv2
 import numpy as np
 import os
+
 # 讓 result 資料夾固定建在這支 .py 檔同一層，不受執行時的工作目錄影響
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 RESULT_DIR = os.path.join(SCRIPT_DIR, "result")
+
 
 def analyze_image(
     img_path,
@@ -192,7 +193,7 @@ def analyze_image(
             )
         cv2.namedWindow(title, cv2.WINDOW_NORMAL)
         cv2.resizeWindow(title, img.shape[1], img.shape[0])
-        cv2.imshow(title, img)
+        # cv2.imshow(title, img)
 
     # === 讀圖 ===
     img = cv2.imread(img_path)
@@ -441,7 +442,7 @@ def analyze_image(
         2,
     )
 
-            # === 另存主視窗影像到 result/（穩健版） ===
+    # === 另存主視窗影像到 result/（穩健版） ===
     os.makedirs(RESULT_DIR, exist_ok=True)
 
     base = os.path.splitext(os.path.basename(img_path))[0]
@@ -459,7 +460,7 @@ def analyze_image(
     else:
         if img_disp.dtype != np.uint8:
             img_disp = np.clip(img_disp, 0, 255).astype(np.uint8)
-        cv2.imshow("result",img_disp)
+        # cv2.imshow("result",img_disp)
         cv2.waitKey(0)
         cv2.destroyAllWindows()
         # 用 imencode 轉成 JPEG，再用 tofile 寫入，避免 Windows/路徑問題
@@ -469,11 +470,6 @@ def analyze_image(
             print(f"✅ 已儲存結果影像：{out_path}")
         else:
             print(f"❌ 儲存失敗：{out_path}")
-
-
-
-
-
 
     # === 顯示四窗（可關閉） ===
     # if show_windows:
@@ -493,7 +489,7 @@ def analyze_image(
         f"{os.path.basename(img_path)} → score={score}, deviation={dev_str} cm, "
         f"touch=({touch1},{touch2}), same={same_component}"
     )
-    return score,img_disp
+    return score, img_disp
     # return {
     #     "score": score,
     #     # "reason": reason,
@@ -516,5 +512,7 @@ def analyze_image(
 
 # ===== 使用範例 =====
 if __name__ == "__main__":
-    result = analyze_image(r"PDMS2_web\ch2-t6\new\new6.jpg", dot_distance_cm=10.0, show_windows=True)
+    result = analyze_image(
+        r"PDMS2_web\ch2-t6\new\new6.jpg", dot_distance_cm=10.0, show_windows=True
+    )
     print("得分：", result["score"])
