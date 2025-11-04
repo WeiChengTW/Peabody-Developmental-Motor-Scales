@@ -276,19 +276,19 @@ def main(img_path):
             )
             # cv2.imshow('Other', img)
             print(f"{url} is {result[url]}!")
-            return 0, result_img
-    return 0, result_img
+            return 0, img
+    return 0, None
 
 
 if __name__ == "__main__":
-    if len(sys.argv) > 2:
-        # 使用傳入的 uid 和 id 作為圖片路徑
-        uid = sys.argv[1]
-        img_id = sys.argv[2]
-        image_path = rf"kid\{uid}\{img_id}.jpg"
-    # image_path = rf"ch2-t1.jpg"
+    # if len(sys.argv) > 2:
+    #     # 使用傳入的 uid 和 id 作為圖片路徑
+    #     uid = sys.argv[1]
+    #     img_id = sys.argv[2]
+    #     image_path = rf"kid\{uid}\{img_id}.jpg"
+    image_path = rf"ch2-t1.jpg"
     score, result_img = main(image_path)
-    cv2.imwrite(rf"kid\{uid}\{img_id}_result.jpg", result_img)
-    # cv2.imwrite(rf"result.jpg", result_img)
+    # cv2.imwrite(rf"kid\{uid}\{img_id}_result.jpg", result_img)
+    cv2.imwrite(rf"result.jpg", result_img)
     print(score)
-    return_score(score)
+    # return_score(score)
