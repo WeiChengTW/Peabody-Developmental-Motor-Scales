@@ -4,9 +4,11 @@ import json
 import cv2
 from final import find_baseline_and_show_all
 import sys
+from pathlib import Path
 
 CROP_FOLDER = r"ch2-t4\new"
-PXCM_JSON = "px2cm.json"
+BASE_DIR = Path(__file__).resolve().parent
+PXCM_JSON = BASE_DIR.parent / "px2cm.json"
 
 
 def return_score(score):

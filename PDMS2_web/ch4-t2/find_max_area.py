@@ -1,12 +1,16 @@
 import cv2
 import numpy as np
 import json
+from pathlib import Path
+
+BASE_DIR = Path(__file__).resolve().parent
 
 
 class MaxAreaQuadFinder:
     def __init__(self, image_path):
         try:
-            with open("PDMS2_web/px2cm.json", "r") as f:
+            json_path = BASE_DIR.parent / "px2cm.json"
+            with open(json_path, "r") as f:
                 data = json.load(f)
                 self.px2cm = data["px2cm"]
         except FileNotFoundError:

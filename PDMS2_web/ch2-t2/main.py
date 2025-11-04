@@ -206,7 +206,8 @@ def main(img_path):
             output_folder=target_dir / "cropped_a4",
         )
         try:
-            with open("PDMS2_web/px2cm.json", "r") as f:
+            json_path = BASE_DIR.parent / "px2cm.json"
+            with open(json_path, "r") as f:
                 data = json.load(f)
                 pixel_per_cm = data["pixel_per_cm"]
         except FileNotFoundError:

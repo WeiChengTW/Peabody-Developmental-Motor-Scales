@@ -209,7 +209,7 @@ def main(img_path):
             img_path,
             show_debug=False,  # 關掉視覺化避免卡住
             save_cropped=True,
-            output_folder="cropped_a4",
+            output_folder="PDMS2_web\ch2-t1",
         )
         print(f"{img_path} pixel_per_cm = {pixel_per_cm}")
     except ValueError as e:
@@ -276,8 +276,8 @@ def main(img_path):
             )
             # cv2.imshow('Other', img)
             print(f"{url} is {result[url]}!")
-            return 0, result_img
-    return 0, result_img
+            return 0, None
+    return 0, None
 
 
 if __name__ == "__main__":
