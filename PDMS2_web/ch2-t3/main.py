@@ -218,19 +218,14 @@ def main(img_path):
     cs = CrossScorer(
         cm_per_pixel=pixel_per_cm, angle_min=70.0, angle_max=110.0, max_spread_cm=0.6
     )
-        # 裁切圖形
-    print("\n==裁切圖形==")
-    segmenter = Analyze_graphics()
-    print(cropped_path)
-    ready = segmenter.infer_and_draw(cropped_path, expand_ratio=0.15)
-
+    
     # 單張處理
     print(f"\n=== 處理 {img_path} ===\n")
 
     # 裁切圖形
     print("\n==裁切圖形==")
     # print(cropped_path)
-    ready = segmenter.infer_and_draw(img_path, expand_ratio=0.15)
+    ready = segmenter.infer_and_draw(img_path)
 
     # 分類圖形
     print("\n==分類圖形==\n")
@@ -274,8 +269,6 @@ if __name__ == "__main__":
         # 使用傳入的 uid 和 id 作為圖片路徑
         uid = sys.argv[1]
         img_id = sys.argv[2]
-        # uid = "lull222"
-        # img_id = "ch3-t1"
         image_path = rf"kid\{uid}\{img_id}.jpg"
     # img_path = r'S__75628564.jpg'
     # image_path = r'ch2-t3.jpg'
