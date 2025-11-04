@@ -5,8 +5,10 @@ const KEY = "kid-quest-progress-v1";
 // ======相機參數 (對應 app.py) =====
 const TOP = 1; 
 const SIDE = 2; 
-// 移除 duration
-// ===================================
+const waittime = 3;
+
+
+
 // 讀 id（如 ch2-t3）
 function getId(){
   const u = new URL(location.href);
@@ -173,9 +175,7 @@ async function captureWithCamera(cameraIndex, fullTaskId, uid) {
   }
 }
 
-// 移除 startRecording 和 stopRecording 函數
-
-// === [修正] 背景觸發分析（用於 Ch5-t1 啟動遊戲）===
+// === 背景觸發分析（用於 Ch5-t1 啟動遊戲）===
 async function triggerBackgroundAnalysis(taskId, uid) {
   try {
 
@@ -213,7 +213,7 @@ async function triggerBackgroundAnalysis(taskId, uid) {
   }
 }
 
-// === [簡化] 跳轉函數 ===
+// === 跳轉函數 ===
 function redirectToNextTask(currentId) {
   const TASK_IDS = Object.keys(ID_TO_META);
   const idx = TASK_IDS.indexOf(currentId);
@@ -225,7 +225,7 @@ function redirectToNextTask(currentId) {
   }
 }
 
-// === [重構] 拍照/開始遊戲主函數 ===
+// === 拍照/開始遊戲主函數 ===
 async function takeShot() {
   try {
     const currentUid = await getUid() || 'default';
@@ -246,6 +246,8 @@ async function takeShot() {
       // 這裡採用直接跳轉，並假設 main.py 會在背景運行完畢。
       
     } else if (["ch1-t2", "ch1-t3"].includes(id)) {
+        await countdown(waittime);
+
       // 雙鏡頭任務：拍照 -> 跳轉
       updateStatus('正在拍攝側面鏡頭...', 'loading');
       await captureWithCamera(SIDE, `${id}-side`, currentUid);
@@ -254,10 +256,11 @@ async function takeShot() {
       await captureWithCamera(TOP, `${id}-top`, currentUid);
 
       updateStatus('照片拍攝完成！背景分析已啟動，準備跳轉...', 'success');
-    } else {
-      // 單鏡頭任務：拍照 -> 跳轉
-      updateStatus('正在拍照（上方鏡頭）...', 'loading');
-      await captureWithCamera(TOP, id, currentUid);
+        } else {
+        await countdown(waittime);
+          // 單鏡頭任務：拍照 -> 跳轉
+          updateStatus('正在拍照（上方鏡頭）...', 'loading');
+          await captureWithCamera(TOP, id, currentUid);
       
       updateStatus('照片拍攝完成！背景分析已啟動，準備跳轉...', 'success');
     }
@@ -267,9 +270,8 @@ async function takeShot() {
         await new Promise(r => setTimeout(r, 800));
         redirectToNextTask(id);
     } else {
-        // Ch5-t1 則等待遊戲視窗執行完畢 (約 63 秒)，這裡讓使用者點擊按鈕跳轉
-        // 為了避免前端長時間等待，這裡僅提示用戶遊戲在執行
-        els.shotBtn.disabled = false; // 遊戲啟動後，重新啟用按鈕，但功能會變成跳轉
+    
+        els.shotBtn.disabled = false; 
         els.shotBtn.textContent = "遊戲已啟動，點此跳轉下一任務";
         els.shotBtn.removeEventListener("click", shotBtnClickHandler);
         els.shotBtn.addEventListener("click", () => redirectToNextTask(id));
@@ -282,6 +284,14 @@ async function takeShot() {
     els.shotBtn.disabled = false;
     await openCamera(); // 失敗時重新開啟預覽
   }
+}
+
+// 倒數計時函數
+async function countdown(seconds) {
+  for (let i = seconds; i > 0; i--) {
+    updateStatus(`準備拍照... ${i}`, 'loading');
+    await new Promise(r => setTimeout(r, 1000));
+  }
 }
 
 // 關閉相機
@@ -310,7 +320,7 @@ function shotBtnClickHandler() {
     takeShot(); 
 }
 
-// === [修正] 按鈕點擊事件及移除停止按鈕事件 ===
+// === 按鈕點擊事件及移除停止按鈕事件 ===
 els.shotBtn.addEventListener("click", shotBtnClickHandler);
 
 // 移除停止按鈕點擊事件

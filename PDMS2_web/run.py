@@ -11,8 +11,8 @@ from PIL import Image
 from flask_cors import CORS
 import traceback
 from typing import Optional
-from flask import Flask, send_from_directory, request, jsonify, session, send_file
-
+import time
+# 移除 imageio 依賴，因為錄影功能已移除
 
 # ======相機參數 (使用 runFortest.py 的值) =====
 TOP = 1
@@ -34,24 +34,6 @@ DB = dict(
     cursorclass=pymysql.cursors.DictCursor,
     autocommit=True,
 )
-
-def query_all(sql, params=()):
-    conn = pymysql.connect(**DB)
-    try:
-        with conn.cursor() as cur:
-            cur.execute(sql, params)
-            return cur.fetchall()
-    finally:
-        conn.close()
-
-def execute(sql, params=()):
-    conn = pymysql.connect(**DB)
-    try:
-        with conn.cursor() as cur:
-            cur.execute(sql, params)
-            return cur.rowcount
-    finally:
-        conn.close()
 
 
 def db_exec(sql, params=None, fetch="none"):
@@ -228,291 +210,6 @@ ROOT = Path(__file__).parent.resolve()
 app = Flask(__name__, static_folder=None)
 app.secret_key = secrets.token_hex(16)
 CORS(app)
-
-# ===== 角色表名（沿用你舊版）=====
-TABLE_USERS = "admin_users"          # 欄位至少要有 account,password,email,level
-TABLE_RECORDS = "records"            # 成績/紀錄表
-TABLE_PARENT_CHILD = "parent_child"  # 家長綁小孩
-
-# === 權限裝飾器（舊版原樣）===
-def login_required(f):
-    from functools import wraps
-    @wraps(f)
-    def _wrap(*args, **kwargs):
-        if not session.get("uid"):
-            return jsonify({"ok": False, "msg": "未登入"}), 401
-        return f(*args, **kwargs)
-    return _wrap
-
-def require_level(min_level: int):
-    from functools import wraps
-    def deco(f):
-        @wraps(f)
-        def _wrap(*args, **kwargs):
-            if session.get("level", 0) < min_level:
-                return jsonify({"ok": False, "msg": "權限不足"}), 403
-            return f(*args, **kwargs)
-        return _wrap
-    return deco
-
-# ===== 診斷：列出所有請求的路徑（方便看到 /admin 有沒有被打到）=====
-@app.before_request
-def _log_path():
-    try:
-        print(">>> got request:", request.method, request.path, flush=True)
-    except Exception:
-        pass
-
-# ===== 首頁（你新版已經有 / 指到 start.html，就略過這個；保留 admin 與 index 快捷）=====
-# ===== 管理者介面（支援 /admin 與 /admin/）=====
-@app.route("/admin")
-@app.route("/admin/")
-def admin_page():
-    p = ROOT / "html" / "admin.html"
-    if not p.exists():
-        return f"找不到檔案：{p}", 404
-    # 直接送檔，避免相對路徑問題
-    return send_file(p)
-
-# ===== /index 快捷（你新版已有 /index 與 /index.html，重名會由先宣告者生效；此處保留一份相容）=====
-@app.route("/index/")
-def index_shortcut_slash():
-    p = ROOT / "html" / "index.html"
-    if not p.exists():
-        return f"找不到檔案：{p}", 404
-    return send_from_directory(p.parent, p.name)
-
-# ===== 簡單健康檢查路由（診斷用）=====
-@app.route("/ping")
-def ping():
-    return "pong", 200
-
-@app.route("/admin-test")
-def admin_test():
-    return "admin-test-ok", 200
-
-@app.route("/test-db")
-def test_db():
-    try:
-        rows = query_all("SHOW TABLES;")
-        return jsonify({"ok": True, "tables": rows})
-    except Exception as e:
-        return jsonify({"ok": False, "error": str(e)}), 500
-
-# ===== 管理者登入 / 身分查詢 / 登出 =====
-@app.route("/api/admin/login", methods=["POST"])
-def admin_login():
-    data = request.get_json() or {}
-    account = str(data.get("account", "")).strip()
-    password = str(data.get("password", "")).strip()
-    if not account or not password:
-        return jsonify({"ok": False, "msg": "缺少帳號或密碼"}), 400
-
-    rows = query_all(
-        f"SELECT account, email, level, account AS uid FROM {TABLE_USERS} WHERE account=%s AND password=%s LIMIT 1",
-        (account, password),
-    )
-    if not rows:
-        return jsonify({"ok": False, "msg": "帳號或密碼錯誤"}), 401
-
-    user = rows[0]
-    session["uid"] = user["uid"]          # 先用 account 當 uid
-    session["account"] = user["account"]
-    session["email"] = user.get("email")
-    session["level"] = int(user["level"])
-    return jsonify({"ok": True, "user": {"account": user["account"], "email": user["email"], "level": user["level"]}})
-
-@app.route("/api/auth/whoami")
-def whoami():
-    if "uid" not in session:
-        return jsonify({"ok": False, "logged_in": False})
-    return jsonify({"ok": True, "logged_in": True, "user": {
-        "uid": session.get("uid"),
-        "account": session.get("account"),
-        "email": session.get("email"),
-        "level": session.get("level"),
-    }})
-
-@app.route("/api/auth/logout", methods=["POST"])
-def logout_api():
-    session.clear()
-    return jsonify({"ok": True})
-
-# === 主管介面（Level 3 專用） ===
-@app.route("/api/admin/list")
-@require_level(3)
-def list_admins():
-    """列出所有醫療人員帳號（無 name 欄位，就用 account 當作顯示名稱）"""
-    try:
-        rows = query_all("SELECT account, email, level FROM admin_users WHERE level=2")
-        for r in rows:
-            r["name"] = r["account"]  # 前端需要 name，就用 account 代替
-        return jsonify(ok=True, admins=rows)
-    except Exception as e:
-        return jsonify(ok=False, msg=str(e)), 500
-
-@app.route("/api/admin/add", methods=["POST"])
-@require_level(3)
-def add_admin():
-    """新增醫療人員帳號"""
-    data = request.get_json() or {}
-    account = str(data.get("account", "")).strip()
-    password = str(data.get("password", "123456")).strip()
-    email = str(data.get("email", "")).strip() or None
-    if not account:
-        return jsonify(ok=False, msg="缺少 account"), 400
-
-    try:
-        execute(
-            "INSERT INTO admin_users (account, password, email, level) VALUES (%s, %s, %s, %s)",
-            (account, password, email, 2),
-        )
-        return jsonify(ok=True)
-    except Exception as e:
-        return jsonify(ok=False, msg=str(e)), 500
-
-@app.route("/api/admin/update/<account>", methods=["PUT"])
-@require_level(3)
-def update_admin(account):
-    """修改醫療人員資料（account/email/password）"""
-    data = request.get_json() or {}
-    new_account = data.get("account")
-    email = data.get("email")
-    password = data.get("password")
-
-    fields, params = [], []
-    if new_account:
-        fields.append("account=%s")
-        params.append(new_account)
-    if email is not None:
-        fields.append("email=%s")
-        params.append(email)
-    if password:
-        fields.append("password=%s")
-        params.append(password)
-
-    if not fields:
-        return jsonify(ok=False, msg="沒有要更新的欄位"), 400
-
-    sql = f"UPDATE admin_users SET {', '.join(fields)} WHERE account=%s AND level=2"
-    params.append(account)
-
-    try:
-        affected = execute(sql, tuple(params))
-        return jsonify(ok=(affected == 1))
-    except Exception as e:
-        return jsonify(ok=False, msg=str(e)), 500
-
-@app.route("/api/admin/delete/<account>", methods=["DELETE"])
-@require_level(3)
-def delete_admin(account):
-    """刪除醫療人員帳號（用 account 當 key）"""
-    try:
-        affected = execute("DELETE FROM admin_users WHERE account=%s AND level=2", (account,))
-        return jsonify(ok=(affected == 1))
-    except Exception as e:
-        return jsonify(ok=False, msg=str(e)), 500
-
-# ========== Records：查詢 ==========
-@app.route("/api/records", methods=["GET"])
-@login_required
-def list_records():
-    level = session.get("level", 0)
-    uid = session.get("uid")
-
-    # 篩選條件（可選）
-    child_uid = request.args.get("child_uid", "").strip()
-    task_id = request.args.get("task_id", "").strip()
-    limit = int(request.args.get("limit", 200))
-
-    if level == 1:
-        # 家長：只能看自己綁定的小孩
-        binds = query_all(
-            f"SELECT child_uid FROM {TABLE_PARENT_CHILD} WHERE parent_uid=%s",
-            (uid,)
-        )
-        allow = [b["child_uid"] for b in binds]
-        if not allow:
-            return jsonify({"ok": True, "records": []})
-
-        # 用安全方式組成 IN 子句
-        in_clause = ",".join(["%s"] * len(allow))
-        sql = f"SELECT * FROM {TABLE_RECORDS} WHERE child_uid IN ({in_clause})"
-        params = tuple(allow)
-        if child_uid:
-            sql += " AND child_uid=%s"
-            params += (child_uid,)
-        if task_id:
-            sql += " AND task_id=%s"
-            params += (task_id,)
-        sql += " ORDER BY id DESC LIMIT %s"
-        params += (limit,)
-
-        rows = query_all(sql, params)
-        return jsonify({"ok": True, "records": rows})
-
-    else:
-        # 醫療人員 / 主管：看全部（可篩選）
-        sql = f"SELECT * FROM {TABLE_RECORDS} WHERE 1=1"
-        params = []
-        if child_uid:
-            sql += " AND child_uid=%s"
-            params.append(child_uid)
-        if task_id:
-            sql += " AND task_id=%s"
-            params.append(task_id)
-        sql += " ORDER BY id DESC LIMIT %s"
-        params.append(limit)
-        rows = query_all(sql, tuple(params))
-        return jsonify({"ok": True, "records": rows})
-
-# ========== Records：新增（LV >= 2）==========
-@app.route("/api/records", methods=["POST"])
-@require_level(2)
-def create_record():
-    js = request.get_json() or {}
-    child_uid = js.get("child_uid")
-    task_id = js.get("task_id")
-    score = js.get("score")
-    data = js.get("data")
-
-    if not child_uid or not task_id:
-        return jsonify({"ok": False, "msg": "缺少 child_uid 或 task_id"}), 400
-
-    sql = f"INSERT INTO {TABLE_RECORDS} (child_uid, task_id, score, data) VALUES (%s, %s, %s, %s)"
-    affected = execute(sql, (child_uid, task_id, score, str(data) if data is not None else None))
-    return jsonify({"ok": affected == 1})
-
-# ========== Records：修改（LV >= 2）==========
-@app.route("/api/records/<int:rid>", methods=["PUT"])
-@require_level(2)
-def update_record(rid):
-    js = request.get_json() or {}
-    fields = []
-    params = []
-
-    if "score" in js:
-        fields.append("score=%s")
-        params.append(js["score"])
-    if "data" in js:
-        fields.append("data=%s")
-        params.append(str(js["data"]))
-
-    if not fields:
-        return jsonify({"ok": False, "msg": "沒有可更新欄位"}), 400
-
-    sql = f"UPDATE {TABLE_RECORDS} SET {', '.join(fields)} WHERE id=%s"
-    params.append(rid)
-    affected = execute(sql, tuple(params))
-    return jsonify({"ok": affected == 1})
-
-# ========== Records：刪除（LV >= 2）==========
-@app.route("/api/records/<int:rid>", methods=["DELETE"])
-@require_level(2)
-def delete_record(rid):
-    sql = f"DELETE FROM {TABLE_RECORDS} WHERE id=%s"
-    affected = execute(sql, (rid,))
-    return jsonify({"ok": affected == 1})
 
 
 def setup_console_logging():
@@ -1037,7 +734,7 @@ def list_scores():
 
 
 # =========================
-# 6) OpenCV 相機 (錄影邏輯已移除，僅保留靜態拍照)
+# 6) OpenCV 相機
 # =========================
 camera = None
 camera_active = False
@@ -1052,8 +749,8 @@ def release_camera():
         camera = None
     camera_active = False
 
+CROP_RATE = 0.8
 
-# === [修正] init_camera (保留靜態拍照所需) ===
 def init_camera(camera_index=TOP):
     global camera, camera_active
     try:
@@ -1081,10 +778,15 @@ def init_camera(camera_index=TOP):
 
         write_to_console(f"相機實際設定：{actual_width}x{actual_height} @ {actual_fps:.1f} FPS (用於靜態拍照)", "INFO")
 
-
-        ret, _ = camera.read()
+        ret, frame = camera.read()
         if not ret:
             raise Exception(f"成功開啟相機 {camera_index} 但無法讀取畫面")
+
+        # 計算裁切區域
+        h, w = frame.shape[:2]
+        crop_w = int(w * CROP_RATE)
+        crop_h = int(h * CROP_RATE)
+        write_to_console(f"裁切後尺寸：{crop_w}x{crop_h} (保留中間80%)", "INFO")
 
         camera_active = True
         return True
@@ -1094,22 +796,34 @@ def init_camera(camera_index=TOP):
         return False
 
 
-# === [修正] get_frame (移除 lock，用於靜態拍照取幀) ===
+def crop_center(frame, rate):
+    """裁切畫面中間區域"""
+
+    h, w = frame.shape[:2]
+    crop_w = int(w * rate)
+    crop_h = int(h * rate)
+    start_x = (w - crop_w) // 2
+    start_y = (h - crop_h) // 2
+    return frame[start_y:start_y+crop_h, start_x:start_x+crop_w]
+
+
 def get_frame():
     global camera, camera_active
     if not camera_active or camera is None:
         return None
     try:
-        # 移除 lock，因為錄影線程已移除
         ret, frame = camera.read()
         if not ret:
             return None
+        
+        # 切割畫面 CROP_RATE
+        frame = crop_center(frame, CROP_RATE)
+        
         _, buffer = cv2.imencode(".jpg", frame, [cv2.IMWRITE_JPEG_QUALITY, 85])
         return buffer.tobytes()
     except Exception as e:
         write_to_console(f"get_frame 錯誤: {e}", "ERROR")
         return None
-
 # 相機路由
 @app.post("/opencv-camera/stop")
 def stop_opencv_camera():
@@ -1223,8 +937,6 @@ def capture_opencv_photo():
     except Exception:
         write_to_console(f"/opencv-camera/capture 錯誤", "ERROR")
         return jsonify({"success": False}), 500
-
-# ===== 移除：影片錄製狀態管理和相關路由 =====
 
 if __name__ == "__main__":
     try:
