@@ -133,21 +133,21 @@ class Analyze_graphics:
         canvas[y:y+new_h, x:x+new_w] = resized
         return canvas
 
-    def save_224_pair(self, cropped_img, ready_path, ready_binary_path, keep_ratio=True):
-        """將彩色與二值圖都存成 224×224，並立即印出 shape 驗證。"""
-        if keep_ratio:
-            img224 = self.resize_with_padding(cropped_img, 224)
-        else:
-            img224 = cv2.resize(cropped_img, (224, 224), interpolation=cv2.INTER_AREA)
+    def save_224_pair(self, cropped_img, ready_path, ready_binary_path, keep_ratio=False):
+        """將彩色與二值圖都存成 224×224"""
+        # 直接 resize 到 224x224，不保持比例，不加白邊
+        img224 = cv2.resize(cropped_img, (224, 224), interpolation=cv2.INTER_AREA)
 
         # 彩色 224×224
         cv2.imwrite(ready_path, img224)
 
-        # Binary 以 224×224 來做
+        # 二值化
         gray = cv2.cvtColor(img224, cv2.COLOR_BGR2GRAY)
-        _, binary = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-        binary_inverted = cv2.bitwise_not(binary)
-        cv2.imwrite(ready_binary_path, binary_inverted)
+        
+        # 使用反轉 + Otsu
+        _, binary = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
+        
+        cv2.imwrite(ready_binary_path, binary)
 
         # 驗證
         color_shape = cv2.imread(ready_path).shape
