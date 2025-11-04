@@ -9,7 +9,6 @@ from Analyze_graphics import Analyze_graphics
 import glob
 from PIL import Image
 import os
-from check_point import check_point
 from q_or_other import ImageClassifier
 import shutil
 from square_detect import SquareGapAnalyzer
@@ -20,6 +19,7 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent
 target_dir = BASE_DIR.parent / "ch2-t2"
 MODEL_PATH = BASE_DIR.parent / "ch2-t2" / "model" / "square.h5"
+
 
 def return_score(score):
     sys.exit(int(score))
@@ -115,14 +115,14 @@ def get_pixel_per_cm_from_a4(
         print(f"A4區域已儲存至: {cropped_path}")
 
     # 儲存像素比例資料
-    json_path = "px2cm.json"
-    data = {
-        "pixel_per_cm": pixel_per_cm,
-        "image_path": image_path,
-        "cropped_path": cropped_path,
-    }
-    with open(json_path, "w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
+    json_path = BASE_DIR.parent / "px2cm.json"
+    # data = {
+    #     "pixel_per_cm": pixel_per_cm,
+    #     "image_path": image_path,
+    #     "cropped_path": cropped_path,
+    # }
+    # with open(json_path, "w", encoding="utf-8") as f:
+    #     json.dump(data, f, ensure_ascii=False, indent=2)
 
     return pixel_per_cm, json_path, cropped_path
 
@@ -190,7 +190,6 @@ def main(img_path):
     os.makedirs(other_dir, exist_ok=True)
 
     classifier = ImageClassifier(MODEL_PATH, CLASS_NAMES)
-    cp = check_point(SCALE=SCALE)
 
     # 資料夾初始化
     segmenter = Analyze_graphics()
@@ -200,15 +199,24 @@ def main(img_path):
 
     # 得出 px->cm
     try:
-        pixel_per_cm, _, cropped_path = get_pixel_per_cm_from_a4(
+        _, _, cropped_path = get_pixel_per_cm_from_a4(
             img_path,
             show_debug=False,  # 關掉視覺化避免卡住
             save_cropped=True,
             output_folder=target_dir / "cropped_a4",
         )
+        try:
+            with open("PDMS2_web/px2cm.json", "r") as f:
+                data = json.load(f)
+                pixel_per_cm = data["pixel_per_cm"]
+        except FileNotFoundError:
+            pixel_per_cm = 47.4416628993705  # 預設值
         print(f"{img_path} pixel_per_cm = {pixel_per_cm}")
     except ValueError as e:
         print(f"⚠️ 跳過 {img_path}：{e}")
+
+    # cm_per_pixel = 1 / pixel_per_cm
+    # actual_length_cm = 7.5
 
     # 裁切圖形
     print("\n==裁切圖形==")
@@ -247,8 +255,8 @@ def main(img_path):
                 print(f"{url} 已存入 Other 資料夾並加上標記")
 
     SGA = SquareGapAnalyzer()
-    res = SGA.process_image(cropped_path)
-    return res["score"]
+    res, result_img = SGA.process_image(cropped_path)
+    return res["score"], result_img
 
 
 if __name__ == "__main__":
@@ -259,7 +267,9 @@ if __name__ == "__main__":
         # uid = "lull222"
         # img_id = "ch3-t1"
         image_path = rf"kid\{uid}\{img_id}.jpg"
-    # img_path = r"realtest\S__75472904_0.jpg"
-    score = main(image_path)
+    # image_path = r"ch2-t2.jpg"
+    score, result_img = main(image_path)
+    cv2.imwrite(rf"kid\{uid}\{img_id}_result.jpg", result_img)
+    # cv2.imwrite(rf"result.jpg", result_img)
     print(f"score = {score}")
     return_score(score)

@@ -5,141 +5,134 @@ import time
 
 # 初始化模型
 model = YOLO(r'bean_model.pt')
-cap = cv2.VideoCapture(4)
 
-CONF = 0.45
-DIST_THRESHOLD = 5  # 中心點合併距離閾值
-CHECK_INTERVAL = 0.5  # 檢查間隔秒數
+cap = cv2.VideoCapture(0)  # 開啟攝影機
 
-previous_count = 0
-last_check_time = time.time()
+frame_count = 0
+PER_FRAME = 3
+prev_box_count = 0
 
-# 遊戲計時
-GAME_DURATION = 120
-start_time = time.time()
+# 計時相關
+game_duration = 3
+start_time = None
+game_started = False
 
-# 狀態記錄
-warning_flag = False   # 是否有違規
-total_count = 0        # 豆子總數
+# 分數相關
+WARNING = False
+SCORE = -1
 
-def calculate_score(total_count, warning_flag, elapsed):
-    """依規則計算分數"""
-    if elapsed <= 30:  # 前 30 秒
-        if total_count >= 10:
-            return 1 if warning_flag else 2
-        else:
-            return 0
-    else:  # 31–60 秒
-        if total_count >= 5:
-            return 1
-        else:
-            return 0
+# 按鈕設定
+button_x, button_y, button_w, button_h = 10, 300, 150, 50
+
+# 滑鼠回調函數
+def mouse_callback(event, x, y, flags, param):
+    global game_started, start_time
+    
+    if event == cv2.EVENT_LBUTTONDOWN:
+        # 檢查是否點擊按鈕區域
+        if button_x <= x <= button_x + button_w and button_y <= y <= button_y + button_h:
+            if not game_started:
+                game_started = True
+                start_time = time.time()
+            
+
+cv2.namedWindow('Pick Bean Game')
+cv2.setMouseCallback('Pick Bean Game', mouse_callback)
+
+def calculate_score(cur_count, remain_time, WARNING):
+    
+    if cur_count >= 10 and remain_time >= 30:
+        return 2 if not WARNING else 1
+    elif cur_count >= 5 and remain_time >= 0:
+        return 1
+    elif remain_time == 0:
+        return 0
+    else:
+        return -1
 
 while True:
     ret, frame = cap.read()
     if not ret:
         break
+    
+    frame_count += 1
+    
+    # 裁切中間區域
+    scale = 0.8
+    height, width = frame.shape[:2]
 
-    # 偵測
-    results = model.predict(source=frame, conf=CONF, verbose=False)
-    annotated = frame.copy()
-    centers = []
+    crop_height = int(height * scale)
+    crop_width = int(width * scale)
 
-    if results[0].masks is not None:
-        masks = results[0].masks.data.cpu().numpy()
+    # 計算起始位置(讓裁切區域置中) [丟棄部分][   保留區域   ][丟棄部分]
+    #                          start_x 
+    start_x = (width - crop_width) // 2
+    start_y = (height - crop_height) // 2
 
-        for mask in masks:
-            ys, xs = np.where(mask > CONF)
-            if len(xs) > 0 and len(ys) > 0:
-                cx = int(np.mean(xs))
-                cy = int(np.mean(ys))
-                centers.append((cx, cy))
-
-    # 合併過近的中心點
-    merged = []
-    used = set()
-    for i, (x1, y1) in enumerate(centers):
-        if i in used:
-            continue
-        group = [(x1, y1)]
-        for j, (x2, y2) in enumerate(centers):
-            if i != j and j not in used:
-                dist = np.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2)
-                if dist < DIST_THRESHOLD:
-                    group.append((x2, y2))
-                    used.add(j)
-        merged.append(np.mean(group, axis=0))  # 取平均當新的中心點
-
-    # 畫合併後的中心點
-    for (cx, cy) in merged:
-        cv2.circle(annotated, (int(cx), int(cy)), 5, (0, 0, 255), -1)  # 紅點
-
-    count = len(merged)
-
-    # 每隔一段時間檢查一次
-    current_time = time.time()
-    if current_time - last_check_time >= CHECK_INTERVAL:
-        if count > previous_count:  # 有新增豆子
-            added = count - previous_count
-            
-            if added > 1:  # 違規
-                warning_flag = True
-                cv2.putText(annotated, "Warning !", (10, 120),
-                            cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 255), 2)
-        if count > total_count:
-            total_count = count
-
-        previous_count = count
-        last_check_time = current_time
+    # 裁切畫面
+    frame = frame[start_y:start_y + crop_height, start_x:start_x + crop_width]
 
     # 計算剩餘時間
-    elapsed = current_time - start_time
-    remaining = max(0, GAME_DURATION - int(elapsed))
+    if game_started:
+        elapsed_time = time.time() - start_time
+        remaining_time = max(0, game_duration - elapsed_time)
 
-    cv2.putText(annotated, f'SoyBean count: {count}', (10, 30),
-                cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
-    cv2.putText(annotated, f'Total placed: {total_count}', (10, 60),
-                cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 0), 2)
-    cv2.putText(annotated, f'Time Left: {remaining}s', (10, 90),
-                cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 0, 255), 2)
+        SCORE = calculate_score(current_box_count, remaining_time, WARNING)
+        if SCORE != -1:
+            cv2.putText(frame, f"GAME OVER !", (start_x + 5, start_y + 5), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 255, 255), 5)
+            cv2.imshow('Game Over !', frame)
+            cv2.waitKey(3000)
+            break
+            #return SCORE
 
-    # 放大顯示
-    combined = cv2.resize(annotated, (0, 0), fx=2, fy=2)
-    cv2.imshow("SoyBean", combined)
 
-    # === 結束條件 ===
-    end_game = False
-    # 1. 累積達 10 顆就結束（但分數要依秒數判斷）
-    if total_count >= 10:
-        end_game = True
-    # 2. 時間結束
-    elif elapsed >= GAME_DURATION:
-        end_game = True
+    results = model.predict(source=frame, conf=0.5, verbose=False)
 
-    if end_game:
-        score = calculate_score(total_count, warning_flag, elapsed)
-        print(f"遊戲結束！總數: {total_count}, 警告: {warning_flag}, 分數: {score}, 用時: {int(elapsed)} 秒")
+    current_box_count = 0
+    for result in results:
+        boxes = result.boxes
+        current_box_count = len(boxes)
 
-        # 畫面顯示分數
-        end_screen = frame.copy()
-        
-        cv2.putText(end_screen, "Game Over!", (50, 100),
-                    cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 255, 255), 3)
-        cv2.putText(end_screen, f"Total: {total_count}", (50, 130),
-                    cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 255, 255), 3)
-        cv2.putText(end_screen, f"Score: {score}", (50, 160),
-                    cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 255, 255), 3)
-        cv2.putText(end_screen, f"Time: {int(elapsed)}s", (50, 190),
-                    cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 255, 255), 3)
-        cv2.imshow("SoyBean", end_screen)
-        cv2.waitKey(5000)  # 顯示 5 秒
-        break
+        for box in boxes:
+            x1, y1, x2, y2 = box.xyxy[0].cpu().numpy()
+            cx = int((x1 + x2) // 2)
+            cy = int((y1 + y2) // 2)
+            cv2.circle(frame, (cx, cy), 5, (0, 0, 255), -1)
 
-    key = cv2.waitKey(1)
-    if key == ord('q'):
+    # 檢查是否突然增加 2 個或以上
+    if game_started and prev_box_count > 0:
+        increase = current_box_count - prev_box_count
+        if frame_count % PER_FRAME == 0 and increase >= 2:
+            WARNING = True
+    
+    prev_box_count = current_box_count
+
+    # 顯示資訊
+    cv2.putText(frame, f'Beans: {current_box_count}', (10, 30), 
+                cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+    
+    if game_started:
+        cv2.putText(frame, f'Time: {int(remaining_time)}s', (10, 70), 
+                    cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+    
+    # 繪製按鈕
+    if not game_started:
+        # 按鈕背景
+        cv2.rectangle(frame, (button_x, button_y), 
+                     (button_x + button_w, button_y + button_h), 
+                     (0, 255, 0), -1)
+        # 按鈕邊框
+        cv2.rectangle(frame, (button_x, button_y), 
+                     (button_x + button_w, button_y + button_h), 
+                     (0, 0, 0), 2)
+        # 按鈕文字
+        cv2.putText(frame, 'START', (button_x + 25, button_y + 35), 
+                    cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 0), 2)
+
+    cv2.imshow('Pick Bean Game', frame)
+
+    if cv2.waitKey(1) & 0xFF in [ord('q'), ord('Q')]:
         break
 
 cap.release()
 cv2.destroyAllWindows()
-
-

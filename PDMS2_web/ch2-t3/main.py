@@ -114,14 +114,14 @@ def get_pixel_per_cm_from_a4(
         print(f"A4區域已儲存至: {cropped_path}")
 
     # 儲存像素比例資料
-    json_path = "px2cm.json"
-    data = {
-        "pixel_per_cm": pixel_per_cm,
-        "image_path": image_path,
-        "cropped_path": cropped_path,
-    }
-    with open(json_path, "w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
+    json_path = "PDMS2_web/px2cm.json"
+    # data = {
+    #     "pixel_per_cm": pixel_per_cm,
+    #     "image_path": image_path,
+    #     "cropped_path": cropped_path,
+    # }
+    # with open(json_path, "w", encoding="utf-8") as f:
+    #     json.dump(data, f, ensure_ascii=False, indent=2)
 
     return pixel_per_cm, json_path, cropped_path
 
@@ -172,7 +172,7 @@ def read_all_images_from_folder(folder_path):
 def main(img_path):
     # ==參數==#
     real_width_cm = 29.7
-    SCORE = -1
+    SCORE = 0
 
     CLASS_NAMES = ["cross", "other"]
 
@@ -182,17 +182,14 @@ def main(img_path):
     # all_images = read_all_images_from_folder(input_folder)
 
     ## 先建立分類資料夾
-    cross_dir = target_dir / "cross"
+    cross_dir = target_dir / "Cross"
     other_dir = target_dir / "other"
-    os.makedirs(cross_dir / "cross", exist_ok=True)
+    os.makedirs(cross_dir / "Cross", exist_ok=True)
     os.makedirs(other_dir / "other", exist_ok=True)
 
     classifier = ImageClassifier(MODEL_PATH, CLASS_NAMES)
 
-    # 參數要改
-    cs = CrossScorer(
-        cm_per_pixel=0.02079, angle_min=70.0, angle_max=110.0, max_spread_cm=0.6
-    )
+    
 
     # 初始化空間
     segmenter = Analyze_graphics()
@@ -200,17 +197,27 @@ def main(img_path):
 
     # 得出 px->cm
     try:
-        pixel_per_cm, _, cropped_path = get_pixel_per_cm_from_a4(
+        _, _, cropped_path = get_pixel_per_cm_from_a4(
             img_path,
             show_debug=False,  # 關掉視覺化避免卡住
             save_cropped=True,
             output_folder=target_dir / "cropped_a4",
         )
+        try:
+            with open("PDMS2_web/px2cm.json", "r") as f:
+                data = json.load(f)
+                pixel_per_cm = data["pixel_per_cm"]
+        except FileNotFoundError:
+            pixel_per_cm = 47.4416628993705  # 預設值
         print(f"{img_path} pixel_per_cm = {pixel_per_cm}")
     except ValueError as e:
         print(f"⚠️ 跳過 {img_path}：{e}")
         return SCORE
-
+    
+    # 參數要改
+    cs = CrossScorer(
+        cm_per_pixel=pixel_per_cm, angle_min=70.0, angle_max=110.0, max_spread_cm=0.6
+    )
         # 裁切圖形
     print("\n==裁切圖形==")
     segmenter = Analyze_graphics()
@@ -223,7 +230,7 @@ def main(img_path):
     # 裁切圖形
     print("\n==裁切圖形==")
     # print(cropped_path)
-    ready = segmenter.infer_and_draw(cropped_path, expand_ratio=0.15)
+    ready = segmenter.infer_and_draw(img_path, expand_ratio=0.15)
 
     # 分類圖形
     print("\n==分類圖形==\n")
@@ -239,8 +246,8 @@ def main(img_path):
             # 直接分類存檔
             if predicted_class_name == "cross":
                 shutil.copy(url, cross_dir / os.path.basename(url))
-                results, _, _, _ = cs.score_image(url)
-                return results["score"]
+                results, result_img, _, _, _ = cs.score_image(url)
+                return results["score"], result_img
 
             else:
                 # 讀取圖片並加上標記
@@ -257,7 +264,7 @@ def main(img_path):
                 save_path = other_dir / os.path.basename(url)
                 cv2.imwrite(save_path, img)  # 直接存檔，不用手動關視窗
                 print(f"{url} 已存入 Other 資料夾並加上標記")
-                return 0
+                return 0, img
 
     return SCORE
 
@@ -271,7 +278,9 @@ if __name__ == "__main__":
         # img_id = "ch3-t1"
         image_path = rf"kid\{uid}\{img_id}.jpg"
     # img_path = r'S__75628564.jpg'
-    # img_path = 'test01.jpg'
-    score = main(image_path)
+    # image_path = r'ch2-t3.jpg'
+    score, result_img = main(image_path)
+    cv2.imwrite(rf"kid\{uid}\{img_id}_result.jpg", result_img)
+    # cv2.imwrite(rf"result.jpg", result_img)
     print(score)
     return_score(score)

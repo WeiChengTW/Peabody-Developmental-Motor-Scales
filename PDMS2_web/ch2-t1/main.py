@@ -15,7 +15,7 @@ import shutil
 import sys
 import os
 from pathlib import Path
-
+from datetime import datetime
 
 BASE_DIR = Path(__file__).resolve().parent
 target_dir = BASE_DIR.parent / "ch2-t1"
@@ -116,8 +116,13 @@ def get_pixel_per_cm_from_a4(
         print(f"A4區域已儲存至: {cropped_path}")
 
     # 儲存像素比例資料
-    json_path = "px2cm.json"
+    json_path = BASE_DIR.parent / "px2cm.json"
+    current_time = datetime.now()  # Define current_time
+    # json_path = r"PDMS2_web/px2cm.json"
+    print(f"儲存像素比例資料至: {json_path}")
+    os.makedirs(os.path.dirname(json_path), exist_ok=True)
     data = {
+        "datetime": current_time.strftime("%Y-%m-%d %H:%M:%S"),
         "pixel_per_cm": pixel_per_cm,
         "image_path": image_path,
         "cropped_path": cropped_path,
@@ -175,9 +180,7 @@ def main(img_path):
     # ==參數==#
     real_width_cm = 29.7
     SCALE = 2
-    SCORE = -1
 
-    input_folder = "input"  # <-- 資料夾
     CLASS_NAMES = ["Other", "circle_or_oval"]
     # ==參數==#
 
@@ -252,18 +255,19 @@ def main(img_path):
     print("\n==計算端點距離==\n")
     for url, u_type in result.items():
         if u_type == "circle_or_oval":
-            px = cp.check_point(url)
+            px, result_img = cp.check_point(url)
             if px == 0.0:
                 print(f"{url} : Perfect!")
+                return 2, result_img
             else:
                 offset = px / pixel_per_cm
                 print(f"{url} : {offset}cm")
                 if offset <= 1.2:
-                    SCORE = 2
+                    return 2, result_img
                 elif offset > 1.2 and offset <= 2.5:
-                    SCORE = 1
+                    return 1, result_img
                 else:
-                    SCORE = 0
+                    return 0, result_img
 
         else:
             img = cv2.imread(url)
@@ -272,11 +276,8 @@ def main(img_path):
             )
             # cv2.imshow('Other', img)
             print(f"{url} is {result[url]}!")
-            SCORE = 0
-            cv2.waitKey(0)
-            cv2.destroyAllWindows()
-
-    return SCORE
+            return 0, result_img
+    return 0, result_img
 
 
 if __name__ == "__main__":
@@ -284,9 +285,10 @@ if __name__ == "__main__":
         # 使用傳入的 uid 和 id 作為圖片路徑
         uid = sys.argv[1]
         img_id = sys.argv[2]
-        # uid = "lull222"
-        # img_id = "ch3-t1"
         image_path = rf"kid\{uid}\{img_id}.jpg"
-    # img_path = r'realtest\S__75472905_0.jpg'
-    score = main(image_path)
+    # image_path = rf"ch2-t1.jpg"
+    score, result_img = main(image_path)
+    cv2.imwrite(rf"kid\{uid}\{img_id}_result.jpg", result_img)
+    # cv2.imwrite(rf"result.jpg", result_img)
     print(score)
+    return_score(score)

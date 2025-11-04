@@ -6,7 +6,7 @@ import json
 class MaxAreaQuadFinder:
     def __init__(self, image_path):
         try:
-            with open("px2cm.json", "r") as f:
+            with open("PDMS2_web/px2cm.json", "r") as f:
                 data = json.load(f)
                 self.px2cm = data["px2cm"]
         except FileNotFoundError:
@@ -85,7 +85,7 @@ class MaxAreaQuadFinder:
                         max_diff = diff
                         max_diff_side = side_name
                 print(f"與7.5cm差距最大的邊: {max_diff_side}, 差距: {max_diff:.2f} cm")
-                return max_diff
+                return self.img, max_diff
         else:
             print("找不到四邊形")
 
