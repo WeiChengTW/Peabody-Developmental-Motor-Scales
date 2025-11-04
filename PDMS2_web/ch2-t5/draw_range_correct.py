@@ -2,11 +2,14 @@ import cv2
 import numpy as np
 import json
 import os
+from pathlib import Path
 
 # === 參數（可微調）===
 MERGE_GAP_PX = 16  # 合併相鄰突出片段的最小水平距離（12~20 都可試）
 MIN_BLOB_AREA = 60  # 最小面積門檻；原本 20 太小容易數到雜點
 
+# 改動：統一用檔案所在資料夾為路徑基準
+BASE = Path(__file__).resolve().parent
 
 def calc_mainline_paint_ratio(bw, y_top, y_bot, shrink=6, min_keep_frac=0.5):
     """
@@ -126,10 +129,35 @@ def analyze_paint(image, y_top, y_bot, show_windows=False):
     bw_lines = np.zeros_like(gray, dtype=np.uint8)
     bw_lines[y0:y1, :] = band_bw
 
-    # ========== 3B. 紅筆專用遮罩 ==========
+    # ========== 3B. 筆劃遮罩（紅色 OR 深色鉛筆） ==========
+
+    # 3B-1) 紅色（保留你原本的做法）
     mask_red = mask_red_full.copy()
     mask_red = cv2.morphologyEx(mask_red, cv2.MORPH_OPEN, np.ones((3, 3), np.uint8), 1)
     mask_red = cv2.dilate(mask_red, np.ones((3, 3), np.uint8), 1)
+
+    # 3B-2) 深色鉛筆線（灰階黑線）
+    #   做自適應對比＋黑帽凸顯「比背景更暗的細線」，再 Otsu 閾值
+    g_eq = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8)).apply(gray)
+    bh2  = cv2.morphologyEx(
+        g_eq, cv2.MORPH_BLACKHAT,
+        cv2.getStructuringElement(cv2.MORPH_RECT, (9, 9))
+    )
+    _, mask_dark = cv2.threshold(bh2, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    mask_dark = cv2.morphologyEx(mask_dark, cv2.MORPH_OPEN, np.ones((3, 3), np.uint8), 1)
+
+    #   移除主水平線本體（避免把主線當成塗色）
+    mainline_thick = cv2.dilate(bw_lines, cv2.getStructuringElement(cv2.MORPH_RECT, (1, 9)), 1)
+    mask_dark[mainline_thick > 0] = 0
+
+    #   限縮到畫面中間亮度偏低的像素（排除淺噪聲，可視情況開/關）
+    #   這行可選：若背景很乾淨可先註解
+    low_sat_gray = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)[:, :, 1] < 80
+    mask_dark = cv2.bitwise_and(mask_dark, (low_sat_gray.astype(np.uint8) * 255))
+
+    # 3B-3) 最終「筆劃」遮罩＝紅色 OR 深色線
+    mask_paint = cv2.bitwise_or(mask_red, mask_dark)
+
 
     # 用黑線圖算 x_start, x_end
     _, x_start, x_end = calc_mainline_paint_ratio(bw_lines, y_top, y_bot)
@@ -153,7 +181,7 @@ def analyze_paint(image, y_top, y_bot, show_windows=False):
             x_start, x_end = new_x_start, new_x_end
 
     # ===== C) 計算突出（x 範圍內、離邊界安全距離）=====
-    ys, xs = np.where(mask_red > 0)
+    ys, xs = np.where(mask_paint > 0)
     mask_in_xrange = (xs >= x_start) & (xs <= x_end)
     h, w = mask_red.shape
     margin = 20
@@ -182,9 +210,9 @@ def analyze_paint(image, y_top, y_bot, show_windows=False):
     protrude_count = sum(cv2.contourArea(c) > MIN_BLOB_AREA for c in contours)
 
     # ===== D) 計算塗色佔比（在縮內區塊）=====
-    roi_red = mask_red[y_in0 : y_in1 + 1, x_start : x_end + 1].copy()
-    # 補實紅筆，避免小縫造成分子過小
-    roi_red = cv2.morphologyEx(roi_red, cv2.MORPH_CLOSE, np.ones((7, 7), np.uint8), 1)
+    roi_red = mask_paint[y_in0 : y_in1 + 1, x_start : x_end + 1].copy()
+    # 收斂就好，避免過度膨脹偏離筆劃
+    roi_red = cv2.morphologyEx(roi_red, cv2.MORPH_CLOSE, np.ones((3, 3), np.uint8), 1)
     roi_red = cv2.dilate(roi_red, np.ones((5, 3), np.uint8), 1)
 
     total_area = int(roi_red.size)
@@ -192,68 +220,116 @@ def analyze_paint(image, y_top, y_bot, show_windows=False):
     ratio = (n_white / total_area) if total_area else 0.0
 
     # ===== E) 評分規則 =====
-    RATIO_MIN = 0.75
+    RATIO_MIN = 0.70
     RATIO_TOL = 0.01  # 1% 容忍：避免 74.9%/75.1% 抖動
 
     def grade(paint_ratio, protrusion_count):
         meets_cover = (paint_ratio + RATIO_TOL) >= RATIO_MIN
         if meets_cover:
             if protrusion_count <= 2:
-                return 2, "達到 ≥75%，且超線 ≤2 次 → 2 分"
+                return 2, "達到 >= 70%，且超線 <= 2 次 → 2 分"
             elif protrusion_count <= 4:
-                return 1, "達到 ≥75%，但超線 3~4 次 → 1 分"
+                return 1, "達到 >= 70%，但超線 3~4 次 → 1 分"
             else:
-                return 0, "達到 ≥75%，但超線 >4 次 → 0 分"
+                return 0, "達到 >= 70%，但超線 >4 次 → 0 分"
         else:
             if protrusion_count <= 2:
-                return 1, "未達 75%，雖超線 ≤2 次，但降級 → 1 分"
+                return 1, "未達 70%，雖超線 <= 2 次，但降級 → 1 分"
             elif protrusion_count <= 4:
-                return 0, "未達 75%，且超線 3~4 次 → 0 分"
+                return 0, "未達 70%，且超線 3~4 次 → 0 分"
             else:
-                return 0, "未達 75%，且超線 >4 次 → 0 分"
+                return 0, "未達 70%，且超線 >4 次 → 0 分"
 
     score, rule_msg = grade(ratio, protrude_count)
 
-    # 視窗預覽（可選）
-    if show_windows:
-        # 突出標記 + 紫線
-        img_out = img.copy()
-        img_out[over_ys, over_xs] = (0, 0, 255)
-        for y in (y_in0, y_in1):
-            cv2.line(img_out, (x_start, y), (x_end, y), (255, 0, 255), 2)
+        # === Draw Area 圖建立與結果輸出 ===
+    # 突出標記 + 紫線
+    img_out = img.copy()
+    img_out[over_ys, over_xs] = (0, 0, 255)
+    for y in (y_in0, y_in1):
+        cv2.line(img_out, (x_start, y), (x_end, y), (255, 0, 255), 2)
 
-        # draw area 領域可視化
-        img_mask = img.copy()
-        roi_color = img_mask[y_in0 : y_in1 + 1, x_start : x_end + 1]
-        roi_color[roi_red > 0] = (0, 255, 0)
-        cv2.rectangle(img_mask, (x_start, y_in0), (x_end, y_in1), (0, 255, 255), 2)
+    # Draw Area 領域（主視覺圖）
+    img_mask = img.copy()
+    roi_color = img_mask[y_in0 : y_in1 + 1, x_start : x_end + 1]
+    roi_color[roi_red > 0] = (0, 255, 0)
+    cv2.rectangle(img_mask, (x_start, y_in0), (x_end, y_in1), (0, 255, 255), 2)
 
-        def show_scaled(title, im, scale=0.5):
-            hh, ww = im.shape[:2]
-            imr = cv2.resize(im, (int(ww * scale), int(hh * scale)))
-            # cv2.imshow(title, imr)
+    def _pick_font():
+        for p in [
+            r"C:\Windows\Fonts\msjh.ttc",
+            r"C:\Windows\Fonts\msjhbd.ttc",
+            r"C:\Windows\Fonts\mingliu.ttc",
+            r"C:\Windows\Fonts\Arial.ttf",
+        ]:
+            if os.path.exists(p):
+                return p
+        return None
 
-        # 依需求打開
-        show_scaled("Draw Area", img_mask, 0.5)
-        show_scaled("Protrusion (red)", img_out, 0.5)
-        # show_scaled("two-value (lines)", bw_lines, 0.5)  # 若需要可加
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
+    def draw_text_cn(bgr, text, topleft=(20, 35), font_size=28,
+                     color=(255,255,255), bg=(0,0,0), pad=8):
+        try:
+            from PIL import Image, ImageDraw, ImageFont
+            font_path = _pick_font()
+            if not font_path:
+                raise RuntimeError
+            img_pil = Image.fromarray(cv2.cvtColor(bgr, cv2.COLOR_BGR2RGB))
+            draw = ImageDraw.Draw(img_pil)
+            font = ImageFont.truetype(font_path, font_size)
+            x, y = topleft
+            bbox = draw.textbbox((x, y), text, font=font)
+            draw.rectangle((bbox[0]-pad, bbox[1]-pad,
+                            bbox[2]+pad, bbox[3]+pad), fill=bg)
+            draw.text((x, y), text, font=font, fill=color)
+            return cv2.cvtColor(np.array(img_pil), cv2.COLOR_RGB2BGR)
+        except Exception:
+            cv2.putText(bgr, text, (20, 35),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.7, color, 2, cv2.LINE_AA)
+            return bgr
 
-    return {
-        "ratio": ratio,
-        "protrude_count": protrude_count,
-        "score": score,
-        "rule": rule_msg,
-        "x_start": int(x_start),
-        "x_end": int(x_end),
-        "y_in0": int(y_in0),
-        "y_in1": int(y_in1),
-    }
+    # 組合輸出文字內容
+    base_name = Path(image).name if isinstance(image, (str, os.PathLike)) else "result.jpg"
+    summary = (
+        f"{base_name} → 佔比: {ratio:.2%}, 突出: {protrude_count}, 分數: {score}\n"
+        f"{rule_msg}"
+    )
+
+    # 疊字到 Draw Area 圖上
+    img_mask = draw_text_cn(img_mask, summary)
+
+    # === 儲存到 result/ ===
+    result_dir = Path(__file__).resolve().parent / "result"
+    result_dir.mkdir(parents=True, exist_ok=True)
+    out_path = result_dir / base_name
+
+    ok, buf = cv2.imencode(".jpg", img_mask)
+    if ok:
+        buf.tofile(str(out_path))
+        print(f"✅ 已輸出 {out_path}")
+    else:
+        print(f"⚠️ 儲存失敗：{out_path}")
+
+    # === 不顯示視窗 ===
+    # （若你想要臨時預覽，把下面三行解開即可）
+    cv2.imshow("Draw Area", img_mask)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+    return score,img_mask
+    # return {
+    #     "ratio": ratio,
+    #     "protrude_count": protrude_count,
+    #     "score": score,
+    #     "rule": rule_msg,
+    #     "x_start": int(x_start),
+    #     "x_end": int(x_end),
+    #     "y_in0": int(y_in0),
+    #     "y_in1": int(y_in1),
+    # }
 
 
-# 兼容舊命名（如果你 main.py 想寫 from correct import analyze_image）
+# 兼容舊命名
 analyze_image = analyze_paint
+
 
 
 # ============ 測試區（單張）=========== #
@@ -264,20 +340,21 @@ def main():
       2) 自動偵測兩條水平線 y_top, y_bot
       3) 呼叫 analyze_paint 做評分
     """
-    img = 1  # ← 改成你要測的編號（對應 new/new{img}.jpg）
-    img_path = os.path.join("new", f"new{img}.jpg")
-    if not os.path.exists(img_path):
-        raise FileNotFoundError(f"找不到圖片：{os.path.abspath(img_path)}")
+    img = 3  # ← 改成你要測的編號（對應 new/new{img}.jpg）
+    # 改動：用 BASE / "new" / ...
+    img_path = BASE / "new" / f"new{img}.jpg"
+    if not img_path.exists():
+        raise FileNotFoundError(f"找不到圖片：{img_path}")
 
     # 單張自動抓 y_top, y_bot（不再用 JSON）
     from exceed_correct import detect_horizontal_lines
 
-    y_top, y_bot = detect_horizontal_lines(img_path, show_debug=False)
+    y_top, y_bot = detect_horizontal_lines(str(img_path), show_debug=False)
     if y_top is None or y_bot is None:
         raise RuntimeError("偵測不到兩條主線")
 
     # 分析
-    result = analyze_paint(img_path, int(y_top), int(y_bot), show_windows=True)
+    result = analyze_paint(str(img_path), int(y_top), int(y_bot), show_windows=True)
     print(
         f"{os.path.basename(img_path)} → 佔比: {result['ratio']:.2%}, "
         f"突出: {result['protrude_count']}, 分數: {result['score']} | {result['rule']}"

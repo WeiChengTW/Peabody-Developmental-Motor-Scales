@@ -20,6 +20,7 @@ if __name__ == "__main__":
         # uid = "lull222"
         # img_id = "ch3-t1"
         image_path = rf"kid\{uid}\{img_id}.jpg"
+
     # img = 3
     # image_path = rf"PDMS2_web\ch2-t5\image\{img}.jpg"
     # in_path = os.path.join("image", f"{img}.jpg")  # ✅ 跨平台路徑
@@ -27,9 +28,8 @@ if __name__ == "__main__":
     out_path = rf"PDMS2_web\ch2-t5\new\new{img_id}.jpg"
 
     # 1) 裁切
-    warped = get_pixel_per_cm_from_a4(image_path, show_debug=False)
-    cv2.imwrite(out_path, warped)
-    print(f"裁切後圖片已儲存至: {out_path}")
+    warped = get_pixel_per_cm_from_a4(image_path,show_debug=False)
+    cv2.imwrite(out_path,warped)
     if warped is None:
         # 若你的 crop_paper 只存檔不回傳，可改成：warped = cv2.imread(out_path)
         warped = cv2.imread(out_path)
@@ -42,8 +42,9 @@ if __name__ == "__main__":
         raise RuntimeError("偵測不到兩條主線")
 
     # 3) 分析塗色 + 超出
-    result = analyze_paint(warped, int(y_top), int(y_bot), show_windows=True)
-    print("得分：", result["score"])
+    score,result_img = analyze_paint(warped, int(y_top), int(y_bot), show_windows=True)
+    # print("得分：", result["score"])
     # print("說明：", result["rule"])
-    score = result["score"]
+    result_path = rf"kid\{uid}\{img_id}_result.jpg"
+    cv2.imwrite(result_path,result_img)
     return_score(score)
