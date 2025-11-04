@@ -116,7 +116,7 @@ def get_pixel_per_cm_from_a4(
         print(f"A4區域已儲存至: {cropped_path}")
 
     # 儲存像素比例資料
-    json_path = rf"PDMS2_web/px2cm.json"
+    json_path = BASE_DIR.parent / "px2cm.json"
     current_time = datetime.now()  # Define current_time
     # json_path = r"PDMS2_web/px2cm.json"
     print(f"儲存像素比例資料至: {json_path}")

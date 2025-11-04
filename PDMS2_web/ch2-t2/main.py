@@ -115,7 +115,7 @@ def get_pixel_per_cm_from_a4(
         print(f"A4區域已儲存至: {cropped_path}")
 
     # 儲存像素比例資料
-    json_path = "PDMS2_web/px2cm.json"
+    json_path = BASE_DIR.parent / "px2cm.json"
     # data = {
     #     "pixel_per_cm": pixel_per_cm,
     #     "image_path": image_path,
@@ -217,7 +217,7 @@ def main(img_path):
 
     # cm_per_pixel = 1 / pixel_per_cm
     # actual_length_cm = 7.5
-    
+
     # 裁切圖形
     print("\n==裁切圖形==")
 
