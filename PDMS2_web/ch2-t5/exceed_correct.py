@@ -14,7 +14,7 @@ def _parabolic_subpixel(y_vals, idx):
     if idx <= 0 or idx >= len(y_vals) - 1:
         return 0.0
     y1, y2, y3 = float(y_vals[idx - 1]), float(y_vals[idx]), float(y_vals[idx + 1])
-    denom = (y1 - 2 * y2 + y3)
+    denom = y1 - 2 * y2 + y3
     if abs(denom) < 1e-6:
         return 0.0
     return 0.5 * (y1 - y3) / denom
@@ -35,11 +35,11 @@ def refine_line_y(gray, bw_mask, y0, search=24, mode="center"):
     y_hi = min(h - 1, y0 + search)
 
     # 限制分析範圍：只用該水平線附近的白段，避免背景干擾
-    band = bw_mask[max(0, y0 - 2):min(h, y0 + 3), :].max(axis=0) > 0
+    band = bw_mask[max(0, y0 - 2) : min(h, y0 + 3), :].max(axis=0) > 0
     if band.sum() < max(50, int(0.1 * w)):
         band = np.ones(w, dtype=bool)
 
-    roi_gray = gray[y_lo:y_hi + 1, :][:, band]
+    roi_gray = gray[y_lo : y_hi + 1, :][:, band]
 
     if mode == "center":
         # 黑線中心：平均灰階最小處
@@ -50,7 +50,7 @@ def refine_line_y(gray, bw_mask, y0, search=24, mode="center"):
     else:
         # 邊界：垂直梯度（Sobel Y）
         sobel_y = cv2.Sobel(gray, cv2.CV_32F, 0, 1, ksize=3)
-        roi_gy = sobel_y[y_lo:y_hi + 1, :][:, band]
+        roi_gy = sobel_y[y_lo : y_hi + 1, :][:, band]
         gprof = roi_gy.mean(axis=1)
         if mode == "top":
             idx = int(np.argmin(gprof))  # 上緣：白→黑（負梯度峰）
@@ -68,7 +68,7 @@ def refine_y_center(bw, y0, cover_frac=0.25, search=12):
     y_lo = max(0, y0 - search)
     y_hi = min(h - 1, y0 + search)
     row_sum = (bw > 0).sum(axis=1)
-    idx = np.where(row_sum[y_lo: y_hi + 1] > int(cover_frac * w))[0]
+    idx = np.where(row_sum[y_lo : y_hi + 1] > int(cover_frac * w))[0]
     if idx.size == 0:
         return y0
     y_top = y_lo + idx[0]
@@ -112,8 +112,7 @@ def detect_horizontal_lines(image, show_debug=False):
     # 1) BlackHat 強化暗線條
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     bh = cv2.morphologyEx(
-        gray, cv2.MORPH_BLACKHAT,
-        cv2.getStructuringElement(cv2.MORPH_RECT, (51, 51))
+        gray, cv2.MORPH_BLACKHAT, cv2.getStructuringElement(cv2.MORPH_RECT, (51, 51))
     )
     # Otsu + 保底門檻
     _, bw = cv2.threshold(bh, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
@@ -133,9 +132,9 @@ def detect_horizontal_lines(image, show_debug=False):
     MARGIN_X = max(10, int(0.03 * w))
     MARGIN_Y = max(10, int(0.03 * h))
     bw[:, :MARGIN_X] = 0
-    bw[:, w - MARGIN_X:] = 0
+    bw[:, w - MARGIN_X :] = 0
     bw[:MARGIN_Y, :] = 0
-    bw[h - MARGIN_Y:, :] = 0
+    bw[h - MARGIN_Y :, :] = 0
 
     # 4) 水平閉運算：補斷線
     close_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (max(45, w // 16), 3))
@@ -160,7 +159,7 @@ def detect_horizontal_lines(image, show_debug=False):
     good_rows = []
     for y in cand_rows:
         y = int(np.clip(y, 0, h - 1))
-        band_row = bw_close[max(0, y - 1): min(h, y + 2), :].max(axis=0)
+        band_row = bw_close[max(0, y - 1) : min(h, y + 2), :].max(axis=0)
         if longest_run(band_row) >= int(0.28 * w):
             good_rows.append(y)
 
@@ -169,8 +168,12 @@ def detect_horizontal_lines(image, show_debug=False):
         edges = cv2.Canny(bw_close, 50, 120, apertureSize=3)
         minLineLength = int(0.20 * w)
         lines = cv2.HoughLinesP(
-            edges, 1, np.pi / 180, threshold=40,
-            minLineLength=minLineLength, maxLineGap=25,
+            edges,
+            1,
+            np.pi / 180,
+            threshold=40,
+            minLineLength=minLineLength,
+            maxLineGap=25,
         )
         ylist = []
         if lines is not None:
@@ -190,11 +193,27 @@ def detect_horizontal_lines(image, show_debug=False):
 
     # === 細緻化：改用灰階/梯度，把線貼到黑線的上/下緣 ===
     if len(center_lines) >= 2:
-        y_top_refined = int(round(refine_line_y(gray, bw_close, center_lines[0], search=24, mode="top")))
-        y_bot_refined = int(round(refine_line_y(gray, bw_close, center_lines[-1], search=24, mode="bottom")))
+        y_top_refined = int(
+            round(refine_line_y(gray, bw_close, center_lines[0], search=24, mode="top"))
+        )
+        y_bot_refined = int(
+            round(
+                refine_line_y(
+                    gray, bw_close, center_lines[-1], search=24, mode="bottom"
+                )
+            )
+        )
         center_lines = [y_top_refined, y_bot_refined]
     elif len(center_lines) == 1:
-        center_lines = [int(round(refine_line_y(gray, bw_close, center_lines[0], search=24, mode="center")))]
+        center_lines = [
+            int(
+                round(
+                    refine_line_y(
+                        gray, bw_close, center_lines[0], search=24, mode="center"
+                    )
+                )
+            )
+        ]
     else:
         center_lines = []
 
@@ -213,7 +232,7 @@ def detect_horizontal_lines(image, show_debug=False):
             cv2.line(dbg, (0, int(y_top)), (w - 1, int(y_top)), (0, 255, 255), 1)
         if y_bot is not None and y_bot != y_top:
             cv2.line(dbg, (0, int(y_bot)), (w - 1, int(y_bot)), (0, 255, 0), 1)
-        cv2.imshow("Detected lines", dbg)
+        # cv2.imshow("Detected lines", dbg)
         cv2.waitKey(0)
         cv2.destroyAllWindows()
 

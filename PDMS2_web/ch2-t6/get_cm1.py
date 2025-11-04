@@ -4,6 +4,7 @@ import glob
 import os
 import re
 
+
 def auto_crop_wood_board(image, debug=False, allow_fallback=True):
     """
     嘗試只留下木板區域；若偵測失敗且 allow_fallback=True 則回傳原圖，避免整段流程中斷。
@@ -12,30 +13,32 @@ def auto_crop_wood_board(image, debug=False, allow_fallback=True):
 
     # （1）木板顏色 HSV 範圍：可視現場光線微調
     hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-    lower_wood = np.array([5, 10, 50])     # 放寬一些
+    lower_wood = np.array([5, 10, 50])  # 放寬一些
     upper_wood = np.array([45, 160, 255])
 
     mask = cv2.inRange(hsv, lower_wood, upper_wood)
 
     # （2）形態學：閉運算填洞、再做一次開運算去雜點
     k_close = np.ones((25, 25), np.uint8)
-    k_open  = np.ones((9, 9),   np.uint8)
+    k_open = np.ones((9, 9), np.uint8)
     mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, k_close)
-    mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN,  k_open)
+    mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, k_open)
 
     # （3）找最大輪廓，並做最小面積比過濾，避免選到小雜訊
     contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     if not contours:
         if allow_fallback:
-            if debug: print("⚠️ 木板未偵測到，改回傳原圖")
+            if debug:
+                print("⚠️ 木板未偵測到，改回傳原圖")
             return image
         raise ValueError("找不到木板區域")
 
     biggest = max(contours, key=cv2.contourArea)
     area = cv2.contourArea(biggest)
-    if area < 0.1 * (h * w):   # 面積過小視為失敗（閾值可調）
+    if area < 0.1 * (h * w):  # 面積過小視為失敗（閾值可調）
         if allow_fallback:
-            if debug: print("⚠️ 木板面積太小，改回傳原圖")
+            if debug:
+                print("⚠️ 木板面積太小，改回傳原圖")
             return image
         raise ValueError("找不到木板區域（面積過小）")
 
@@ -47,16 +50,15 @@ def auto_crop_wood_board(image, debug=False, allow_fallback=True):
     ww = min(ww + 20, w - x)
     hh = min(hh + 20, h - y)
 
-    crop_board = image[y:y+hh, x:x+ww]
+    crop_board = image[y : y + hh, x : x + ww]
 
     if debug:
         # debug 可視化（選擇性）
         vis = image.copy()
-        cv2.rectangle(vis, (x, y), (x+ww, y+hh), (0, 255, 0), 2)
-        cv2.imshow("Wood Board BBox", vis); cv2.waitKey(0); cv2.destroyAllWindows()
+        cv2.rectangle(vis, (x, y), (x + ww, y + hh), (0, 255, 0), 2)
+        # cv2.imshow("Wood Board BBox", vis); cv2.waitKey(0); cv2.destroyAllWindows()
 
     return crop_board
-
 
 
 def order_points(pts):
@@ -132,7 +134,7 @@ if __name__ == "__main__":
     output_folder = os.path.join(BASE, "new")
     os.makedirs(output_folder, exist_ok=True)
 
-    patterns = ["*.jpg","*.jpeg","*.png","*.JPG","*.JPEG","*.PNG"]
+    patterns = ["*.jpg", "*.jpeg", "*.png", "*.JPG", "*.JPEG", "*.PNG"]
     img_paths = []
     for p in patterns:
         img_paths.extend(glob.glob(os.path.join(input_folder, p)))
@@ -157,6 +159,7 @@ if __name__ == "__main__":
         m = re.search(r"\d+", name)
         num = int(m.group()) if m else float("inf")
         return (num, name.lower())
+
     img_paths = sorted(img_paths, key=sort_key)
 
     for i, img_path in enumerate(img_paths, start=1):
@@ -190,6 +193,3 @@ if __name__ == "__main__":
                 print(f"⚠️ 影像儲存失敗（cv2.imwrite 回傳 False）：{out_name}")
         except Exception as e:
             print(f"{os.path.basename(img_path)} 發生錯誤：{e}")
-
-
-

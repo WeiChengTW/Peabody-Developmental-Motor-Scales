@@ -4,7 +4,7 @@ from ultralytics import YOLO
 import sys
 
 # ================== 裁剪設定 ==================
-CROP_RATIO = 0.85  
+CROP_RATIO = 0.85
 
 # ================== YOLO 模型 ==================
 model = YOLO(r"ch1-t1/toybrick.pt")
@@ -21,20 +21,20 @@ def crop_center(frame, ratio=CROP_RATIO):
     將圖像裁剪至中心指定比例 (ratio) 的區域。
     """
     h, w = frame.shape[:2]
-    
+
     # 計算邊緣需要裁剪掉的比例
     margin_ratio = (1 - ratio) / 2
-    
+
     # 計算起始和結束座標
     x_start = int(w * margin_ratio)
     x_end = int(w * (1 - margin_ratio))
-    
+
     y_start = int(h * margin_ratio)
     y_end = int(h * (1 - margin_ratio))
-    
+
     # 裁剪圖像
     cropped_frame = frame[y_start:y_end, x_start:x_end]
-    
+
     return cropped_frame
 
 
@@ -163,7 +163,7 @@ def score_from_image(img_path, conf=CONF):
     # ===== 新增: 中心裁剪 75% 區域 =====
     img = crop_center(img, CROP_RATIO)
     # ==================================
-    
+
     display_frame = img.copy()
 
     # 灰階 + 模糊
@@ -172,8 +172,7 @@ def score_from_image(img_path, conf=CONF):
 
     # 自適應二值化：將深色的繩子凸顯出來
     binary = cv2.adaptiveThreshold(
-        blurred, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, 
-        cv2.THRESH_BINARY_INV, 25, 10
+        blurred, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, 25, 10
     )
 
     # 閉運算去雜點
@@ -191,7 +190,7 @@ def score_from_image(img_path, conf=CONF):
 
     # 骨架化
     skeleton = extract_line_skeleton(binary_masked)
-        
+
     # 檢查每個方塊是否靠近骨架
     is_correct = []
     correct_num = 0
@@ -203,13 +202,15 @@ def score_from_image(img_path, conf=CONF):
 
     # 在所有圖像上繪製標記
     # 原始圖 (BGR)
-    display_frame_with_markers = draw_block_markers(display_frame, boxes, masks, is_correct)
-    
+    display_frame_with_markers = draw_block_markers(
+        display_frame, boxes, masks, is_correct
+    )
+
     # 二值遮罩圖 (GRAY/BGR)
     # 將單通道的二值圖轉為三通道才能繪製彩色標記
     binary_bgr = cv2.cvtColor(binary_masked, cv2.COLOR_GRAY2BGR)
     binary_with_markers = draw_block_markers(binary_bgr, boxes, masks, is_correct)
-    
+
     # 骨架圖 (GRAY/BGR)
     skeleton_bgr = cv2.cvtColor(skeleton, cv2.COLOR_GRAY2BGR)
     skeleton_with_markers = draw_block_markers(skeleton_bgr, boxes, masks, is_correct)
@@ -223,20 +224,18 @@ def score_from_image(img_path, conf=CONF):
     # skeleton_resized = cv2.resize(skeleton_with_markers, (0, 0), fx=0.3, fy=0.3)
     # cv2.imshow('Skeleton Line', skeleton_resized)
 
-    
-
     # 計算分數 (沿用您的計分邏輯)
     correct_num_for_score = correct_num
-    if correct_num_for_score >= 2: # 假設有 2 個是基礎
+    if correct_num_for_score >= 2:  # 假設有 2 個是基礎
         correct_num_for_score -= 2
-        
+
     if correct_num_for_score == 4:
         score = 2
     elif correct_num_for_score == 3:
         score = 1
     else:
         score = 0
-        
+
     cv2.waitKey(0)
     cv2.destroyAllWindows()
 
@@ -252,7 +251,7 @@ if __name__ == "__main__":
     else:
         # 測試圖片路徑 (請替換為實際測試路徑)
         print("請提供 uid 和 img_id 參數或在程式碼中設定測試路徑。")
-        sys.exit(0) 
+        sys.exit(0)
 
     # image_path = r"ch1-t1.jpg"  # 讀取圖片
     score, num, result_img = score_from_image(image_path)
@@ -260,4 +259,4 @@ if __name__ == "__main__":
     # score, num = score_from_image(test_img)
     print("score =", score)
     print("num =", num)
-    # return_score(score)
+    return_score(score)

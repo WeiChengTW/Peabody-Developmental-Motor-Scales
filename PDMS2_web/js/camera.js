@@ -3,8 +3,8 @@
 // 共用 KEY；與你的其他頁一致
 const KEY = "kid-quest-progress-v1";
 // ======相機參數 (對應 app.py) =====
-const TOP = 1; 
-const SIDE = 2; 
+const TOP = 2; 
+const SIDE = 3; 
 const waittime = 3;
 
 
