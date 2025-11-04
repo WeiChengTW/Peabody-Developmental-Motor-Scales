@@ -5,3 +5,11 @@
 *.jpeg
 *.gif   
 *.pyc
+
+# 忽略大型模型檔案
+/PDMS2_web/ch2-t1/model/circle_detect.h5
+/PDMS2_web/ch2-t2/model/square.h5
+/PDMS2_web/ch2-t3/model/cross_final.h5
+
+# 忽略所有 .h5 檔案
+*.h5
