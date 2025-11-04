@@ -20,11 +20,11 @@ if __name__ == "__main__":
         # uid = "lull222"
         # img_id = "ch3-t1"
         image_path = rf"kid\{uid}\{img_id}.jpg"
-    img = 3
-    image_path = rf"PDMS2_web\ch2-t5\image\{img}.jpg"
+    # img = 3
+    # image_path = rf"PDMS2_web\ch2-t5\image\{img}.jpg"
     # in_path = os.path.join("image", f"{img}.jpg")  # ✅ 跨平台路徑
 
-    out_path = rf"PDMS2_web\ch2-t5\new\new{img}.jpg"
+    out_path = rf"PDMS2_web\ch2-t5\new\new{img_id}.jpg"
 
     # 1) 裁切
     warped = get_pixel_per_cm_from_a4(image_path, show_debug=False)

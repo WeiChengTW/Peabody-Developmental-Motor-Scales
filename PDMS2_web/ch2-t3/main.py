@@ -114,7 +114,7 @@ def get_pixel_per_cm_from_a4(
         print(f"A4區域已儲存至: {cropped_path}")
 
     # 儲存像素比例資料
-    json_path = "PDMS2_web/px2cm.json"
+    json_path = BASE_DIR.parent / "px2cm.json"
     # data = {
     #     "pixel_per_cm": pixel_per_cm,
     #     "image_path": image_path,
@@ -189,8 +189,6 @@ def main(img_path):
 
     classifier = ImageClassifier(MODEL_PATH, CLASS_NAMES)
 
-    
-
     # 初始化空間
     segmenter = Analyze_graphics()
     segmenter.initialize_workspace()
@@ -213,12 +211,12 @@ def main(img_path):
     except ValueError as e:
         print(f"⚠️ 跳過 {img_path}：{e}")
         return SCORE
-    
+
     # 參數要改
     cs = CrossScorer(
         cm_per_pixel=pixel_per_cm, angle_min=70.0, angle_max=110.0, max_spread_cm=0.6
     )
-        # 裁切圖形
+    # 裁切圖形
     print("\n==裁切圖形==")
     segmenter = Analyze_graphics()
     print(cropped_path)

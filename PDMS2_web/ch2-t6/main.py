@@ -19,12 +19,12 @@ if __name__ == "__main__":
         uid = sys.argv[1]
         img_id = sys.argv[2]
         image_path = rf"kid\{uid}\{img_id}.jpg"
-    image_path = rf"kid\cgu\ch2-t6.jpg"
+    # image_path = rf"kid\cgu\ch2-t6.jpg"
 
     output_folder = "new"
 
     os.makedirs(output_folder, exist_ok=True)
-
+    out_path = None
     # img=6
     # img_path=rf"image\{img}.jpg"
     image = cv2.imread(image_path)

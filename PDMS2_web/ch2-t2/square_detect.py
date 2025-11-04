@@ -2,7 +2,9 @@
 # -*- coding: utf-8 -*-
 import os, cv2, math, numpy as np
 from skimage.morphology import skeletonize
+
 __all__ = ["SquareGapAnalyzer"]
+
 
 class SquareGapAnalyzer:
     def __init__(
@@ -20,7 +22,7 @@ class SquareGapAnalyzer:
         # —— 是否強制用形態學骨架（避免 ximgproc 差異）——
         force_morph: bool = False,
         # —— 輸出資料夾 ——
-        out_dir: str = "output",
+        out_dir: str = "PDMS2_web\\ch2-t2\\output",
     ):
         # 輸出資料夾
         self.OUT_DIR = out_dir
@@ -67,11 +69,11 @@ class SquareGapAnalyzer:
         endpoints = []
         # 確保是二值圖（0/1）
         binary = (skel > 0).astype(np.uint8)
-        
+
         for y in range(1, binary.shape[0] - 1):
             for x in range(1, binary.shape[1] - 1):
                 if binary[y, x] == 1:
-                    neighbors = np.sum(binary[y-1:y+2, x-1:x+2]) - 1
+                    neighbors = np.sum(binary[y - 1 : y + 2, x - 1 : x + 2]) - 1
                     if neighbors == 1:
                         endpoints.append((x, y))
         return endpoints
@@ -101,7 +103,7 @@ class SquareGapAnalyzer:
         pairs = []
         while len(pts) >= 2:
             p = pts.pop(0)
-            distances = [(p[0]-q[0])**2 + (p[1]-q[1])**2 for q in pts]
+            distances = [(p[0] - q[0]) ** 2 + (p[1] - q[1]) ** 2 for q in pts]
             j = int(np.argmin(distances))
             pairs.append((p, pts.pop(j)))
         return pairs
@@ -111,20 +113,19 @@ class SquareGapAnalyzer:
         """找端點 → 合併 → 計算缺口數"""
         # 找端點
         endpoints = self.find_endpoints(skel)
-        
+
         # 合併端點
         H, W = img_shape[:2]
         diag = math.hypot(W, H)
         eps = max(self.MERGE_EPS_PX, int(0.030 * diag))
         endpoints = self.merge_points(endpoints, eps=eps)
-        
+
         # 過濾邊界端點
-        endpoints = [(x, y) for x, y in endpoints 
-                     if 1 <= x < W-1 and 1 <= y < H-1]
-        
+        endpoints = [(x, y) for x, y in endpoints if 1 <= x < W - 1 and 1 <= y < H - 1]
+
         # 計算缺口數
         gaps = len(endpoints) // 2
-        
+
         return endpoints, gaps
 
     # ===================== 角度計算（輪廓逼近法）=====================
@@ -141,19 +142,19 @@ class SquareGapAnalyzer:
         contours, _ = cv2.findContours(skel, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         if not contours:
             return dict(ok=False, reason="no contour")
-        
+
         # 2. 取最大輪廓
         cnt = max(contours, key=cv2.contourArea)
-        
+
         # 檢查面積
         H, W = img_shape[:2]
         if cv2.contourArea(cnt) < self.AREA_MIN_RATIO * (H * W):
             return dict(ok=False, reason="contour too small")
-        
+
         # 3. 凸包 + 逼近成四邊形
         hull = cv2.convexHull(cnt)
         peri = cv2.arcLength(hull, True)
-        
+
         # 嘗試不同的 epsilon 值
         approx = None
         for eps in [0.01, 0.02, 0.03, 0.04, 0.05]:
@@ -161,45 +162,53 @@ class SquareGapAnalyzer:
             if len(temp) == 4:
                 approx = temp
                 break
-        
+
         if approx is None or len(approx) != 4:
             return dict(ok=False, reason="cannot approximate to quad")
-        
+
         # 4. 排序角點（逆時針）
         corners = approx.reshape(-1, 2).astype(float)
         corners = self.cyclic(corners)
-        
+
         # 5. 計算四個內角
         angles = []
         for i in range(4):
-            p_prev = corners[(i-1) % 4]
+            p_prev = corners[(i - 1) % 4]
             p_curr = corners[i]
-            p_next = corners[(i+1) % 4]
+            p_next = corners[(i + 1) % 4]
             angle = self.interior_angle(p_prev, p_curr, p_next)
             angles.append(angle)
-        
+
         # 檢查角度是否合理
         if any(not np.isfinite(a) or a < 30 or a > 150 for a in angles):
             return dict(ok=False, reason="angles out of range")
-        
+
         # 6. 計算最大偏差
         max_deviation = max(abs(a - 90) for a in angles)
-        
+
         return dict(
             ok=True,
             corners=corners,
             thetas=angles,
             dev=max_deviation,
-            reason="contour_approx"
+            reason="contour_approx",
         )
 
     # ===================== 可視化 =====================
     def draw_gap_image(self, skel, endpoints, pairs, gaps, out_path):
         vis = cv2.cvtColor(skel, cv2.COLOR_GRAY2BGR)
-        for (x, y) in endpoints:
+        for x, y in endpoints:
             cv2.circle(vis, (x, y), 4, (0, 0, 255), -1)
-        cv2.putText(vis, f"Endpoints: {len(endpoints)}  Gaps: {gaps}", (10, 24),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.25, (0, 255, 0), 1, cv2.LINE_AA)
+        cv2.putText(
+            vis,
+            f"Endpoints: {len(endpoints)}  Gaps: {gaps}",
+            (10, 24),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.25,
+            (0, 255, 0),
+            1,
+            cv2.LINE_AA,
+        )
         cv2.imwrite(out_path, vis)
 
     def draw_score_image(self, img, score, reason, thetas, corners, gaps, out_path):
@@ -210,19 +219,28 @@ class SquareGapAnalyzer:
         th = max(1, int(1 + fs * 1.2))
         step = int(18 + fs * 26)
         y = int(12 + fs * 22)
-        
+
         panel = [f"Score: {score}", f"Reason: {reason}", f"Gaps: {gaps}"]
         if thetas is not None:
             mx = max(abs(t - 90) for t in thetas)
             panel += [
                 f"Angles: {' | '.join(f'{t:.1f}' for t in thetas)}",
-                f"Max dev: {mx:.1f} deg"
+                f"Max dev: {mx:.1f} deg",
             ]
         else:
             panel += ["Angles: -", "Max dev: -"]
-        
+
         for t in panel:
-            cv2.putText(vis, t, (10, y), cv2.FONT_HERSHEY_SIMPLEX, fs, (0, 0, 0), th, cv2.LINE_AA)
+            cv2.putText(
+                vis,
+                t,
+                (10, y),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                fs,
+                (0, 0, 0),
+                th,
+                cv2.LINE_AA,
+            )
             y += step
 
         if corners is not None and thetas is not None and len(corners) == 4:
@@ -233,8 +251,16 @@ class SquareGapAnalyzer:
             for i in range(4):
                 x, y = int(round(P[i][0])), int(round(P[i][1]))
                 cv2.circle(vis, (x, y), r, (0, 255, 0), 1)
-                cv2.putText(vis, f"{thetas[i]:.1f}", (x + 6, y - 6),
-                            cv2.FONT_HERSHEY_SIMPLEX, fs_c, (0, 255, 0), th_c, cv2.LINE_AA)
+                cv2.putText(
+                    vis,
+                    f"{thetas[i]:.1f}",
+                    (x + 6, y - 6),
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    fs_c,
+                    (0, 255, 0),
+                    th_c,
+                    cv2.LINE_AA,
+                )
         cv2.imwrite(out_path, vis)
         return vis
 
@@ -242,7 +268,7 @@ class SquareGapAnalyzer:
     def score_from_gaps_and_angles(self, gaps, thetas):
         if gaps >= 2:
             return 0, ">=2 gaps"
-        
+
         if thetas is None:
             if gaps == 1:
                 return 1, "1 gap (angles not found → default 1)"
@@ -266,22 +292,22 @@ class SquareGapAnalyzer:
     def process_image(self, img_path: str):
         SCORE = 0
 
-        #讀不到圖片直接回傳 0
+        # 讀不到圖片直接回傳 0
         img = cv2.imread(img_path)
         if img is None:
-            return dict(ok=False, error=f"read fail: {img_path}", score = SCORE)
+            return dict(ok=False, error=f"read fail: {img_path}", score=SCORE)
 
         # 1) 二值化與骨架
         img = cv2.imread(img_path, cv2.IMREAD_GRAYSCALE)
         blur = cv2.GaussianBlur(img, (3, 3), 0)
         _, binary = cv2.threshold(blur, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
-        
+
         # cv2.imshow('ori', img)
         # cv2.imshow('binary', binary)
 
-        #cv2.imshow 顯示灰階時是把 0 視為黑、255 視為白
-        skel_bool = skeletonize(binary > 0)        # True/False
-        skel = (skel_bool.astype(np.uint8) * 255)  # 0/255，便於顯示
+        # cv2.imshow 顯示灰階時是把 0 視為黑、255 視為白
+        skel_bool = skeletonize(binary > 0)  # True/False
+        skel = skel_bool.astype(np.uint8) * 255  # 0/255，便於顯示
 
         # cv2.imshow('skel', skel)
         # cv2.waitKey(0)
@@ -299,12 +325,27 @@ class SquareGapAnalyzer:
             out_gap = os.path.join(self.OUT_DIR, f"gap_{base}")
             out_score = os.path.join(self.OUT_DIR, f"score_{base}")
 
-            self.draw_gap_image(skel, endpoints, self.pair_greedy(endpoints), gaps, out_gap)
-            result_img = self.draw_score_image(img, score, reason, None, None, gaps, out_score)
+            self.draw_gap_image(
+                skel, endpoints, self.pair_greedy(endpoints), gaps, out_gap
+            )
+            result_img = self.draw_score_image(
+                img, score, reason, None, None, gaps, out_score
+            )
 
-            return dict(ok=True, gaps=gaps, score=score, reason=reason,
-                        thetas=None, corners=None,
-                        out_skeleton=out_skel, out_gap=out_gap, out_score=out_score), result_img
+            return (
+                dict(
+                    ok=True,
+                    gaps=gaps,
+                    score=score,
+                    reason=reason,
+                    thetas=None,
+                    corners=None,
+                    out_skeleton=out_skel,
+                    out_gap=out_gap,
+                    out_score=out_score,
+                ),
+                result_img,
+            )
 
         # 4) 只有 <2 缺口才去算角度
         angle_res = self.get_angles_from_skeleton(skel, img.shape)
@@ -318,22 +359,38 @@ class SquareGapAnalyzer:
         out_gap = os.path.join(self.OUT_DIR, f"gap_{base}")
         out_score = os.path.join(self.OUT_DIR, f"score_{base}")
         self.draw_gap_image(skel, endpoints, self.pair_greedy(endpoints), gaps, out_gap)
-        result_img = self.draw_score_image(img, score, reason, thetas, corners, gaps, out_score)
+        result_img = self.draw_score_image(
+            img, score, reason, thetas, corners, gaps, out_score
+        )
 
-        return dict(ok=True, gaps=gaps, score=score, reason=reason,
-                    thetas=thetas, corners=corners,
-                    out_skeleton=out_skel, out_gap=out_gap, out_score=out_score), result_img
+        return (
+            dict(
+                ok=True,
+                gaps=gaps,
+                score=score,
+                reason=reason,
+                thetas=thetas,
+                corners=corners,
+                out_skeleton=out_skel,
+                out_gap=out_gap,
+                out_score=out_score,
+            ),
+            result_img,
+        )
 
 
 # ===================== 最底下跑流程（示例） =====================
 if __name__ == "__main__":
     image_path = r"cropped_a4\S__75472904_0_a4_cropped.jpg"
-    analyzer = SquareGapAnalyzer(out_dir="output")
+    analyzer = SquareGapAnalyzer(out_dir="PDMS2_web\\ch2-t2\\output")
     res = analyzer.process_image(image_path)
 
     if not res.get("ok", False):
         print("[Err]", res.get("error", "unknown error"))
     else:
         print(f"[Score] score={res['score']} gaps={res['gaps']} reason={res['reason']}")
-        print("thetas:", None if res['thetas'] is None else [round(t, 1) for t in res['thetas']])
-        print("saved:", res['out_skeleton'], res['out_gap'], res['out_score'])
+        print(
+            "thetas:",
+            None if res["thetas"] is None else [round(t, 1) for t in res["thetas"]],
+        )
+        print("saved:", res["out_skeleton"], res["out_gap"], res["out_score"])

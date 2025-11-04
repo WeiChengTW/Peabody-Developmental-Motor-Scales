@@ -4,6 +4,9 @@ import os
 import numpy as np
 import sys
 import json
+from pathlib import Path
+
+BASE_DIR = Path(__file__).resolve().parent
 
 
 def return_score(score):
@@ -69,7 +72,8 @@ def analyze_image(img_path):
     os.makedirs(result_dir, exist_ok=True)
 
     try:
-        with open("PDMS2_web/px2cm.json", "r") as f:
+        json_path = BASE_DIR.parent / "px2cm.json"
+        with open(json_path, "r") as f:
             data = json.load(f)
             px2cm = data["pixel_per_cm"]
     except FileNotFoundError:
