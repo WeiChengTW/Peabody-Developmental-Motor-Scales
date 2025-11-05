@@ -16,8 +16,8 @@ import time
 # 移除 imageio 依賴，因為錄影功能已移除
 
 # ======相機參數 (使用 runFortest.py 的值) =====
-TOP = 2
-SIDE = 3  # <-- Ch5-t1 會使用這個索引
+TOP = 1
+SIDE = 0  # <-- Ch5-t1 會使用這個索引
 # ============================================
 
 # =========================
@@ -492,8 +492,147 @@ def resolve_script_path(task_code: str) -> Optional[Path]:
             return p
     return None
 
+# def run_analysis_in_background(
+#     task_id, uid, img_id, script_path, stair_type=None, cam_index_input=None
+# ):
+#     try:
+#         processing_tasks[task_id] = {
+#             "status": "running",
+#             "uid": uid,
+#             "img_id": img_id,
+#             "start_time": datetime.now().isoformat(),
+#             "progress": 0,
+#         }
+#         write_to_console(f"開始背景任務 {task_id}: uid={uid}, task={img_id}", "INFO")
 
-# === [修正] run_analysis_in_background (簡化，移除 video_path 邏輯，強制顯示 Ch5-t1 視窗) ===
+#         # 基礎命令
+#         base_cmd = [sys.executable, str(script_path)]
+
+#         # 判斷是否為遊戲，並決定參數
+#         is_game = normalize_task_id(img_id) == "Ch5-t1"
+
+#         camera_to_use = SIDE  # Ch5-t1 的預設值
+#         if is_game and cam_index_input is not None:
+#             # 如果是 Ch5-t1 且前端有傳 cam_index，則使用傳入的值
+#             try:
+#                 camera_to_use = int(cam_index_input)
+#             except ValueError:
+#                 write_to_console(
+#                     f"無效的 cam_index: {cam_index_input}，使用預設 SIDE={SIDE}", "WARN"
+#                 )
+#                 pass  # 使用預設的 SIDE
+
+#         if is_game:
+#             # 遊戲模式：傳遞 uid 和 SIDE 相機索引
+#             cmd = base_cmd + [uid, str(camera_to_use)]  # <-- 使用全域 SIDE
+#         else:
+#             # 靜態分析模式：傳遞 uid 和 img_id (檔名)
+#             cmd = base_cmd + [uid, img_id]
+#             # 如果是階梯任務，再加入 stair_type
+#             if stair_type:
+#                 cmd.append(stair_type)
+
+#         write_to_console(f"執行命令：{' '.join(cmd)}", "INFO")
+#         env = os.environ.copy()
+#         env["PYTHONIOENCODING"] = "utf-8"
+#         env["PYTHONUTF8"] = "1"
+
+#         # 決定 creationflags
+#         creation_flags = 0
+#         if sys.platform == "win32":
+#             # 靜態任務使用 CREATE_NO_WINDOW 隱藏主控台
+#             if not is_game:
+#                 creation_flags = subprocess.CREATE_NO_WINDOW
+#             # 遊戲任務也使用 CREATE_NO_WINDOW 隱藏主控台，但會彈出 OpenCV 視窗
+#             else:
+#                 creation_flags = subprocess.CREATE_NO_WINDOW
+
+#         # 決定是否擷取輸出
+#         capture_output_flag = (
+#             not is_game
+#         )  # 靜態任務擷取，遊戲任務不擷取 (因為 stdout 可能被 opencv 阻塞)
+
+#         # 執行子程序
+#         result = subprocess.run(
+#             cmd,
+#             cwd=ROOT,
+#             env=env,
+#             capture_output=capture_output_flag,
+#             text=True,
+#             encoding="utf-8",
+#             errors="replace",
+#             creationflags=creation_flags,
+#         )
+
+#         # 從執行結果中取得分數和輸出
+#         score = int(result.returncode)
+
+#         if is_game:
+#             stdout_str = "Game executed in foreground (Console Hidden)."
+#             stderr_str = ""
+#         else:
+#             stdout_str = result.stdout
+#             stderr_str = result.stderr
+
+#         if stdout_str:
+#             write_to_console(f"腳本輸出 (任務 {task_id})：\n{stdout_str}", "INFO")
+#         if stderr_str:
+#             write_to_console(f"腳本錯誤輸出 (任務 {task_id})：\n{stderr_str}", "ERROR")
+#         task_id_std = normalize_task_id(img_id)
+#         uid_eff = uid or "unknown"
+
+#         score_id = None
+#         try:
+#             score_id = insert_score(uid_eff, task_id_std, score)
+#         except Exception as e:
+#             write_to_console(f"寫分數失敗：{e}", "ERROR")
+
+#         if score_id:
+#             try:
+#                 # 遊戲(Ch5-t1)不需要寫入子表
+#                 if not is_game:
+#                     insert_task_payload(task_id_std, score_id, None, None)
+#             except Exception as e:
+#                 # 子表寫入失敗也只記錄錯誤
+#                 write_to_console(
+#                     f"寫入子表失敗 (score_id={score_id}, task={task_id_std}): {e}",
+#                     "ERROR",
+#                 )
+
+#         processing_tasks[task_id] = {
+#             "status": "completed",
+#             "uid": uid_eff,
+#             "img_id": img_id,
+#             "start_time": processing_tasks[task_id]["start_time"],
+#             "end_time": datetime.now().isoformat(),
+#             "progress": 100,
+#             "result": {
+#                 "success": True,
+#                 "stdout": stdout_str,
+#                 "stderr": stderr_str,
+#                 "returncode": score,
+#                 "score_id": score_id,
+#                 "task_id": task_id_std,
+#             },
+#         }
+#         write_to_console(
+#             f"任務 {task_id} 完成：uid={uid_eff}, task={task_id_std}, score={score}, score_id={score_id}",
+#             "INFO",
+#         )
+
+#     except Exception as e:
+#         tb = traceback.format_exc()
+#         processing_tasks[task_id] = {
+#             "status": "error",
+#             "uid": uid,
+#             "img_id": img_id,
+#             "start_time": processing_tasks[task_id].get("start_time"),
+#             "end_time": datetime.now().isoformat(),
+#             "progress": 0,
+#             "error": str(e),
+#         }
+#         write_to_console(f"背景任務 {task_id} 發生嚴重錯誤：{e}\n{tb}", "ERROR")
+
 def run_analysis_in_background(
     task_id, uid, img_id, script_path, stair_type=None, cam_index_input=None
 ):
@@ -526,7 +665,7 @@ def run_analysis_in_background(
 
         if is_game:
             # 遊戲模式：傳遞 uid 和 SIDE 相機索引
-            cmd = base_cmd + [uid, str(camera_to_use)]  # <-- 使用全域 SIDE
+            cmd = base_cmd + [uid, str(camera_to_use)]
         else:
             # 靜態分析模式：傳遞 uid 和 img_id (檔名)
             cmd = base_cmd + [uid, img_id]
@@ -545,14 +684,13 @@ def run_analysis_in_background(
             # 靜態任務使用 CREATE_NO_WINDOW 隱藏主控台
             if not is_game:
                 creation_flags = subprocess.CREATE_NO_WINDOW
-            # 遊戲任務也使用 CREATE_NO_WINDOW 隱藏主控台，但會彈出 OpenCV 視窗
+            # 遊戲任務不隱藏，讓 OpenCV 視窗可以正常顯示
             else:
-                creation_flags = subprocess.CREATE_NO_WINDOW
+                creation_flags = 0
 
         # 決定是否擷取輸出
-        capture_output_flag = (
-            not is_game
-        )  # 靜態任務擷取，遊戲任務不擷取 (因為 stdout 可能被 opencv 阻塞)
+        # 遊戲任務也擷取輸出，以便看到錯誤訊息
+        capture_output_flag = True
 
         # 執行子程序
         result = subprocess.run(
@@ -569,17 +707,14 @@ def run_analysis_in_background(
         # 從執行結果中取得分數和輸出
         score = int(result.returncode)
 
-        if is_game:
-            stdout_str = "Game executed in foreground (Console Hidden)."
-            stderr_str = ""
-        else:
-            stdout_str = result.stdout
-            stderr_str = result.stderr
+        stdout_str = result.stdout if result.stdout else ""
+        stderr_str = result.stderr if result.stderr else ""
 
         if stdout_str:
             write_to_console(f"腳本輸出 (任務 {task_id})：\n{stdout_str}", "INFO")
         if stderr_str:
             write_to_console(f"腳本錯誤輸出 (任務 {task_id})：\n{stderr_str}", "ERROR")
+            
         task_id_std = normalize_task_id(img_id)
         uid_eff = uid or "unknown"
 
@@ -635,7 +770,6 @@ def run_analysis_in_background(
         }
         write_to_console(f"背景任務 {task_id} 發生嚴重錯誤：{e}\n{tb}", "ERROR")
 
-
 @app.post("/run-python")
 def run_python_script():
     try:
@@ -684,9 +818,6 @@ def run_python_script():
     except Exception as e:
         write_to_console(f"/run-python 發生錯誤: {e}", "ERROR")
         return jsonify({"success": False, "error": str(e)}), 500
-
-
-# ===== 移除：不再需要 run_analysis_in_background_with_video 函數 =====
 
 
 @app.get("/check-task/<task_id>")
