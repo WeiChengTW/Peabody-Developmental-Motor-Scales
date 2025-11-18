@@ -170,12 +170,61 @@ def save_and_display_image(img, filename="a4_with_aruco_marks.jpg"):
     return filename
 
 
-def main(show_plot=True):
+def create_pdf_from_image(img, pdf_filename="a4_with_aruco_marks.pdf"):
+    """
+    將圖片轉換為PDF格式
+
+    Args:
+        img: OpenCV圖片格式 (numpy array)
+        pdf_filename: PDF檔案名稱
+    """
+    try:
+        # 轉換OpenCV圖片為PIL格式
+        img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        pil_img = Image.fromarray(img_rgb)
+
+        # 創建PDF
+        c = canvas.Canvas(pdf_filename, pagesize=A4)
+
+        # 獲取A4頁面尺寸
+        page_width, page_height = A4
+
+        # 先保存圖片到臨時檔案
+        temp_img_path = "temp_aruco_image.png"
+        pil_img.save(temp_img_path, format="PNG")
+
+        # 將圖片插入PDF，並調整大小以適合A4頁面
+        c.drawImage(temp_img_path, 0, 0, width=page_width, height=page_height)
+
+        # 保存PDF
+        c.save()
+
+        # 清理臨時檔案
+        import os
+
+        if os.path.exists(temp_img_path):
+            os.remove(temp_img_path)
+
+        print(f"PDF已保存為: {pdf_filename}")
+
+        return pdf_filename
+
+    except ImportError:
+        print("警告: reportlab套件未安裝，無法生成PDF")
+        print("請執行: pip install reportlab pillow")
+        return None
+    except Exception as e:
+        print(f"生成PDF時發生錯誤: {e}")
+        return None
+
+
+def main(show_plot=True, create_pdf=True):
     """
     主函數
 
     Args:
         show_plot (bool): 是否顯示matplotlib視窗，默認True
+        create_pdf (bool): 是否生成PDF檔案，默認True
     """
     print("正在創建A4紙分四份ArUco標記...")
 
@@ -187,17 +236,22 @@ def main(show_plot=True):
         filename = save_and_display_image(img)
     else:
         # 只保存，不顯示
-        filename = "item60/a4_with_aruco_marks.jpg"
+        filename = "a4_with_aruco_marks.jpg"
         cv2.imwrite(filename, img)
         print(f"圖片已保存為: {filename}")
+
+    # 生成PDF
+    pdf_filename = None
+    if create_pdf:
+        pdf_filename = create_pdf_from_image(img, "a4_with_aruco_marks.pdf")
 
     print("完成！")
     print(f"圖片尺寸: {img.shape[1]} x {img.shape[0]} 像素")
     print(f"ArUco標記ID: 0, 1, 2, 3 (左上、右上、左下、右下)")
     print(f"ArUco字典: DICT_4X4_50")
 
-    return img, filename
+    return img, filename, pdf_filename
 
 
 if __name__ == "__main__":
-    image, saved_file = main(show_plot=False)
+    image, saved_file, pdf_file = main(show_plot=False, create_pdf=True)
