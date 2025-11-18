@@ -60,7 +60,7 @@ TASK_MAP = {
     "Ch1-t1": "string_blocks",
     "Ch1-t2": "pyramid",
     "Ch1-t3": "stair",
-    "Ch1-t4": "wall",
+    "Ch1-t4": "build_wall",
     "Ch2-t1": "draw_circle",
     "Ch2-t2": "draw_square",
     "Ch2-t3": "draw_cross",
@@ -100,16 +100,20 @@ def task_id_to_table(task_id: str) -> str:
     raise ValueError(f"未知的 task_id: {task_id}")
 
 
-def insert_task_payload(task_id: str, score_id: str, data1=None, data2=None):
+def insert_task_payload(task_id: str, uid: str, no: int, data1=None, data2=None):
     """寫入任務子表 (PyMySQL)"""
     table = task_id_to_table(task_id)
+    write_to_console(
+        f"[DB] insert_task_payload: table={table}, task_id={task_id}, uid={uid}, no={no}",
+        "INFO",
+    )
     try:
         db_exec(
-            f"INSERT INTO `{table}` (score_id, data1, data2) VALUES (%s, %s, %s)",
-            (score_id, data1, data2),
+            f"INSERT INTO `{table}` (task_id, uid, no, data1, data2) VALUES (%s, %s, %s, %s, %s)",
+            (task_id, uid, no, data1, data2),
         )
     except Exception as e:
-        # 錯誤已在 db_exec 中記錄，此處只需 raise
+        write_to_console(f"[DB] insert_task_payload 失敗: {e}", "ERROR")
         raise
 
 
@@ -161,37 +165,37 @@ def insert_score(
     uid: str,
     task_id: str,
     score: int,
-    no: Optional[int] = None,
     test_date: Optional[date] = None,
-) -> str:
+) -> int:
     """在 score_list 新增一筆分數 (PyMySQL)"""
     ensure_user(uid)
     ensure_task(task_id)
 
-    if no is None:
-        row = db_exec(
-            "SELECT COUNT(*) AS cnt FROM score_list WHERE uid=%s AND task_id=%s",
-            (uid, task_id),
-            fetch="one",
-        )
-        # PyMySQL 的 COUNT(*) 可能回傳 None 或 {'cnt': 0}
-        no = (int(row["cnt"]) + 1) if row and row.get("cnt") is not None else 1
+    row = db_exec(
+        "SELECT MAX(no) AS max_no FROM score_list WHERE uid=%s AND task_id=%s",
+        (uid, task_id),
+        fetch="one",
+    )
+    max_no = row["max_no"] if row and row["max_no"] is not None else 0
+    new_no = max_no + 1
 
-    score_id = uuid.uuid4().hex
     if test_date is None:
         test_date = date.today()
 
     try:
         db_exec(
-            "INSERT INTO score_list(score_id, task_id, uid, score, no, test_date) VALUES (%s,%s,%s,%s,%s,%s)",
-            (score_id, task_id, uid, int(score), no, test_date),
+            """
+            INSERT INTO score_list (task_id, uid, no, score, test_date)
+            VALUES (%s, %s, %s, %s, %s)
+            """,
+            (task_id, uid, new_no, int(score), test_date),
         )
         write_to_console(
-            f"[DB] insert_score ok: uid={uid}, task_id={task_id}, score={score}, score_id={score_id}",
+            f"[DB] insert_score ok: uid={uid}, task_id={task_id}, score={score}, no={new_no}",
             "INFO",
         )
-        return score_id
-    except Exception as e:
+        return new_no
+    except Exception:
         # 錯誤已在 db_exec 中記錄，此處只需 raise
         raise
 
@@ -430,10 +434,18 @@ def test_score():
         data = request.get_json()
         uid = data["uid"]
         task_id = data["task_id"]
-        score = 3
-        score_id = insert_score(uid, task_id, score)
-        insert_task_payload(task_id, score_id, None, None)  # 寫入子表
-        return jsonify({"success": True, "score_id": score_id, "score": score})
+        score = 3  # 測試用固定分數
+        # insert_score 現在回傳的是這次的 no（第幾次測驗）
+        attempt_no = insert_score(uid, task_id, score)
+        # 寫入對應任務的子表
+        insert_task_payload(task_id, uid, attempt_no, None, None)
+        return jsonify({
+            "success": True,
+            "task_id": task_id,
+            "uid": uid,
+            "no": attempt_no,
+            "score": score,
+        })
     except Exception as e:
         write_to_console(f"/test-score 錯誤: {e}", "ERROR")
         return jsonify({"success": False, "error": str(e)}), 500
@@ -585,23 +597,25 @@ def run_analysis_in_background(
         task_id_std = normalize_task_id(img_id)
         uid_eff = uid or "unknown"
 
-        score_id = None
+        attempt_no = None
         try:
-            score_id = insert_score(uid_eff, task_id_std, score)
+            # insert_score 現在回傳的是這次的 no（第幾次測驗）
+            attempt_no = insert_score(uid_eff, task_id_std, score)
         except Exception as e:
             write_to_console(f"寫分數失敗：{e}", "ERROR")
 
-        if score_id:
+        # 有成功寫入 score_list 才寫入子表
+        if attempt_no is not None:
             try:
                 # 遊戲(Ch5-t1)不需要寫入子表
                 if not is_game:
-                    insert_task_payload(task_id_std, score_id, None, None)
+                    insert_task_payload(task_id_std, uid_eff, attempt_no, None, None)
             except Exception as e:
-                # 子表寫入失敗也只記錄錯誤
                 write_to_console(
-                    f"寫入子表失敗 (score_id={score_id}, task={task_id_std}): {e}",
+                    f"寫入子表失敗 (task_id={task_id_std}, uid={uid_eff}, no={attempt_no}): {e}",
                     "ERROR",
                 )
+
 
         processing_tasks[task_id] = {
             "status": "completed",
@@ -615,12 +629,13 @@ def run_analysis_in_background(
                 "stdout": stdout_str,
                 "stderr": stderr_str,
                 "returncode": score,
-                "score_id": score_id,
                 "task_id": task_id_std,
+                "uid": uid_eff,
+                "no": attempt_no,
             },
         }
         write_to_console(
-            f"任務 {task_id} 完成：uid={uid_eff}, task={task_id_std}, score={score}, score_id={score_id}",
+            f"任務 {task_id} 完成：uid={uid_eff}, task={task_id_std}, score={score}, no={attempt_no}",
             "INFO",
         )
 
@@ -729,13 +744,18 @@ def db_ping():
 def list_scores():
     try:
         rows = db_exec(
-            "SELECT score_id, uid, task_id, score, no, test_date "
-            "FROM score_list ORDER BY test_date DESC, score_id DESC LIMIT 50",
+            """
+            SELECT task_id, uid, no, score, test_date
+            FROM score_list
+            ORDER BY test_date DESC, task_id ASC, uid ASC, no DESC
+            LIMIT 50
+            """,
             fetch="all",
         )
         return jsonify(rows or [])
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
+
 
 
 # =========================
