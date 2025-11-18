@@ -4,33 +4,25 @@ import time
 import sys
 import os
 from pathlib import Path
+import json
 
 game_started = False
 start_time = None
-
-# 按鈕設定
-button_x, button_y, button_w, button_h = 10, 300, 150, 50
-
 video_writer = None
 recording = False
 
+# 新增：遊戲狀態（供前端查詢）
+game_state = {
+    "running": False,
+    "bean_count": 0,
+    "remaining_time": 60,
+    "warning": False,
+    "game_over": False,
+    "score": -1
+}
 
 def return_score(score):
     sys.exit(int(score))
-
-
-# 滑鼠回調函數
-def mouse_callback(event, x, y, flags, param):
-    global game_started, start_time, recording, video_writer
-    
-    if event == cv2.EVENT_LBUTTONDOWN:
-        # 檢查是否點擊按鈕區域
-        if button_x <= x <= button_x + button_w and button_y <= y <= button_y + button_h:
-            if not game_started:
-                game_started = True
-                start_time = time.time()
-                recording = True  # 開始錄影
-                print("遊戲開始！")
 
 def calculate_score(cur_count, remain_time, WARNING):
     if cur_count >= 10 and remain_time >= 30:
@@ -42,23 +34,62 @@ def calculate_score(cur_count, remain_time, WARNING):
     else:
         return -1
 
-def main(CAMERA_INDEX, VIDEO_PATH):
-    global video_writer, recording, game_started, start_time
+def save_game_state(uid, state_data):
+    """儲存遊戲狀態到檔案，供前端讀取"""
+    state_file = Path(__file__).parent.parent / "kid" / uid / "Ch5-t1_state.json"
+    try:
+        with open(state_file, 'w', encoding='utf-8') as f:
+            json.dump(state_data, f, ensure_ascii=False)
+    except Exception as e:
+        print(f"儲存狀態失敗: {e}")
+
+def main(CAMERA_INDEX, VIDEO_PATH, UID):
+    global video_writer, recording, game_started, start_time, game_state
+
+    # ===== 重要：每次開始前完全重置遊戲狀態 =====
+    game_state["running"] = False
+    game_state["bean_count"] = 0
+    game_state["remaining_time"] = 60
+    game_state["warning"] = False
+    game_state["game_over"] = False
+    game_state["score"] = -1
+    
+    # 立即儲存初始狀態到檔案
+    save_game_state(UID, game_state)
+    print("遊戲狀態已初始化並儲存")
 
     # 初始化模型
     model = YOLO(r'ch5-t1/bean_model.pt')
-
-    cap = cv2.VideoCapture(CAMERA_INDEX)  # 開啟攝影機
-
-    # 檢查攝影機是否成功開啟
-    if not cap.isOpened():
-        print("錯誤：無法開啟攝影機")
+    
+    # 嘗試開啟相機（加入重試機制）
+    max_retries = 3
+    retry_delay = 1  # 秒
+    
+    for attempt in range(max_retries):
+        print(f"嘗試開啟相機 (索引 {CAMERA_INDEX})，第 {attempt + 1}/{max_retries} 次...")
+        cap = cv2.VideoCapture(CAMERA_INDEX, cv2.CAP_DSHOW)  # Windows 使用 DirectShow
+        
+        if cap.isOpened():
+            print("相機開啟成功！")
+            break
+        
+        print(f"開啟失敗，等待 {retry_delay} 秒後重試...")
+        cap.release()
+        time.sleep(retry_delay)
+    else:
+        # 所有嘗試都失敗
+        print(f"錯誤：嘗試 {max_retries} 次後仍無法開啟相機索引 {CAMERA_INDEX}")
+        print("可用的相機索引：")
+        for i in range(5):
+            test_cap = cv2.VideoCapture(i)
+            if test_cap.isOpened():
+                print(f"  - 相機索引 {i} 可用")
+                test_cap.release()
         return -1
 
-    # 預熱模型（讀取第一幀進行空推論）
+    # 預熱模型
     ret, warmup_frame = cap.read()
     if ret:
-        # 裁切預熱畫面
         scale = 0.8
         height, width = warmup_frame.shape[:2]
         crop_height = int(height * scale)
@@ -66,32 +97,27 @@ def main(CAMERA_INDEX, VIDEO_PATH):
         start_x = (width - crop_width) // 2
         start_y = (height - crop_height) // 2
         warmup_frame = warmup_frame[start_y:start_y + crop_height, start_x:start_x + crop_width]
-        
-        # 執行一次推論來預熱
         _ = model.predict(source=warmup_frame, conf=0.6, verbose=False)
         print("模型預熱完成！")
 
     frame_count = 0
     PER_FRAME = 10
     prev_box_count = 0
-    CONF = 0.5
+    CONF = 0.4
     game_duration = 60
 
-    # 分數相關
     WARNING = False
     SCORE = -1
 
-    # 在進入迴圈前設定視窗
-    cv2.namedWindow('Pick Bean Game', cv2.WINDOW_NORMAL)
-    cv2.setWindowProperty('Pick Bean Game', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
-    cv2.setWindowProperty('Pick Bean Game', cv2.WND_PROP_TOPMOST, 1)  
-    # cv2.setMouseCallback('Pick Bean Game', mouse_callback)  # 不需要滑鼠回調，自動開始
-    
     # 自動開始遊戲
     game_started = True
     start_time = time.time()
-    recording = True  # 開始錄影
+    recording = True
+    game_state["running"] = True
     print("遊戲開始！")
+    
+    # 建立顯示視窗
+    cv2.namedWindow('Bean Detection - Press Q to Quit', cv2.WINDOW_NORMAL)
 
     while True:
         ret, frame = cap.read()
@@ -104,14 +130,10 @@ def main(CAMERA_INDEX, VIDEO_PATH):
         # 裁切中間區域
         scale = 0.7
         height, width = frame.shape[:2]
-
         crop_height = int(height * scale)
         crop_width = int(width * scale)
-
         start_x = (width - crop_width) // 2
         start_y = (height - crop_height) // 2
-
-        # 裁切畫面
         frame = frame[start_y:start_y + crop_height, start_x:start_x + crop_width]
 
         # 初始化 VideoWriter
@@ -122,20 +144,28 @@ def main(CAMERA_INDEX, VIDEO_PATH):
             video_writer = cv2.VideoWriter(str(VIDEO_PATH), fourcc, fps, frame_size)
             print(f"開始錄影: {frame_size} @ {fps} FPS, 路徑: {VIDEO_PATH}")
 
-        # 只在遊戲開始後才進行偵測
         current_box_count = 0
+        display_frame = frame.copy()  # 複製一份用於顯示
+        
         if game_started:
             results = model.predict(source=frame, conf=CONF, verbose=False)
 
             for result in results:
                 boxes = result.boxes
                 current_box_count = len(boxes)
-
+                
+                # 繪製偵測框和標籤
                 for box in boxes:
-                    x1, y1, x2, y2 = box.xyxy[0].cpu().numpy()
-                    cx = int((x1 + x2) // 2)
-                    cy = int((y1 + y2) // 2)
-                    cv2.circle(frame, (cx, cy), 5, (0, 0, 255), -1)
+                    x1, y1, x2, y2 = map(int, box.xyxy[0])
+                    conf = float(box.conf[0])
+                    
+                    # 繪製邊界框
+                    cv2.rectangle(display_frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
+                    
+                    # 顯示信心度
+                    label = f'Bean {conf:.2f}'
+                    cv2.putText(display_frame, label, (x1, y1 - 10),
+                               cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
 
             # 檢查是否突然增加 2 個或以上
             if prev_box_count > 0:
@@ -143,6 +173,7 @@ def main(CAMERA_INDEX, VIDEO_PATH):
                 if frame_count % PER_FRAME == 0 and increase >= 2:
                     print("WARNING !")
                     WARNING = True
+                    game_state["warning"] = True
             
             prev_box_count = current_box_count
 
@@ -151,32 +182,55 @@ def main(CAMERA_INDEX, VIDEO_PATH):
             elapsed_time = time.time() - start_time
             remaining_time = max(0, game_duration - elapsed_time)
 
+            # 更新遊戲狀態
+            game_state["bean_count"] = current_box_count
+            game_state["remaining_time"] = int(remaining_time)
+            
+            # 在畫面上顯示資訊
+            info_y = 30
+            cv2.putText(display_frame, f'Bean Count: {current_box_count}', (10, info_y),
+                       cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 0), 2)
+            cv2.putText(display_frame, f'Time: {int(remaining_time)}s', (10, info_y + 40),
+                       cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 0), 2)
+            
+            if WARNING:
+                cv2.putText(display_frame, 'WARNING!', (10, info_y + 80),
+                           cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 3)
+            
+            # 每0.1秒儲存一次狀態
+            if frame_count % 10 == 0:
+                save_game_state(UID, game_state)
+
             SCORE = calculate_score(current_box_count, remaining_time, WARNING)
             if SCORE != -1:
-                cv2.putText(frame, f"GAME OVER !", (10, 50), 
-                           cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 255, 255), 5)
+                game_state["game_over"] = True
+                game_state["score"] = SCORE
+                game_state["running"] = False
+                save_game_state(UID, game_state)
+
+                # 顯示最終分數
+                cv2.putText(display_frame, f'GAME OVER - Score: {SCORE}', 
+                           (display_frame.shape[1]//2 - 200, display_frame.shape[0]//2),
+                           cv2.FONT_HERSHEY_SIMPLEX, 1.5, (0, 255, 255), 3)
 
                 if video_writer is not None:
                     video_writer.write(frame)
                 
-                cv2.imshow('Pick Bean Game', frame)
-                cv2.waitKey(3000)
+                # 顯示結束畫面 2 秒
+                cv2.imshow('Bean Detection - Press Q to Quit', display_frame)
+                cv2.waitKey(2000)
+                
                 print(f"score : {SCORE}\n")
                 break
         
-        # 顯示資訊
-        if game_started:
-            cv2.putText(frame, f'Beans: {current_box_count}', (10, 30), 
-                       cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
-            cv2.putText(frame, f'Time: {int(remaining_time)}s', (10, 70), 
-                       cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
-
-        # 錄影
+        # 顯示畫面
+        cv2.imshow('Bean Detection - Press Q to Quit', display_frame)
+        
+        # 錄影（錄製原始畫面，不包含標註）
         if recording and video_writer is not None:
             video_writer.write(frame)
 
-        cv2.imshow('Pick Bean Game', frame)
-
+        # 檢查是否按下 Q 鍵退出
         if cv2.waitKey(1) & 0xFF in [ord('q'), ord('Q')]:
             print("使用者按下 Q 鍵，結束遊戲")
             break
@@ -191,15 +245,14 @@ def main(CAMERA_INDEX, VIDEO_PATH):
     return 0 if SCORE == -1 else SCORE
 
 if __name__ == "__main__":
-
     UID = None
-    CAMERA_INDEX = 1
+    CAMERA_INDEX = 0  # 預設改為 0（因為只有一個相機）
     
     if len(sys.argv) >= 3:
         try:
             UID = sys.argv[1]
             CAMERA_INDEX = int(sys.argv[2])
-            print(f"從 app.py 接收到 UID: {UID}, 相機索引: {CAMERA_INDEX}")
+            print(f"從 run.py 接收到 UID: {UID}, 相機索引: {CAMERA_INDEX}")
         except Exception as e:
             print(f"錯誤：無法解析參數: {e}")
             sys.exit(-1)
@@ -215,10 +268,6 @@ if __name__ == "__main__":
     
     print(f"影片將儲存至: {VIDEO_PATH}")
 
-    # test
-    # VIDEO_PATH = 'result.mp4'
-    # CAMERA_INDEX = 1
-
-    score = main(CAMERA_INDEX, str(VIDEO_PATH))
+    score = main(CAMERA_INDEX, str(VIDEO_PATH), UID)
     print(f"最終分數: {score}")
     return_score(score)
