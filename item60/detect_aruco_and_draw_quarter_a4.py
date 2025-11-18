@@ -162,21 +162,13 @@ class ArUcoQuarterA4Detector:
         # 輸出詳細的比例尺資訊
         if marker_id is not None:
             print(f"\n--- 標記 ID {marker_id} 比例尺分析 ---")
-            print(f"ArUco 標記實際尺寸: {self.ARUCO_MARKER_SIZE_MM} mm (2.8 cm)")
-            print(f"ArUco 標記像素尺寸: {avg_marker_size_px:.2f} px")
-            print(f"四邊長度 (像素): [{', '.join([f'{l:.1f}' for l in side_lengths])}]")
             print(
                 f"旋轉角度: {np.degrees(rotation_angle):.1f}° ({rotation_angle:.3f} 弧度)"
             )
             print(f"比例尺: 1 mm = {px_to_mm_ratio:.3f} px")
-            print(f"比例尺: 1 px = {1/px_to_mm_ratio:.3f} mm")
             print(
                 f"1/4 A4 實際尺寸: {self.QUARTER_A4_WIDTH_MM} x {self.QUARTER_A4_HEIGHT_MM} mm"
             )
-            print(
-                f"1/4 A4 像素尺寸: {quarter_width_px:.1f} x {quarter_height_px:.1f} px"
-            )
-            print(f"長方形已旋轉以與 ArUco 標記平行")
 
         return rectangle_corners, scale_info
 

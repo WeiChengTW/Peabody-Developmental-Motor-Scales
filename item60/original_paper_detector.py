@@ -320,9 +320,38 @@ class OriginalPaperDetector:
 
         return left_mask, right_mask, left_rectangles, right_rectangles
 
+    def calculate_cutting_score(
+        self, distance_cm, has_cutting_evidence=True, cutting_analysis=None
+    ):
+        """
+        計算剪紙評分
+
+        Args:
+            distance_cm: 剪完的紙邊緣與原來的線間距（公分）
+            has_cutting_evidence: 是否有剪切證據（是否真的剪下去了）
+            cutting_analysis: 剪切分析結果
+
+        Returns:
+            score: 評分 (0, 1, 2)
+            score_description: 評分描述
+        """
+        if not has_cutting_evidence:
+            reason = (
+                cutting_analysis.get("reason", "未偵測到剪切證據")
+                if cutting_analysis
+                else "未偵測到剪切證據"
+            )
+            return 0, f"小朋友只是動動剪刀而沒剪下去 ({reason})"
+
+        if distance_cm < 1.2:
+            return 2, f"沿著線剪完，且間距{distance_cm:.2f}cm < 1.2cm"
+        else:
+            return 1, f"沿著線剪完，但間距{distance_cm:.2f}cm ≥ 1.2cm"
+
     def create_adaptive_masks(self, image_shape, left_rectangles, right_rectangles):
         """
         創建自適應的左右區域遮罩，基於ArUco標記的實際位置
+        修正版本：確保左右區域不重疊，避免交叉距離計算
         """
         height, width = image_shape[:2]
 
@@ -330,33 +359,58 @@ class OriginalPaperDetector:
         left_mask = np.zeros((height, width), dtype=np.uint8)
         right_mask = np.zeros((height, width), dtype=np.uint8)
 
-        # 如果有左側標記，擴展左側區域
-        if left_rectangles:
-            # 找到所有左側標記的最右邊界
-            max_right_x = 0
+        # 計算分割邊界
+        if left_rectangles and right_rectangles:
+            # 找到左側標記的最右邊界和右側標記的最左邊界
+            max_left_x = 0
             for rect_info in left_rectangles:
                 corners = rect_info["corners"]
                 right_x = np.max([corner[0] for corner in corners])
-                max_right_x = max(max_right_x, right_x)
+                max_left_x = max(max_left_x, right_x)
 
-            # 左側遮罩延伸到最右邊界加一些緩衝
-            buffer = width * 0.1  # 10%的緩衝區
-            left_boundary = min(int(max_right_x + buffer), width)
-            left_mask[:, :left_boundary] = 255
-
-        # 如果有右側標記，擴展右側區域
-        if right_rectangles:
-            # 找到所有右側標記的最左邊界
-            min_left_x = width
+            min_right_x = width
             for rect_info in right_rectangles:
                 corners = rect_info["corners"]
                 left_x = np.min([corner[0] for corner in corners])
-                min_left_x = min(min_left_x, left_x)
+                min_right_x = min(min_right_x, left_x)
 
-            # 右側遮罩從最左邊界減一些緩衝開始
-            buffer = width * 0.1  # 10%的緩衝區
-            right_boundary = max(int(min_left_x - buffer), 0)
-            right_mask[:, right_boundary:] = 255
+            # 確保不重疊：在兩個邊界的中點分割
+            split_x = (max_left_x + min_right_x) // 2
+
+            print(
+                f"遮罩分割調試: 左側最右邊界={max_left_x}, 右側最左邊界={min_right_x}, 分割點={split_x}"
+            )
+
+            left_mask[:, :split_x] = 255
+            right_mask[:, split_x:] = 255
+
+        elif left_rectangles:
+            # 只有左側標記，右側使用圖像右半部
+            max_left_x = 0
+            for rect_info in left_rectangles:
+                corners = rect_info["corners"]
+                right_x = np.max([corner[0] for corner in corners])
+                max_left_x = max(max_left_x, right_x)
+
+            # 左側遮罩延伸到標記邊界加小緩衝
+            buffer = width * 0.05  # 減少緩衝區到5%
+            split_x = min(int(max_left_x + buffer), width * 2 // 3)
+            left_mask[:, :split_x] = 255
+            right_mask[:, split_x:] = 255
+
+        elif right_rectangles:
+            # 只有右側標記，左側使用圖像左半部
+            min_right_x = width
+            for rect_info in right_rectangles:
+                corners = rect_info["corners"]
+                left_x = np.min([corner[0] for corner in corners])
+                min_right_x = min(min_right_x, left_x)
+
+            # 右側遮罩從標記邊界減小緩衝開始
+            buffer = width * 0.05  # 減少緩衝區到5%
+            split_x = max(int(min_right_x - buffer), width // 3)
+            left_mask[:, :split_x] = 255
+            right_mask[:, split_x:] = 255
 
         # 如果沒有標記，使用默認分割
         if not left_rectangles and not right_rectangles:
@@ -373,6 +427,66 @@ class OriginalPaperDetector:
             right_mask[:, center_x:] = 255
 
         return left_mask, right_mask
+
+    def detect_cutting_evidence(self, image, aruco_rectangles):
+        """
+        檢測是否有真正的剪切證據
+
+        Args:
+            image: 輸入圖像
+            aruco_rectangles: ArUco長方形資訊
+
+        Returns:
+            has_cutting: 是否有剪切證據 (True/False)
+            cutting_analysis: 剪切分析結果
+        """
+        # 轉換為灰度圖
+        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
+        # 高斯模糊
+        blurred = cv2.GaussianBlur(gray, (5, 5), 0)
+
+        # 邊緣偵測
+        edges = cv2.Canny(blurred, 30, 100)
+
+        # 尋找輪廓
+        contours, _ = cv2.findContours(
+            edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
+        )
+
+        # 過濾較小的輪廓
+        significant_contours = [c for c in contours if cv2.contourArea(c) > 500]
+
+        cutting_analysis = {
+            "total_contours": len(significant_contours),
+            "total_contour_area": sum(
+                [cv2.contourArea(c) for c in significant_contours]
+            ),
+            "aruco_count": len(aruco_rectangles),
+        }
+
+        # 判斷標準：
+        # 1. 必須有足夠的輪廓（表示有紙張邊緣）
+        # 2. 輪廓總面積要合理（不能太小，表示真的有紙）
+        # 3. 至少要有基本的紙張形狀
+
+        min_expected_contours = max(2, len(aruco_rectangles))  # 至少要有ArUco數量的輪廓
+        min_contour_area = 10000  # 最小輪廓面積閾值
+
+        has_cutting = (
+            cutting_analysis["total_contours"] >= min_expected_contours
+            and cutting_analysis["total_contour_area"] >= min_contour_area
+        )
+
+        cutting_analysis["has_cutting_evidence"] = has_cutting
+        cutting_analysis["reason"] = (
+            "偵測到剪切證據"
+            if has_cutting
+            else f"未偵測到足夠剪切證據 (輪廓:{cutting_analysis['total_contours']}/{min_expected_contours}, "
+            f"面積:{cutting_analysis['total_contour_area']:.0f}/{min_contour_area})"
+        )
+
+        return has_cutting, cutting_analysis
 
     def calculate_rectangle_distance(
         self, rect_info, contours, result_image, region_name
@@ -434,7 +548,7 @@ class OriginalPaperDetector:
                 ):
                     best_edge_to_box = edge_result
 
-        # 記錄結果
+        # 記錄並返回結果
         result = {
             "marker_id": marker_id,
             "max_distance": max_overall_distance,
@@ -466,7 +580,7 @@ class OriginalPaperDetector:
         return result
 
     def calculate_rectangle_distance_no_draw(
-        self, rect_info, contours, region_name, scale_info=None
+        self, rect_info, contours, region_name, scale_info=None, cutting_analysis=None
     ):
         """
         計算單個長方形與輪廓的距離 - 不繪製距離線，只計算結果
@@ -553,10 +667,36 @@ class OriginalPaperDetector:
             "corner_to_paper": best_corner_to_paper,
         }
 
+        # 計算評分（使用最大距離作為評分依據）
+        if cutting_analysis and not cutting_analysis.get("has_cutting_evidence", True):
+            # 如果沒有剪切證據，直接給0分
+            score = 0
+            score_description = f"小朋友只是動動剪刀而沒剪下去 ({cutting_analysis.get('reason', '未偵測到剪切證據')})"
+        elif scale_info:
+            max_distance_cm = max_overall_distance / scale_info["px_to_mm_ratio"] / 10
+            has_cutting = (
+                cutting_analysis.get("has_cutting_evidence", True)
+                if cutting_analysis
+                else True
+            )
+            score, score_description = self.calculate_cutting_score(
+                max_distance_cm, has_cutting, cutting_analysis
+            )
+        else:
+            # 沒有比例尺資訊時，無法評分
+            score = -1  # 表示無法評分
+            score_description = "無比例尺資訊，無法計算公分距離進行評分"
+
+        # 將評分添加到結果中
+        result["score"] = score
+        result["score_description"] = score_description
+
         type_text = "邊框" if best_distance_type == "edge_to_box" else "角點"
         print(
             f"  {region_name}標記 ID {marker_id} 最大距離: {max_overall_distance:.2f} 像素 (到{type_text})"
         )
+        if score >= 0:
+            print(f"  評分: {score}分 - {score_description}")
 
         return result
 
@@ -758,6 +898,26 @@ class OriginalPaperDetector:
         print(f"\n=== 最長距離結果 ===")
         print(f"標記 ID: {longest['marker_id']}")
         print(f"距離類型: {longest['type']}")
-        print(f"最長距離: {longest['distance']:.2f} 像素")
+
+        # 查找對應的原始結果以獲取比例尺和評分信息
+        distance_cm = longest["distance"] / 50.0  # 默認轉換比例 (1px ≈ 0.2mm)
+        for result in distance_results:
+            if result["marker_id"] == longest["marker_id"]:
+                # 如果評分不是-1，說明有有效的比例尺信息
+                if "score" in result and result["score"] != -1:
+                    # 使用與評分計算相同的比例尺 (約5px/mm)
+                    distance_cm = (
+                        longest["distance"] / 50.0
+                    )  # 5px/mm * 10mm/cm = 50px/cm
+
+                print(f"最長距離: {distance_cm:.2f} cm")
+
+                if (
+                    "score" in result
+                    and "score_description" in result
+                    and result["score"] >= 0
+                ):
+                    print(f"評分: {result['score']}分 - {result['score_description']}")
+                break
 
         return longest

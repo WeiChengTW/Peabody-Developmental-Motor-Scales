@@ -199,6 +199,34 @@ class PaperContourDetector:
 
         return left_mask, right_mask, left_rectangles, right_rectangles
 
+    def calculate_cutting_score(
+        self, distance_pixels, px_to_mm_ratio=None, has_cutting_evidence=True
+    ):
+        """
+        計算剪紙評分
+
+        Args:
+            distance_pixels: 距離（像素）
+            px_to_mm_ratio: 像素到毫米的轉換比例（如果有的話）
+            has_cutting_evidence: 是否有剪切證據（是否真的剪下去了）
+
+        Returns:
+            score: 評分 (0, 1, 2)
+            score_description: 評分描述
+        """
+        if not has_cutting_evidence:
+            return 0, "小朋友只是動動剪刀而沒剪下去"
+
+        if px_to_mm_ratio:
+            distance_cm = distance_pixels / px_to_mm_ratio / 10
+            if distance_cm < 1.2:
+                return 2, f"沿著線剪完，且間距{distance_cm:.2f}cm < 1.2cm"
+            else:
+                return 1, f"沿著線剪完，但間距{distance_cm:.2f}cm ≥ 1.2cm"
+        else:
+            # 沒有比例尺時，使用像素作為粗略估計
+            return -1, f"距離{distance_pixels:.1f}px，無比例尺無法精確評分"
+
     def process_image_with_rectangles(self, image, rectangles_info):
         """
         處理圖像，計算紙張輪廓與長方形的距離
@@ -275,7 +303,7 @@ class PaperContourDetector:
         return result_image, distance_results
 
     def calculate_rectangle_distance(
-        self, rect_info, contours, result_image, region_name
+        self, rect_info, contours, result_image, region_name, scale_info=None
     ):
         """
         計算單個長方形與輪廓的距離
@@ -316,6 +344,16 @@ class PaperContourDetector:
                 best_distance_type = dist_type
                 best_reference_info = ref_info
 
+        # 計算評分
+        if scale_info and "px_to_mm_ratio" in scale_info:
+            score, score_description = self.calculate_cutting_score(
+                max_overall_distance, scale_info["px_to_mm_ratio"]
+            )
+        else:
+            score, score_description = self.calculate_cutting_score(
+                max_overall_distance
+            )
+
         # 記錄結果
         result = {
             "marker_id": marker_id,
@@ -326,6 +364,8 @@ class PaperContourDetector:
             "reference_info": best_reference_info,
             "rectangle_corners": rectangle_corners,
             "region": region_name,
+            "score": score,
+            "score_description": score_description,
         }
 
         # 在圖上標註最大距離點

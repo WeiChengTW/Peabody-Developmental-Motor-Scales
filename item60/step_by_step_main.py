@@ -68,7 +68,7 @@ class StepByStepAnalyzer:
         rectangles_info = []
         for result in detection_results:
             corner_data = corners[len(rectangles_info)]
-            rectangle_corners, scale_info = (
+            rectangle_corners, current_scale_info = (
                 self.aruco_detector.calculate_quarter_a4_rectangle(
                     corner_data, result["marker_id"]
                 )
@@ -77,7 +77,7 @@ class StepByStepAnalyzer:
                 {
                     "corners": rectangle_corners,
                     "marker_id": result["marker_id"],
-                    "scale_info": result,
+                    "scale_info": current_scale_info,  # 使用正確的比例尺資訊
                 }
             )
 
@@ -165,6 +165,15 @@ class StepByStepAnalyzer:
         """
         result_image = image.copy()
 
+        # 🔍 第一步：檢查是否有剪切證據
+        has_cutting_evidence, cutting_analysis = (
+            self.paper_detector.detect_cutting_evidence(image, rectangles_info)
+        )
+
+        print(f"剪切檢測結果: {cutting_analysis['reason']}")
+        if not has_cutting_evidence:
+            print("⚠️  警告: 未偵測到剪切證據，將直接評為0分")
+
         # 創建智能的左右分區遮罩
         left_mask, right_mask, left_rectangles, right_rectangles = (
             self.paper_detector.create_region_masks(image.shape, rectangles_info)
@@ -177,20 +186,27 @@ class StepByStepAnalyzer:
 
         # 處理左側區域
         if left_rectangles:
-            print(f"  左側區域處理 ({len(left_rectangles)}個標記)...")
             left_contours = self.paper_detector.detect_paper_contours(
                 image, left_mask, filter_center_line=True
             )
             if left_contours:
-                print(f"  左側偵測到 {len(left_contours)} 個紙張輪廓")
                 # 繪製左側紙張輪廓 (藍色)
                 cv2.drawContours(result_image, left_contours, -1, (255, 0, 0), 2)
 
                 # 計算距離但不繪製距離線
                 for rect_info in left_rectangles:
+                    # 獲取比例尺資訊
+                    scale_info = None
+                    if "scale_info" in rect_info:
+                        scale_info = rect_info["scale_info"]
+
                     distance_result = (
                         self.paper_detector.calculate_rectangle_distance_no_draw(
-                            rect_info, left_contours, "左側"
+                            rect_info,
+                            left_contours,
+                            "左側",
+                            scale_info,
+                            cutting_analysis,
                         )
                     )
                     if distance_result:
@@ -198,20 +214,27 @@ class StepByStepAnalyzer:
 
         # 處理右側區域
         if right_rectangles:
-            print(f"  右側區域處理 ({len(right_rectangles)}個標記)...")
             right_contours = self.paper_detector.detect_paper_contours(
                 image, right_mask, filter_center_line=True
             )
             if right_contours:
-                print(f"  右側偵測到 {len(right_contours)} 個紙張輪廓")
                 # 繪製右側紙張輪廓 (藍色)
                 cv2.drawContours(result_image, right_contours, -1, (255, 0, 0), 2)
 
                 # 計算距離但不繪製距離線
                 for rect_info in right_rectangles:
+                    # 獲取比例尺資訊
+                    scale_info = None
+                    if "scale_info" in rect_info:
+                        scale_info = rect_info["scale_info"]
+
                     distance_result = (
                         self.paper_detector.calculate_rectangle_distance_no_draw(
-                            rect_info, right_contours, "右側"
+                            rect_info,
+                            right_contours,
+                            "右側",
+                            scale_info,
+                            cutting_analysis,
                         )
                     )
                     if distance_result:
@@ -306,6 +329,46 @@ class StepByStepAnalyzer:
                     (0, 0, 0),
                     2,  # 黑色文字
                 )
+
+        # 在左上角顯示評分
+        if distance_results:
+            # 取得最高分數作為整體評分
+            max_score = max([result.get("score", -1) for result in distance_results])
+
+            # 選擇評分顏色
+            if max_score == 2:
+                score_color = (0, 255, 0)  # 綠色 - 優秀
+                score_bg_color = (0, 128, 0)
+            elif max_score == 1:
+                score_color = (0, 165, 255)  # 橘色 - 良好
+                score_bg_color = (0, 100, 200)
+            elif max_score == 0:
+                score_color = (0, 0, 255)  # 紅色 - 需要改進
+                score_bg_color = (0, 0, 128)
+            else:
+                score_color = (128, 128, 128)  # 灰色 - 無法評分
+                score_bg_color = (64, 64, 64)
+
+            # 評分文字
+            score_text = f"Score: {max_score}" if max_score >= 0 else "Score: N/A"
+
+            # 左上角位置
+            score_pos = (20, 50)
+
+            # 繪製背景矩形
+            cv2.rectangle(result_image, (10, 15), (200, 65), score_bg_color, -1)
+            cv2.rectangle(result_image, (10, 15), (200, 65), (255, 255, 255), 2)
+
+            # 繪製評分文字
+            cv2.putText(
+                result_image,
+                score_text,
+                score_pos,
+                cv2.FONT_HERSHEY_SIMPLEX,
+                1.2,
+                score_color,
+                3,
+            )
 
         return result_image
 
