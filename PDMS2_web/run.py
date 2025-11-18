@@ -60,6 +60,7 @@ TASK_MAP = {
     "Ch1-t1": "string_blocks",
     "Ch1-t2": "pyramid",
     "Ch1-t3": "stair",
+    "Ch1-t4": "wall",
     "Ch2-t1": "draw_circle",
     "Ch2-t2": "draw_square",
     "Ch2-t3": "draw_cross",

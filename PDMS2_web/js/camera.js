@@ -40,6 +40,7 @@ const ID_TO_META = {
   "ch1-t1": {icon:"/images/bridge.jpg",  title:"串積木：做成一條橋"},
   "ch1-t2": {icon:"/images/tower.jpg",   title:"疊城堡：蓋瞭望塔"},
   "ch1-t3": {icon:"/images/stairs.jpg",  title:"疊階梯：翻過高牆"},
+  "ch1-t4": {icon:"/images/wall.jpg",  title:"疊高牆：蓋出傳送門"},
   "ch2-t1": {icon:"/images/circle.jpg",  title:"畫圓：大圓圓魔法陣"},
   "ch2-t2": {icon:"/images/square.jpg",  title:"畫方：守護盾"},
   "ch2-t3": {icon:"/images/cross.jpg",   title:"畫十字：啟動魔法"},
@@ -369,7 +370,7 @@ async function takeShot() {
       console.log('[takeShot] Ch5-t1 應該使用自動開始，不應執行到此處');
       return;
       
-    } else if (["ch1-t2", "ch1-t3"].includes(id)) {
+    } else if (["ch1-t2", "ch1-t3", "ch1-t4"].includes(id)) {
       await countdown(waittime);
       await closeCamera();
       
