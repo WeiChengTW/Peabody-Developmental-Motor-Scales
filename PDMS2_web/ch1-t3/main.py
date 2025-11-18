@@ -232,7 +232,7 @@ def analyze_image_side(IMG_PATH, model):
 
         # ========== 繪製空隙 ==========
         if gap_pairs:
-            IS_GAP = len(gap_pairs) // 2 == 3
+            IS_GAP = True
             print(f"偵測到空隙: {len(gap_pairs) // 2} 組")
             
             try:
