@@ -10,14 +10,29 @@
   <!-- 童趣頂欄：大標題 + 星星進度 + 旁白 -->
   <header class="kidbar">
     <div class="kidbar-left">
-      <span class="logo" aria-hidden="true">🪄</span>
+      <span class="logo" aria-hidden="true"><svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" width="40" height="40">
+  <line x1="20" y1="80" x2="70" y2="30" stroke="#8B4513" stroke-width="4" stroke-linecap="round"/>
+  <polygon points="70,20 75,30 85,25 80,35 90,40 80,45 85,55 75,50 70,60 65,50 55,55 60,45 50,40 60,35 55,25 65,30" fill="#FFD700"/>
+  <circle cx="35" cy="65" r="3" fill="#FFD700" opacity="0.6"/>
+  <circle cx="45" cy="55" r="2" fill="#FF69B4" opacity="0.6"/>
+  <circle cx="25" cy="70" r="2" fill="#87CEEB" opacity="0.6"/>
+  <circle cx="55" cy="45" r="3" fill="#FFF" opacity="0.7"/>
+</svg></span>
       <div class="title-wrap">
         <h1 class="app-title">魔法王國大冒險</h1>
         <div class="subtitle">一起找到「快樂寶藏」！</div>
       </div>
     </div>
     <div class="kidbar-right">
-      <button id="ttsBtn" class="btn big pill" aria-label="聽故事旁白">🎤 聽故事</button>
+      <button id="ttsBtn" class="btn big pill" aria-label="聽故事旁白"><svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" width="40" height="40">
+  <ellipse cx="50" cy="35" rx="12" ry="18" fill="#2C3E50" stroke="#34495E" stroke-width="2"/>
+  <rect x="38" y="28" width="24" height="3" fill="#95A5A6" rx="1"/>
+  <rect x="38" y="38" width="24" height="3" fill="#95A5A6" rx="1"/>
+  <line x1="50" y1="53" x2="50" y2="70" stroke="#34495E" stroke-width="3" stroke-linecap="round"/>
+  <path d="M 35 70 L 50 70 L 65 70 L 60 80 L 40 80 Z" fill="#2C3E50"/>
+  <path d="M 60 35 Q 68 35, 68 45 Q 68 55, 60 55" stroke="#7F8C8D" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <path d="M 40 35 Q 32 35, 32 45 Q 32 55, 40 55" stroke="#7F8C8D" stroke-width="2" fill="none" stroke-linecap="round"/>
+</svg> 聽故事</button>
       <div class="stars">
         <span id="star1">★</span><span id="star2">★</span><span id="star3">★</span><span id="star4">★</span><span id="star5">★</span>
       </div>
@@ -84,7 +99,7 @@
         <p class="task-note"></p>
         <div class="task-ops">
           <button class="btn fat start-btn">開始</button>
-          <button class="btn fat done-btn" aria-pressed="false">完成 ✅</button>
+          <button class="btn fat done-btn" aria-pressed="false">完成</button>
         </div>
       </div>
     </article>

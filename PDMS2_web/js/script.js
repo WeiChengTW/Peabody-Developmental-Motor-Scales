@@ -175,7 +175,7 @@ const STORY = [
     title:"第五關：寶藏大發現",
     intro:"到寶藏洞窟把魔法豆豆裝進罐子，回到魔法王國！",
     tasks:[
-      {icon:"beans", title:"豆豆裝罐子：完成任務", note:"把彩色豆豆一顆一顆裝進罐子!"}
+      {icon:"beans", title:"豆豆裝罐子：完成任務", note:"把彩色豆豆一顆一顆裝進罐子。"}
     ]
   }
 ];
