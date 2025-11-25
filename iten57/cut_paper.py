@@ -162,7 +162,7 @@ def show_result(result_data):
 STANDARD_AREA = 760170
 
 # 2. 指定圖片路徑
-for i in range(1, 6):
+for i in range(1, 7):
     target_path = rf"iten57\img\{i}.jpg"
 
     # 3. 執行
