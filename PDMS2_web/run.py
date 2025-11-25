@@ -100,17 +100,17 @@ def task_id_to_table(task_id: str) -> str:
     raise ValueError(f"未知的 task_id: {task_id}")
 
 
-from datetime import date
-from typing import Optional
+
 
 def insert_task_payload(
     task_id: str,
     uid: str,
-    test_date: date,          
+    test_date: date,
     score: int,
     result_img_path: str,
     data1: Optional[str] = None,
-):
+) -> None:
+   
     table = task_id_to_table(task_id)
     sql = f"""
         INSERT INTO `{table}` (uid, test_date, score, result_img_path, data1)
@@ -123,6 +123,7 @@ def insert_task_payload(
     try:
         db_exec(sql, (uid, test_date, score, result_img_path, data1))
     except Exception:
+        # 保留原始 traceback 往外丟
         raise
 
 
