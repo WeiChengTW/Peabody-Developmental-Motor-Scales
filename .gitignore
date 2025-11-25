@@ -1,9 +1,5 @@
 /PDMS2_web/console.txt
-*.mp4
-*.jpg
-*.png
-*.jpeg
-*.gif   
+ 
 *.pyc
 
 # 忽略大型模型檔案
