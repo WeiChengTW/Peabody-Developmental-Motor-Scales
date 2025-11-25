@@ -1,6 +1,11 @@
 import cv2
 import numpy as np
 import os
+import sys
+
+
+def return_score(score):
+    sys.exit(int(score))
 
 
 def judge_score(target_img_path, standard_area):
@@ -88,7 +93,7 @@ def judge_score(target_img_path, standard_area):
         "is_rectangular": is_rectangular,  # 是否通過形狀檢查
     }
 
-    return result_data
+    return result_data, score
 
 
 def show_result(result_data):
@@ -156,21 +161,30 @@ def show_result(result_data):
     cv2.destroyAllWindows()
 
 
-# --- 主程式執行區 ---
-
 # 1. 設定基準面積 (請填入你之前測得的數值)
 STANDARD_AREA = 760170
 
-# 2. 指定圖片路徑
-for i in range(1, 7):
-    target_path = rf"iten57\img\{i}.jpg"
+if __name__ == "__main__":
+    # 使用方式範例: python main.py 1125 ch3-t3
 
-    # 3. 執行
-    if os.path.exists(target_path):
+    if len(sys.argv) > 2:
+        # 使用傳入的 uid 和 id 作為圖片路徑
+        uid = sys.argv[1]
+        img_id = sys.argv[2]
+        # uid = "1125"
+        # img_id = "ch3-t3"
+        image_path = rf"kid\{uid}\{img_id}.jpg"
+
+    # image_path = rf"PDMS2_web\kid\1125\ch3-t4.jpg"
+    # 執行主程式
+    if os.path.exists(image_path):
         # 步驟一：計算與判定
-        result = judge_score(target_path, STANDARD_AREA)
+        result, score = judge_score(image_path, STANDARD_AREA)
 
         # 步驟二：顯示結果
         show_result(result)
+
     else:
         print("找不到檔案")
+
+    return_score(score)
