@@ -155,10 +155,11 @@ def show_result(result_data):
     print(f"比例: {ratio:.2f}")
     print(f"判定: {desc}")
 
-    cv2.imshow("Judge Result", final_view)
-    print("按下任意鍵關閉視窗...")
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
+    # cv2.imshow("Judge Result", final_view)
+    # print("按下任意鍵關閉視窗...")
+    # cv2.waitKey(0)
+    # cv2.destroyAllWindows()
+    return final_view
 
 
 # 1. 設定基準面積 (請填入你之前測得的數值)
@@ -174,15 +175,18 @@ if __name__ == "__main__":
         # uid = "1125"
         # img_id = "ch3-t3"
         image_path = rf"kid\{uid}\{img_id}.jpg"
+        result_path = rf"kid\{uid}\{img_id}_result.jpg"
 
     # image_path = rf"PDMS2_web\kid\1125\ch3-t4.jpg"
+    # result_path = rf"PDMS2_web\kid\1125\ch3-t4_result.jpg"
     # 執行主程式
     if os.path.exists(image_path):
         # 步驟一：計算與判定
         result, score = judge_score(image_path, STANDARD_AREA)
 
         # 步驟二：顯示結果
-        show_result(result)
+        result_img = show_result(result)
+        cv2.imwrite(result_path, result_img)
 
     else:
         print("找不到檔案")

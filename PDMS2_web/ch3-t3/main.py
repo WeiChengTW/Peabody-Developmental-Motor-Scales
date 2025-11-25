@@ -74,7 +74,7 @@ def process_single_image(image_path, output_dir="result"):
     result_image, edge_distances, corner_distances = distance_result
 
     # 儲存最終合成圖
-    cv2.imwrite(final_output, result_image)
+    # cv2.imwrite(final_output, result_image)
 
     print(f"  ✓ 距離計算完成")
     print(f"    邊線最大距離: {[f'{d/pixels_per_cm:.2f}cm' for d in edge_distances]}")
@@ -92,8 +92,8 @@ def process_single_image(image_path, output_dir="result"):
     print(f"【評分原因】: {score_reason}")
     print("-" * 30)
 
-    print(f"\n所有結果已保存至資料夾: {output_dir}")
-    return True, score
+    # print(f"\n所有結果已保存至資料夾: {output_dir}")
+    return True, score, result_image
 
 
 if __name__ == "__main__":
@@ -106,9 +106,12 @@ if __name__ == "__main__":
         # uid = "1125"
         # img_id = "ch3-t3"
         image_path = rf"kid\{uid}\{img_id}.jpg"
+        result_path = rf"kid\{uid}\{img_id}_result.jpg"
 
     # image_path = rf"PDMS2_web\kid\1125\ch3-t3.jpg"
+    # result_path = rf"PDMS2_web\kid\1125\ch3-t3_result.jpg"
     # 執行主程式
-    success, score = process_single_image(image_path)
+    success, score, result_img = process_single_image(image_path)
 
+    cv2.imwrite(result_path, result_img)
     return_score(score)
