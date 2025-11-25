@@ -343,12 +343,12 @@ const TASK_MAP = {
     img:"/video/ch3-t2.mp4",
     steps:[ "剪直線四邊", "角角對齊成直角", "把邊修整整齊" ]
   },
-  "ch3-t3": { emoji:"scissorsline", title:"剪圓：把窗戶剪開",
+  "ch3-t3": { emoji:"scissorsLine", title:"剪圓：把窗戶剪開",
     desc:"幫小精靈把窗戶剪開。",
     img:"/video/ch3-t3.mp4",
     steps:[ "沿著畫好的圓慢慢剪", "手要穩，線要直", "不要偏離畫好的線喔" ]
   },
-  "ch3-t4": { emoji:"scissorshalfpaper", title:"剪方：剪窗簾",
+  "ch3-t4": { emoji:"scissorsHalfpaper", title:"剪方：剪窗簾",
     desc:"幫小精靈將紙平分成兩半當窗簾。",
     img:"/video/ch3-t4.mp4",
     steps:[ "剪在紙的中心", "手要穩，線要直", "剪完兩張紙應該一樣大" ]
