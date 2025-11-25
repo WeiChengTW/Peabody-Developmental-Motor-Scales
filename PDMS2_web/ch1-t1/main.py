@@ -7,7 +7,8 @@ import sys
 CROP_RATIO = 0.85
 
 # ================== YOLO 模型 ==================
-model = YOLO(r"ch1-t1/toybrick.pt")
+# model = YOLO(r"ch1-t1/toybrick.pt")
+model = YOLO(r"toybrick.pt")
 CONF = 0.5
 
 
@@ -243,20 +244,22 @@ def score_from_image(img_path, conf=CONF):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) > 2:
-        # 使用傳入的 uid 和 id 作為圖片路徑
-        uid = sys.argv[1]
-        img_id = sys.argv[2]
-        image_path = rf"kid\{uid}\{img_id}.jpg"
-    else:
-        # 測試圖片路徑 (請替換為實際測試路徑)
-        print("請提供 uid 和 img_id 參數或在程式碼中設定測試路徑。")
-        sys.exit(0)
+    # if len(sys.argv) > 2:
+    #     # 使用傳入的 uid 和 id 作為圖片路徑
+    #     uid = sys.argv[1]
+    #     img_id = sys.argv[2]
+    #     image_path = rf"kid\{uid}\{img_id}.jpg"
+    # else:
+    #     # 測試圖片路徑 (請替換為實際測試路徑)
+    #     print("請提供 uid 和 img_id 參數或在程式碼中設定測試路徑。")
+    #     sys.exit(0)
 
-    # image_path = r"ch1-t1.jpg"  # 讀取圖片
-    score, num, result_img = score_from_image(image_path)
-    cv2.imwrite(rf"kid\{uid}\{img_id}_result.jpg", result_img)
-    # score, num = score_from_image(test_img)
+    image_path = r"ch1-t1.jpg"  # 讀取圖片
+    # score, num, result_img = score_from_image(image_path)
+    # cv2.imwrite(rf"kid\{uid}\{img_id}_result.jpg", result_img)
+    score, num, result = score_from_image(image_path)
     print("score =", score)
     print("num =", num)
+    cv2.imshow('result', result)
+    cv2.waitKey(0)
     return_score(score)

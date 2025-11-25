@@ -18,9 +18,9 @@ if __name__ == "__main__":
         uid = sys.argv[1]
         img_id = sys.argv[2]
         # uid = "lull222"
-        # img_id = "ch3-t1"
+        # # img_id = "ch3-t1"
         image_path = rf"kid\{uid}\{img_id}.jpg"
-        # image_path = rf"C:\Users\chang\Downloads\web\kid\lull222\ch3-t1.jpg"
+        # image_path = rf"ch3-t1.jpg"
         _, json_path = get_pixel_per_cm_from_a4(rf"ch3-t1\a4_2.jpg", show_debug=False)
         # 提取紙張區域
         print(f"\n正在處理圖片: {image_path}")
@@ -61,4 +61,6 @@ if __name__ == "__main__":
                 else:
                     print(f"kid = {kid:.2f}, score = 0")
                     score = 0
-        return_score(score)
+        
+        
+        
