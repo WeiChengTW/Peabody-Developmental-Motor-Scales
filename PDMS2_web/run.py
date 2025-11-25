@@ -141,7 +141,7 @@ def ensure_task(task_id: str):
         )
         write_to_console(f"[DB] ensure_task ok: {task_id} -> {task_name}", "INFO")
     except Exception as e:
-        # 錯誤已在 db_exec 中記錄，此處只需 raise
+        
         raise
 
 
