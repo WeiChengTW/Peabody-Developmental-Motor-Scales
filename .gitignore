@@ -5,3 +5,11 @@
 *.jpeg
 *.gif   
 *.pyc
+
+# 但追蹤 PDMS2_web/images 資料夾內的圖片
+!PDMS2_web/images/
+!PDMS2_web/images/*.jpg
+!PDMS2_web/images/*.png
+!PDMS2_web/images/*.jpeg
+!PDMS2_web/images/*.gif
+!PDMS2_web/images/*.mp4
