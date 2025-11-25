@@ -261,18 +261,18 @@ def main(img_path):
 
 
 if __name__ == "__main__":
-    # if len(sys.argv) > 2:
-    #     # 使用傳入的 uid 和 id 作為圖片路徑
-    #     uid = sys.argv[1]
-    #     img_id = sys.argv[2]
-    #     # uid = "lull222"
-    #     # img_id = "ch3-t1"
-    #     image_path = rf"kid\{uid}\{img_id}.jpg"
-    image_path = r"ch2-t2.jpg"
+    if len(sys.argv) > 2:
+        # 使用傳入的 uid 和 id 作為圖片路徑
+        uid = sys.argv[1]
+        img_id = sys.argv[2]
+        # uid = "lull222"
+        # img_id = "ch3-t1"
+        image_path = rf"kid\{uid}\{img_id}.jpg"
+    # image_path = r"ch2-t2.jpg"
     score, result_img = main(image_path)
-    # cv2.imwrite(rf"kid\{uid}\{img_id}_result.jpg", result_img)
-    # cv2.imwrite(rf"result.jpg", result_img)
+    cv2.imwrite(rf"kid\{uid}\{img_id}_result.jpg", result_img)
+    cv2.imwrite(rf"result.jpg", result_img)
     print(f"score = {score}")
-    cv2.imshow('result', result_img)
-    cv2.waitKey(0)
+    # cv2.imshow('result', result_img)
+    # cv2.waitKey(0)
     return_score(score)
