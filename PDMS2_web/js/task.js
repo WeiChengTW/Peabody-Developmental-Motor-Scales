@@ -21,156 +21,250 @@ async function getCurrentUid() {
 
 /* ========= SVG 圖示庫 ========= */
 const SVG_ICONS = {
+  // 橋樑：增加拱形結構與水波紋，更有立體感
   bridge: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-    <rect x="10" y="60" width="80" height="8" fill="#8B4513"/>
-    <rect x="10" y="50" width="8" height="20" fill="#654321"/>
-    <rect x="42" y="50" width="8" height="20" fill="#654321"/>
-    <rect x="82" y="50" width="8" height="20" fill="#654321"/>
-    <path d="M 15 60 Q 30 40, 45 60" stroke="#654321" stroke-width="2" fill="none"/>
-    <path d="M 45 60 Q 60 40, 75 60" stroke="#654321" stroke-width="2" fill="none"/>
+    <defs>
+      <linearGradient id="wood" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#A0522D"/>
+        <stop offset="100%" stop-color="#8B4513"/>
+      </linearGradient>
+    </defs>
+    <path d="M0 75 Q 50 90, 100 75 L 100 100 L 0 100 Z" fill="#87CEEB" opacity="0.6"/>
+    <path d="M 10 70 Q 50 40, 90 70" fill="none" stroke="#654321" stroke-width="4"/>
+    <rect x="5" y="55" width="10" height="20" rx="2" fill="#654321"/>
+    <rect x="85" y="55" width="10" height="20" rx="2" fill="#654321"/>
+    <rect x="45" y="55" width="10" height="20" rx="2" fill="#654321"/>
+    <rect x="5" y="60" width="90" height="12" rx="3" fill="url(#wood)" stroke="#5D4037" stroke-width="1"/>
   </svg>`,
-  
+
+  // 城堡：增加塔樓層次與旗幟，顏色更協調
   castle: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-    <rect x="30" y="40" width="40" height="50" fill="#A9A9A9"/>
-    <rect x="25" y="30" width="10" height="15" fill="#808080"/>
-    <rect x="42" y="30" width="10" height="15" fill="#808080"/>
-    <rect x="65" y="30" width="10" height="15" fill="#808080"/>
-    <rect x="42" y="60" width="16" height="30" fill="#654321"/>
-    <polygon points="50,20 40,35 60,35" fill="#DC143C"/>
+    <rect x="25" y="45" width="50" height="45" rx="2" fill="#C0C0C0"/>
+    <rect x="20" y="35" width="15" height="20" rx="1" fill="#A9A9A9"/>
+    <rect x="65" y="35" width="15" height="20" rx="1" fill="#A9A9A9"/>
+    <rect x="40" y="25" width="20" height="30" rx="1" fill="#808080"/>
+    <path d="M 40 25 L 40 10 L 55 18 Z" fill="#DC143C"/>
+    <rect x="40" y="10" width="2" height="15" fill="#333"/>
+    <path d="M 42 70 A 8 8 0 0 1 58 70 L 58 90 L 42 90 Z" fill="#654321"/>
+    <rect x="20" y="35" width="15" height="5" fill="#696969"/>
+    <rect x="65" y="35" width="15" height="5" fill="#696969"/>
+    <rect x="40" y="25" width="20" height="5" fill="#555"/>
   </svg>`,
-  
+
+  // 樓梯：增加側面陰影，呈現 3D 效果
   stairs: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <path d="M10 90 L 30 90 L 30 70 L 50 70 L 50 50 L 70 50 L 70 30 L 90 30 L 90 90 Z" fill="#D2B48C"/>
     <rect x="10" y="70" width="20" height="20" fill="#8B4513"/>
-    <rect x="30" y="55" width="20" height="35" fill="#A0522D"/>
-    <rect x="50" y="40" width="20" height="50" fill="#8B4513"/>
-    <rect x="70" y="25" width="20" height="65" fill="#A0522D"/>
+    <rect x="30" y="50" width="20" height="20" fill="#8B4513"/>
+    <rect x="50" y="30" width="20" height="20" fill="#8B4513"/>
+    <rect x="70" y="10" width="20" height="20" fill="#8B4513"/>
+    <rect x="10" y="70" width="20" height="5" fill="#5D4037" opacity="0.3"/>
+    <rect x="30" y="50" width="20" height="5" fill="#5D4037" opacity="0.3"/>
+    <rect x="50" y="30" width="20" height="5" fill="#5D4037" opacity="0.3"/>
+    <rect x="70" y="10" width="20" height="5" fill="#5D4037" opacity="0.3"/>
   </svg>`,
-  
+
+  // 牆壁：交錯的磚塊排列 (Running Bond)，更真實
   wall: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-    <rect x="10" y="20" width="35" height="15" fill="#B22222" stroke="#8B0000" stroke-width="1"/>
-    <rect x="55" y="20" width="35" height="15" fill="#B22222" stroke="#8B0000" stroke-width="1"/>
-    <rect x="10" y="40" width="35" height="15" fill="#CD5C5C" stroke="#8B0000" stroke-width="1"/>
-    <rect x="55" y="40" width="35" height="15" fill="#CD5C5C" stroke="#8B0000" stroke-width="1"/>
-    <rect x="10" y="60" width="35" height="15" fill="#B22222" stroke="#8B0000" stroke-width="1"/>
-    <rect x="55" y="60" width="35" height="15" fill="#B22222" stroke="#8B0000" stroke-width="1"/>
+    <rect x="5" y="15" width="90" height="70" fill="#CD5C5C" rx="2"/>
+    <g stroke="#8B0000" stroke-width="2">
+      <line x1="5" y1="32" x2="95" y2="32"/>
+      <line x1="5" y1="50" x2="95" y2="50"/>
+      <line x1="5" y1="68" x2="95" y2="68"/>
+      <line x1="35" y1="15" x2="35" y2="32"/>
+      <line x1="65" y1="15" x2="65" y2="32"/>
+      <line x1="20" y1="32" x2="20" y2="50"/>
+      <line x1="50" y1="32" x2="50" y2="50"/>
+      <line x1="80" y1="32" x2="80" y2="50"/>
+      <line x1="35" y1="50" x2="35" y2="68"/>
+      <line x1="65" y1="50" x2="65" y2="68"/>
+      <line x1="20" y1="68" x2="20" y2="85"/>
+      <line x1="50" y1="68" x2="50" y2="85"/>
+      <line x1="80" y1="68" x2="80" y2="85"/>
+    </g>
   </svg>`,
-  
+
+  // 圓形：增加光澤與雙重邊框
   circle: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="50" cy="50" r="35" fill="none" stroke="#FF69B4" stroke-width="4"/>
+    <circle cx="50" cy="50" r="35" fill="none" stroke="#FF69B4" stroke-width="8"/>
+    <circle cx="50" cy="50" r="35" fill="none" stroke="#FF1493" stroke-width="2" opacity="0.3"/>
   </svg>`,
-  
+
+  // 正方形：圓角與雙重邊框
   square: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-    <rect x="20" y="20" width="60" height="60" fill="none" stroke="#4169E1" stroke-width="4"/>
+    <rect x="20" y="20" width="60" height="60" rx="5" fill="none" stroke="#4169E1" stroke-width="8"/>
+    <rect x="20" y="20" width="60" height="60" rx="5" fill="none" stroke="#000080" stroke-width="2" opacity="0.2"/>
   </svg>`,
-  
+
+  // 叉叉：圓潤端點
   cross: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-    <line x1="50" y1="15" x2="50" y2="85" stroke="#FF6347" stroke-width="6" stroke-linecap="round"/>
-    <line x1="15" y1="50" x2="85" y2="50" stroke="#FF6347" stroke-width="6" stroke-linecap="round"/>
+    <line x1="25" y1="25" x2="75" y2="75" stroke="#FF6347" stroke-width="10" stroke-linecap="round"/>
+    <line x1="75" y1="25" x2="25" y2="75" stroke="#FF6347" stroke-width="10" stroke-linecap="round"/>
   </svg>`,
-  
+
+  // 線條：兩端增加圓點強調
   line: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-    <line x1="10" y1="50" x2="90" y2="50" stroke="#32CD32" stroke-width="4" stroke-linecap="round"/>
+    <line x1="15" y1="50" x2="85" y2="50" stroke="#32CD32" stroke-width="8" stroke-linecap="round"/>
+    <circle cx="15" cy="50" r="4" fill="#32CD32"/>
+    <circle cx="85" cy="50" r="4" fill="#32CD32"/>
   </svg>`,
-  
+
+  // 油漆：改成滾輪刷過的痕跡
   paint: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-    <line x1="10" y1="35" x2="90" y2="35" stroke="#000" stroke-width="2"/>
-    <line x1="10" y1="65" x2="90" y2="65" stroke="#000" stroke-width="2"/>
-    <rect x="10" y="37" width="80" height="26" fill="#FFD700" opacity="0.7"/>
+    <rect x="15" y="35" width="70" height="30" fill="#FFD700" opacity="0.8"/>
+    <path d="M 15 35 Q 35 25, 55 35 T 85 35" stroke="#DAA520" stroke-width="2" fill="none"/>
+    <path d="M 15 65 Q 35 75, 55 65 T 85 65" stroke="#DAA520" stroke-width="2" fill="none"/>
+    <line x1="10" y1="50" x2="90" y2="50" stroke="#FFD700" stroke-width="28" stroke-opacity="0.3" stroke-linecap="round"/>
   </svg>`,
-  
+
+  // 連接：節點更清晰
   connect: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="25" cy="50" r="8" fill="#FFD700"/>
-    <circle cx="75" cy="50" r="8" fill="#FFD700"/>
-    <line x1="25" y1="50" x2="75" y2="50" stroke="#4169E1" stroke-width="3"/>
+    <line x1="25" y1="50" x2="75" y2="50" stroke="#4169E1" stroke-width="6" stroke-linecap="round"/>
+    <circle cx="25" cy="50" r="12" fill="#FFD700" stroke="#DAA520" stroke-width="3"/>
+    <circle cx="75" cy="50" r="12" fill="#FFD700" stroke="#DAA520" stroke-width="3"/>
+    <circle cx="25" cy="50" r="4" fill="#FFF"/>
+    <circle cx="75" cy="50" r="4" fill="#FFF"/>
   </svg>`,
-  
+
+  // === 剪刀系列：具象化的剪刀圖標 ===
   scissorsCircle: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="50" cy="50" r="30" fill="none" stroke="#4169E1" stroke-width="2" stroke-dasharray="5,3"/>
-    <path d="M 20 30 L 35 45 M 80 30 L 65 45" stroke="#DC143C" stroke-width="3" stroke-linecap="round"/>
-    <circle cx="20" cy="25" r="5" fill="#DC143C"/>
-    <circle cx="80" cy="25" r="5" fill="#DC143C"/>
+    <circle cx="50" cy="50" r="35" fill="#E6F2FF" stroke="#4169E1" stroke-width="3" stroke-dasharray="8,5"/>
+    <g transform="translate(50, 75) rotate(-45) scale(0.5)">
+      <path d="M -5 0 L -5 -40 M 5 0 L 5 -40" stroke="#C0C0C0" stroke-width="6"/>
+      <circle cx="-10" cy="10" r="10" fill="none" stroke="#DC143C" stroke-width="4"/>
+      <circle cx="10" cy="10" r="10" fill="none" stroke="#DC143C" stroke-width="4"/>
+      <path d="M 0 -5 L 0 -45" stroke="#A9A9A9" stroke-width="2"/>
+    </g>
   </svg>`,
-  
+
   scissorsSquare: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-    <rect x="30" y="30" width="40" height="40" fill="none" stroke="#4169E1" stroke-width="2" stroke-dasharray="5,3"/>
-    <path d="M 20 25 L 35 40 M 80 25 L 65 40" stroke="#DC143C" stroke-width="3" stroke-linecap="round"/>
-    <circle cx="20" cy="20" r="5" fill="#DC143C"/>
-    <circle cx="80" cy="20" r="5" fill="#DC143C"/>
+    <rect x="20" y="20" width="60" height="60" rx="4" fill="#E6F2FF" stroke="#4169E1" stroke-width="3" stroke-dasharray="8,5"/>
+    <g transform="translate(50, 75) rotate(-45) scale(0.5)">
+      <path d="M -5 0 L -5 -40 M 5 0 L 5 -40" stroke="#C0C0C0" stroke-width="6"/>
+      <circle cx="-10" cy="10" r="10" fill="none" stroke="#DC143C" stroke-width="4"/>
+      <circle cx="10" cy="10" r="10" fill="none" stroke="#DC143C" stroke-width="4"/>
+    </g>
   </svg>`,
-  
+
+  scissorsHalfpaper: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <rect x="25" y="15" width="50" height="70" fill="none" stroke="#4169E1" stroke-width="2" stroke-dasharray="5,3"/>
+    <line x1="50" y1="15" x2="50" y2="85" stroke="#4169E1" stroke-width="3" stroke-dasharray="6,4"/>
+    <g transform="translate(50, 50) rotate(-90) scale(0.5)">
+       <path d="M -5 0 L -5 -40 M 5 0 L 5 -40" stroke="#C0C0C0" stroke-width="6"/>
+       <circle cx="-10" cy="10" r="10" fill="none" stroke="#DC143C" stroke-width="4"/>
+       <circle cx="10" cy="10" r="10" fill="none" stroke="#DC143C" stroke-width="4"/>
+    </g>
+  </svg>`,
+
+  scissorsLine: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <line x1="10" y1="50" x2="90" y2="50" stroke="#4169E1" stroke-width="4" stroke-dasharray="8,5"/>
+    <g transform="translate(50, 50) rotate(-90) scale(0.5)">
+       <path d="M -5 0 L -5 -40 M 5 0 L 5 -40" stroke="#C0C0C0" stroke-width="6"/>
+       <circle cx="-10" cy="10" r="10" fill="none" stroke="#DC143C" stroke-width="4"/>
+       <circle cx="10" cy="10" r="10" fill="none" stroke="#DC143C" stroke-width="4"/>
+    </g>
+  </svg>`,
+
+  // 紙張：增加摺痕細節
   paper: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-    <polygon points="30,20 70,20 70,80 30,80" fill="#FFF8DC" stroke="#DAA520" stroke-width="2"/>
-    <line x1="40" y1="35" x2="60" y2="35" stroke="#DAA520" stroke-width="1"/>
-    <line x1="40" y1="45" x2="60" y2="45" stroke="#DAA520" stroke-width="1"/>
-    <line x1="40" y1="55" x2="60" y2="55" stroke="#DAA520" stroke-width="1"/>
+    <rect x="25" y="15" width="50" height="70" fill="#FFF" stroke="#DAA520" stroke-width="2"/>
+    <path d="M 75 15 L 55 15 L 75 35 Z" fill="#EEE8AA" stroke="#DAA520" stroke-width="1"/>
+    <line x1="35" y1="30" x2="50" y2="30" stroke="#DAA520" stroke-width="2" stroke-linecap="round"/>
+    <line x1="35" y1="45" x2="65" y2="45" stroke="#DAA520" stroke-width="2" stroke-linecap="round"/>
+    <line x1="35" y1="60" x2="65" y2="60" stroke="#DAA520" stroke-width="2" stroke-linecap="round"/>
   </svg>`,
-  
+
+  // 摺疊一次：利用顏色展示正反面
   foldOnce: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-    <polygon points="25,30 50,30 50,70 25,70" fill="#FFF8DC" stroke="#DAA520" stroke-width="2"/>
-    <polygon points="50,30 75,30 75,70 50,70" fill="#F5DEB3" stroke="#DAA520" stroke-width="2"/>
-    <line x1="50" y1="30" x2="50" y2="70" stroke="#DAA520" stroke-width="2" stroke-dasharray="3,3"/>
+    <defs>
+      <linearGradient id="foldGrad1" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" style="stop-color:#FFF8DC;stop-opacity:1" />
+        <stop offset="100%" style="stop-color:#DEB887;stop-opacity:1" />
+      </linearGradient>
+    </defs>
+    <rect x="25" y="25" width="50" height="50" fill="#FFF8DC" stroke="#DAA520" stroke-width="2" stroke-dasharray="4,4"/>
+    <path d="M 50 25 L 75 25 L 75 75 L 50 75 Z" fill="url(#foldGrad1)" stroke="#DAA520" stroke-width="2"/>
+    <line x1="50" y1="25" x2="50" y2="75" stroke="#8B4513" stroke-width="2" stroke-dasharray="4,2"/>
+    <path d="M 40 50 Q 45 45, 50 50" fill="none" stroke="#8B4513" stroke-width="2" marker-end="url(#arrow)"/>
   </svg>`,
-  
+
+  // 摺疊兩次：清晰的摺痕區域
   foldTwice: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-    <polygon points="20,35 35,35 35,65 20,65" fill="#FFF8DC" stroke="#DAA520" stroke-width="1.5"/>
-    <polygon points="35,35 50,35 50,65 35,65" fill="#F5DEB3" stroke="#DAA520" stroke-width="1.5"/>
-    <polygon points="50,35 65,35 65,65 50,65" fill="#DEB887" stroke="#DAA520" stroke-width="1.5"/>
-    <polygon points="65,35 80,35 80,65 65,65" fill="#D2B48C" stroke="#DAA520" stroke-width="1.5"/>
+    <rect x="15" y="30" width="70" height="40" fill="#FFF8DC" stroke="#DAA520" stroke-width="1.5"/>
+    <line x1="38" y1="30" x2="38" y2="70" stroke="#8B4513" stroke-width="1.5" stroke-dasharray="3,3"/>
+    <line x1="62" y1="30" x2="62" y2="70" stroke="#8B4513" stroke-width="1.5" stroke-dasharray="3,3"/>
+    <rect x="38" y="30" width="24" height="40" fill="#DEB887" opacity="0.6"/>
   </svg>`,
-  
+
+  // 豆子：多樣化的顏色與旋轉角度
   beans: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-    <ellipse cx="35" cy="45" rx="8" ry="12" fill="#FF69B4"/>
-    <ellipse cx="50" cy="50" rx="8" ry="12" fill="#4169E1"/>
-    <ellipse cx="65" cy="48" rx="8" ry="12" fill="#32CD32"/>
-    <ellipse cx="42" cy="62" rx="8" ry="12" fill="#FFD700"/>
-    <ellipse cx="58" cy="65" rx="8" ry="12" fill="#FF6347"/>
+    <ellipse cx="30" cy="40" rx="8" ry="12" fill="#FF69B4" transform="rotate(-20, 30, 40)" stroke="#C71585" stroke-width="1"/>
+    <ellipse cx="55" cy="45" rx="9" ry="13" fill="#4169E1" transform="rotate(15, 55, 45)" stroke="#000080" stroke-width="1"/>
+    <ellipse cx="75" cy="50" rx="8" ry="11" fill="#32CD32" transform="rotate(45, 75, 50)" stroke="#006400" stroke-width="1"/>
+    <ellipse cx="40" cy="65" rx="8" ry="12" fill="#FFD700" transform="rotate(-10, 40, 65)" stroke="#B8860B" stroke-width="1"/>
+    <ellipse cx="65" cy="70" rx="9" ry="12" fill="#FF6347" transform="rotate(30, 65, 70)" stroke="#8B0000" stroke-width="1"/>
   </svg>`
 };
 
 /* ========= 慶祝彩紙 SVG 圖示 ========= */
 const CELEBRATION_SVG = {
+  // 派對拉炮：增加爆炸的線條感
   party: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="50" cy="70" r="8" fill="#FF69B4"/>
-    <rect x="48" y="30" width="4" height="40" fill="#FFD700"/>
-    <path d="M 35 25 L 50 30 L 45 15 Z" fill="#FF6347"/>
-    <path d="M 65 25 L 50 30 L 55 15 Z" fill="#4169E1"/>
-    <path d="M 40 35 L 50 30 L 38 20 Z" fill="#32CD32"/>
-    <path d="M 60 35 L 50 30 L 62 20 Z" fill="#FF1493"/>
+    <path d="M 45 60 L 55 60 L 50 90 Z" fill="#FFD700"/>
+    <circle cx="50" cy="90" r="3" fill="#DAA520"/>
+    <g stroke-width="3" stroke-linecap="round">
+      <line x1="40" y1="50" x2="30" y2="30" stroke="#FF6347"/>
+      <line x1="60" y1="50" x2="70" y2="30" stroke="#4169E1"/>
+      <line x1="50" y1="45" x2="50" y2="20" stroke="#32CD32"/>
+      <line x1="35" y1="60" x2="20" y2="65" stroke="#FF1493"/>
+      <line x1="65" y1="60" x2="80" y2="65" stroke="#FFD700"/>
+    </g>
+    <circle cx="30" cy="30" r="3" fill="#FF6347"/>
+    <circle cx="70" cy="30" r="3" fill="#4169E1"/>
+    <circle cx="50" cy="20" r="3" fill="#32CD32"/>
   </svg>`,
-  
+
+  // 氣球：增加高光和立體漸層
   balloon: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-    <ellipse cx="50" cy="45" rx="18" ry="22" fill="#FF69B4"/>
-    <ellipse cx="45" cy="38" rx="6" ry="8" fill="#FFB6C1" opacity="0.6"/>
-    <path d="M 50 67 Q 48 75, 50 82" stroke="#666" stroke-width="2" fill="none"/>
-    <path d="M 48 82 L 50 82 L 52 82 L 50 88 Z" fill="#DC143C"/>
+    <defs>
+      <radialGradient id="balloonGrad" cx="30%" cy="30%" r="70%">
+        <stop offset="0%" stop-color="#FFB6C1"/>
+        <stop offset="100%" stop-color="#DC143C"/>
+      </radialGradient>
+    </defs>
+    <path d="M 50 75 Q 45 85, 50 95" stroke="#888" stroke-width="2" fill="none"/>
+    <ellipse cx="50" cy="45" rx="22" ry="28" fill="url(#balloonGrad)"/>
+    <ellipse cx="40" cy="35" rx="5" ry="8" fill="#FFF" opacity="0.6" transform="rotate(-15, 40, 35)"/>
+    <path d="M 46 72 L 54 72 L 50 78 Z" fill="#DC143C"/>
   </svg>`,
-  
+
+  // 閃光：更銳利且有層次
   sparkle: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-    <polygon points="50,20 55,45 80,50 55,55 50,80 45,55 20,50 45,45" fill="#FFD700"/>
-    <polygon points="50,30 52,45 65,50 52,55 50,70 48,55 35,50 48,45" fill="#FFF"/>
+    <path d="M50 10 L60 40 L90 50 L60 60 L50 90 L40 60 L10 50 L40 40 Z" fill="#FFD700"/>
+    <path d="M50 25 L55 45 L75 50 L55 55 L50 75 L45 55 L25 50 L45 45 Z" fill="#FFFACD"/>
   </svg>`,
-  
+
+  // 星星：標準五角星，帶有邊框
   star: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-    <polygon points="50,15 61,45 92,45 67,63 78,93 50,75 22,93 33,63 8,45 39,45" fill="#FFD700"/>
-    <polygon points="50,25 57,45 75,45 62,55 68,73 50,63 32,73 38,55 25,45 43,45" fill="#FFF8DC"/>
+    <polygon points="50,10 63,38 94,38 69,56 79,86 50,70 21,86 31,56 6,38 37,38" fill="#FFD700" stroke="#DAA520" stroke-width="2" stroke-linejoin="round"/>
+    <polygon points="50,20 58,40 80,40 62,52 69,72 50,60 31,72 38,52 20,40 42,40" fill="#FFF" opacity="0.3"/>
   </svg>`,
-  
+
+  // 閃爍：增加中心發光感
   twinkle: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-    <line x1="50" y1="20" x2="50" y2="80" stroke="#87CEEB" stroke-width="3" stroke-linecap="round"/>
-    <line x1="20" y1="50" x2="80" y2="50" stroke="#87CEEB" stroke-width="3" stroke-linecap="round"/>
-    <line x1="30" y1="30" x2="70" y2="70" stroke="#ADD8E6" stroke-width="2" stroke-linecap="round"/>
-    <line x1="70" y1="30" x2="30" y2="70" stroke="#ADD8E6" stroke-width="2" stroke-linecap="round"/>
-    <circle cx="50" cy="50" r="8" fill="#FFF" opacity="0.8"/>
+    <circle cx="50" cy="50" r="5" fill="#FFF"/>
+    <path d="M50 15 L53 45 L85 50 L53 55 L50 85 L47 55 L15 50 L47 45 Z" fill="#87CEEB"/>
+    <line x1="30" y1="30" x2="70" y2="70" stroke="#B0E0E6" stroke-width="3" stroke-linecap="round"/>
+    <line x1="70" y1="30" x2="30" y2="70" stroke="#B0E0E6" stroke-width="3" stroke-linecap="round"/>
   </svg>`,
-  
+
+  // 糖果：包裝紙更具細節
   candy: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-    <ellipse cx="50" cy="50" rx="15" ry="18" fill="#FF69B4"/>
-    <ellipse cx="45" cy="50" rx="7" ry="18" fill="#FF1493"/>
-    <ellipse cx="55" cy="50" rx="7" ry="18" fill="#FFF"/>
-    <rect x="48" y="20" width="4" height="15" fill="#DC143C"/>
-    <rect x="48" y="65" width="4" height="15" fill="#DC143C"/>
-    <path d="M 48 20 Q 45 18, 43 20 Q 41 22, 43 24 Q 45 26, 48 24" fill="#FFB6C1"/>
-    <path d="M 52 76 Q 55 78, 57 76 Q 59 74, 57 72 Q 55 70, 52 72" fill="#FFB6C1"/>
+    <polygon points="20,50 35,35 35,65" fill="#FF69B4"/>
+    <polygon points="80,50 65,35 65,65" fill="#FF69B4"/>
+    <circle cx="50" cy="50" r="20" fill="#FF1493"/>
+    <circle cx="50" cy="50" r="15" fill="none" stroke="#FFF" stroke-width="2" opacity="0.5"/>
+    <path d="M 40 40 Q 50 35, 60 40" stroke="#FFF" stroke-width="2" fill="none" opacity="0.7"/>
   </svg>`
 };
 
@@ -249,7 +343,16 @@ const TASK_MAP = {
     img:"/video/ch3-t2.mp4",
     steps:[ "剪直線四邊", "角角對齊成直角", "把邊修整整齊" ]
   },
-  
+  "ch3-t3": { emoji:"scissorsline", title:"剪圓：把窗戶剪開",
+    desc:"幫小精靈把窗戶剪開。",
+    img:"/video/ch3-t3.mp4",
+    steps:[ "沿著畫好的圓慢慢剪", "手要穩，線要直", "不要偏離畫好的線喔" ]
+  },
+  "ch3-t4": { emoji:"scissorshalfpaper", title:"剪方：剪窗簾",
+    desc:"幫小精靈將紙平分成兩半當窗簾。",
+    img:"/video/ch3-t4.mp4",
+    steps:[ "剪在紙的中心", "手要穩，線要直", "剪完兩張紙應該一樣大" ]
+  },
 
   // 第四關
   "ch4-t1": { emoji:"foldOnce", title:"摺紙一摺：變出小飛毯",
