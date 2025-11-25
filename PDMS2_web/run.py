@@ -100,17 +100,32 @@ def task_id_to_table(task_id: str) -> str:
     raise ValueError(f"未知的 task_id: {task_id}")
 
 
-def insert_task_payload(task_id: str, score_id: str, data1=None, data2=None):
-    """寫入任務子表 (PyMySQL)"""
+
+
+def insert_task_payload(
+    task_id: str,
+    uid: str,
+    test_date: date,
+    score: int,
+    result_img_path: str,
+    data1: Optional[str] = None,
+) -> None:
+   
     table = task_id_to_table(task_id)
+    sql = f"""
+        INSERT INTO `{table}` (uid, test_date, score, result_img_path, data1)
+        VALUES (%s, %s, %s, %s, %s)
+        ON DUPLICATE KEY UPDATE
+            score           = VALUES(score),
+            result_img_path = VALUES(result_img_path),
+            data1           = VALUES(data1)
+    """
     try:
-        db_exec(
-            f"INSERT INTO `{table}` (score_id, data1, data2) VALUES (%s, %s, %s)",
-            (score_id, data1, data2),
-        )
-    except Exception as e:
-        # 錯誤已在 db_exec 中記錄，此處只需 raise
+        db_exec(sql, (uid, test_date, score, result_img_path, data1))
+    except Exception:
+        # 保留原始 traceback 往外丟
         raise
+
 
 
 def ensure_task(task_id: str):
@@ -126,7 +141,7 @@ def ensure_task(task_id: str):
         )
         write_to_console(f"[DB] ensure_task ok: {task_id} -> {task_name}", "INFO")
     except Exception as e:
-        # 錯誤已在 db_exec 中記錄，此處只需 raise
+        
         raise
 
 
@@ -157,43 +172,35 @@ def _parse_score_from_stdout(stdout: str):
     return None
 
 
+
 def insert_score(
     uid: str,
     task_id: str,
-    score: int,
-    no: Optional[int] = None,
     test_date: Optional[date] = None,
-) -> str:
-    """在 score_list 新增一筆分數 (PyMySQL)"""
+) -> date:
+    
     ensure_user(uid)
     ensure_task(task_id)
 
-    if no is None:
-        row = db_exec(
-            "SELECT COUNT(*) AS cnt FROM score_list WHERE uid=%s AND task_id=%s",
-            (uid, task_id),
-            fetch="one",
-        )
-        # PyMySQL 的 COUNT(*) 可能回傳 None 或 {'cnt': 0}
-        no = (int(row["cnt"]) + 1) if row and row.get("cnt") is not None else 1
-
-    score_id = uuid.uuid4().hex
     if test_date is None:
         test_date = date.today()
 
-    try:
-        db_exec(
-            "INSERT INTO score_list(score_id, task_id, uid, score, no, test_date) VALUES (%s,%s,%s,%s,%s,%s)",
-            (score_id, task_id, uid, int(score), no, test_date),
-        )
-        write_to_console(
-            f"[DB] insert_score ok: uid={uid}, task_id={task_id}, score={score}, score_id={score_id}",
-            "INFO",
-        )
-        return score_id
-    except Exception as e:
-        # 錯誤已在 db_exec 中記錄，此處只需 raise
-        raise
+    db_exec(
+        """
+        INSERT INTO score_list (uid, task_id, test_date)
+        VALUES (%s, %s, %s)
+        ON DUPLICATE KEY UPDATE
+            test_date = VALUES(test_date)
+        """,
+        (uid, task_id, test_date),
+    )
+
+    write_to_console(
+        f"[DB] insert_score ok: uid={uid}, task_id={task_id}, test_date={test_date.isoformat()}",
+        "INFO",
+    )
+
+    return test_date
 
 
 # =========================
@@ -430,10 +437,27 @@ def test_score():
         data = request.get_json()
         uid = data["uid"]
         task_id = data["task_id"]
+        # 測試用
         score = 3
-        score_id = insert_score(uid, task_id, score)
-        insert_task_payload(task_id, score_id, None, None)  # 寫入子表
-        return jsonify({"success": True, "score_id": score_id, "score": score})
+        test_date = insert_score(uid=uid, task_id=task_id)
+
+        insert_task_payload(
+            task_id=task_id,
+            uid=uid,
+            test_date=test_date,
+            score=score,
+            result_img_path="",
+            data1=None,
+        )
+
+        return jsonify({
+            "success": True,
+            "uid": uid,
+            "task_id": task_id,
+            "test_date": test_date.isoformat(),
+            "score": score,
+        })
+
     except Exception as e:
         write_to_console(f"/test-score 錯誤: {e}", "ERROR")
         return jsonify({"success": False, "error": str(e)}), 500
@@ -522,15 +546,15 @@ def run_analysis_in_background(
         if is_game:
             # ===== 重要：Ch5-t1 遊戲模式，先確保前端相機已釋放 =====
             write_to_console(f"Ch5-t1 遊戲模式：準備使用相機索引 {camera_to_use}", "INFO")
-    
+
             # 強制釋放前端相機
             release_camera()
             write_to_console("[Ch5-t1] 前端相機已釋放", "INFO")
-            
-            # 等待相機資源完全釋放（重要！）
+
+            # 等待相機資源完全釋放
             write_to_console("[Ch5-t1] 等待相機資源釋放...", "INFO")
-            time.sleep(1.5)  # 增加到 1.5 秒
-            
+            time.sleep(1.5)
+
             # 遊戲模式：傳遞 uid 和相機索引
             cmd = base_cmd + [uid, str(camera_to_use)]
             write_to_console(f"[Ch5-t1] 啟動遊戲命令: {' '.join(cmd)}", "INFO")
@@ -555,7 +579,6 @@ def run_analysis_in_background(
             else:
                 creation_flags = 0
 
-        # 決定是否擷取輸出
         # 遊戲任務也擷取輸出，以便看到錯誤訊息
         capture_output_flag = True
 
@@ -571,7 +594,7 @@ def run_analysis_in_background(
             creationflags=creation_flags,
         )
 
-        # 從執行結果中取得分數和輸出
+        # 從執行結果中取得分數（exit code）
         score = int(result.returncode)
 
         stdout_str = result.stdout if result.stdout else ""
@@ -581,25 +604,33 @@ def run_analysis_in_background(
             write_to_console(f"腳本輸出 (任務 {task_id})：\n{stdout_str}", "INFO")
         if stderr_str:
             write_to_console(f"腳本錯誤輸出 (任務 {task_id})：\n{stderr_str}", "ERROR")
-            
+
+        # 正規化成 Ch1-t1 / Ch2-t1 這種
         task_id_std = normalize_task_id(img_id)
         uid_eff = uid or "unknown"
 
-        score_id = None
+        
+        test_date = None
         try:
-            score_id = insert_score(uid_eff, task_id_std, score)
+            test_date = insert_score(uid_eff, task_id_std)
         except Exception as e:
-            write_to_console(f"寫分數失敗：{e}", "ERROR")
+            write_to_console(f"寫入 score_list 失敗：{e}", "ERROR")
 
-        if score_id:
+        
+        if (test_date is not None) and (not is_game):
             try:
-                # 遊戲(Ch5-t1)不需要寫入子表
-                if not is_game:
-                    insert_task_payload(task_id_std, score_id, None, None)
+                
+                insert_task_payload(
+                    task_id=task_id_std,
+                    uid=uid_eff,
+                    test_date=test_date,
+                    score=score,
+                    result_img_path="",
+                    data1=None,
+                )
             except Exception as e:
-                # 子表寫入失敗也只記錄錯誤
                 write_to_console(
-                    f"寫入子表失敗 (score_id={score_id}, task={task_id_std}): {e}",
+                    f"寫入任務子表失敗 (uid={uid_eff}, task={task_id_std}): {e}",
                     "ERROR",
                 )
 
@@ -615,12 +646,13 @@ def run_analysis_in_background(
                 "stdout": stdout_str,
                 "stderr": stderr_str,
                 "returncode": score,
-                "score_id": score_id,
                 "task_id": task_id_std,
+                "test_date": test_date.isoformat() if test_date else None,
+               
             },
         }
         write_to_console(
-            f"任務 {task_id} 完成：uid={uid_eff}, task={task_id_std}, score={score}, score_id={score_id}",
+            f"任務 {task_id} 完成：uid={uid_eff}, task={task_id_std}, score={score}, test_date={test_date}",
             "INFO",
         )
 
@@ -636,6 +668,7 @@ def run_analysis_in_background(
             "error": str(e),
         }
         write_to_console(f"背景任務 {task_id} 發生嚴重錯誤：{e}\n{tb}", "ERROR")
+
 
 @app.post("/run-python")
 def run_python_script():
@@ -725,17 +758,17 @@ def db_ping():
         return jsonify({"ok": False, "err": str(e)}), 500
 
 
-@app.get("/scores")
-def list_scores():
-    try:
-        rows = db_exec(
-            "SELECT score_id, uid, task_id, score, no, test_date "
-            "FROM score_list ORDER BY test_date DESC, score_id DESC LIMIT 50",
-            fetch="all",
-        )
-        return jsonify(rows or [])
-    except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
+# @app.get("/scores")
+# def list_scores():
+#     try:
+#         rows = db_exec(
+#             "SELECT score_id, uid, task_id, score, no, test_date "
+#             "FROM score_list ORDER BY test_date DESC, score_id DESC LIMIT 50",
+#             fetch="all",
+#         )
+#         return jsonify(rows or [])
+#     except Exception as e:
+#         return jsonify({"success": False, "error": str(e)}), 500
 
 
 # =========================
