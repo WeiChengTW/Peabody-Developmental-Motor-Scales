@@ -5,17 +5,22 @@ from flask import Flask, send_from_directory, request, jsonify, session
 import webbrowser, threading
 from threading import Thread
 import subprocess, sys, logging, json, secrets, uuid, os, base64, re
-from datetime import datetime, date, time as dtime
+from datetime import datetime, date
 import cv2, numpy as np
-from PIL import Image
+from PIL import Image  
 from flask_cors import CORS
 import traceback
 from typing import Optional
+from werkzeug.exceptions import HTTPException
 import time
+# 移除 imageio 依賴，因為錄影功能已移除
+print("====== CURRENT RUN.PY IS RUNNING ======")
+print("ROOT:", Path(__file__).parent.resolve())
+print("Files in html/:", list((Path(__file__).parent / "html").glob("*")))
 
 # ======相機參數 (使用 runFortest.py 的值) =====
-TOP = 0
-SIDE = 6  # <-- Ch5-t1 會使用這個索引
+TOP = 1
+SIDE = 2  # <-- Ch5-t1 會使用這個索引
 # ============================================
 
 # =========================
@@ -56,7 +61,7 @@ def db_exec(sql, params=None, fetch="none"):
         conn.close()
 
 
-# 任務對照
+# 任務對照：task_id -> 對應「任務資料表」名稱
 TASK_MAP = {
     "Ch1-t1": "string_blocks",
     "Ch1-t2": "pyramid",
@@ -70,12 +75,11 @@ TASK_MAP = {
     "Ch2-t6": "connect_dots",
     "Ch3-t1": "cut_circle",
     "Ch3-t2": "cut_square",
-    "Ch3-t3": "cut_paper",
-    "Ch3-t4": "cut_line",
     "Ch4-t1": "one_fold",
     "Ch4-t2": "two_fold",
     "Ch5-t1": "collect_raisins",
 }
+
 
 
 def ensure_user(uid: str, name: Optional[str] = None, birthday: Optional[str] = None):
@@ -103,30 +107,13 @@ def task_id_to_table(task_id: str) -> str:
     raise ValueError(f"未知的 task_id: {task_id}")
 
 
-def insert_task_payload(
-    task_id: str,
-    uid: str,
-    test_date: date,
-    test_time: dtime,      # time 欄位
-    score: int,            # ⬅ 新增這個參數
-    result_img_path: str,
-    data1: Optional[str] = None,
-) -> None:
-
-    table = task_id_to_table(task_id)
-    sql = f"""
-        INSERT INTO `{table}` (`uid`, `test_date`, `time`, `score`, `result_img_path`, `data1`)
-        VALUES (%s, %s, %s, %s, %s, %s)
-        ON DUPLICATE KEY UPDATE
-            `score`           = VALUES(`score`),
-            `result_img_path` = VALUES(`result_img_path`),
-            `data1`           = VALUES(`data1`)
+def insert_task_payload(task_id: str, score_id: str, data1=None, data2=None):
     """
-    try:
-        db_exec(sql, (uid, test_date, test_time, score, result_img_path, data1))
-    except Exception:
-        # 保留原始 traceback 往外丟
-        raise
+    （新 schema）暫時不在這裡寫任務表內容
+    解析程式會自己寫入各任務表的 score / result_img_path / data1。
+    這個函式保留只是為了相容舊呼叫，不做任何事。
+    """
+    return
 
 
 
@@ -143,7 +130,7 @@ def ensure_task(task_id: str):
         )
         write_to_console(f"[DB] ensure_task ok: {task_id} -> {task_name}", "INFO")
     except Exception as e:
-
+        # 錯誤已在 db_exec 中記錄，此處只需 raise
         raise
 
 
@@ -174,47 +161,63 @@ def _parse_score_from_stdout(stdout: str):
     return None
 
 
-from datetime import datetime, date, time as dtime
-from typing import Optional
-
 def insert_score(
     uid: str,
     task_id: str,
+    score: int,
+    no: Optional[int] = None,          # 為了相容舊呼叫，參數先留著不用
     test_date: Optional[date] = None,
-    test_time: Optional[dtime] = None,   
-) -> tuple[date, dtime]:
+) -> str:
+    """
+    新 schema：
+      score_list(uid, task_id, test_date)
+      <task_table>(uid, test_date, score, result_img_path, data1)
 
+    這裡負責：
+      1. 確保 user_list / task_list 有對應資料
+      2. 在 score_list 寫入 (uid, task_id, test_date)
+      3. 在任務表寫入 / 更新 score
+      4. 回傳 row_key = "uid|task_id|YYYY-MM-DD"
+    """
     ensure_user(uid)
     ensure_task(task_id)
 
-    # 處理 test_date
+    # 若沒帶 test_date，就用今天
     if test_date is None:
-        now = datetime.now()
-        test_date = now.date()
-    else:
-        now = datetime.now()
+        test_date = date.today()
+    test_date_str = test_date.isoformat()
 
-    # 處理 test_time
-    if test_time is None:
-        test_time = now.time().replace(microsecond=0)
-
+    # 1) score_list：記錄有做這一關
     db_exec(
         """
-        INSERT INTO score_list (uid, task_id, test_date, time)
-        VALUES (%s, %s, %s, %s)
+        INSERT INTO score_list(uid, task_id, test_date)
+        VALUES (%s, %s, %s)
         ON DUPLICATE KEY UPDATE
-            test_date = VALUES(test_date),
-            time = VALUES(time)
+            test_date = VALUES(test_date)
         """,
-        (uid, task_id, test_date, test_time),
+        (uid, task_id, test_date),
     )
 
+    # 2) 對應任務表：寫入分數（result_img_path 由分析程式另外更新）
+    table = task_id_to_table(task_id)
+    db_exec(
+        f"""
+        INSERT INTO `{table}`(uid, test_date, score)
+        VALUES (%s, %s, %s)
+        ON DUPLICATE KEY UPDATE
+            score = VALUES(score)
+        """,
+        (uid, test_date, int(score)),
+    )
+
+    # 回傳一個 row_key，方便 log / 前端使用
+    row_key = make_row_key(uid, task_id, test_date_str)
     write_to_console(
-        f"[DB] insert_score ok: uid={uid}, task_id={task_id}, test_date={test_date.isoformat()}, test_time={test_time}",
+        f"[DB] insert_score ok: uid={uid}, task_id={task_id}, score={score}, test_date={test_date_str}",
         "INFO",
     )
+    return row_key
 
-    return test_date, test_time
 
 
 
@@ -230,11 +233,11 @@ ROOT = Path(__file__).parent.resolve()
 
 app = Flask(__name__, static_folder=None)
 app.secret_key = secrets.token_hex(16)
-CORS(app)
+CORS(app, supports_credentials=True)
 
 
 def setup_console_logging():
-    console_path = Path(__file__).parent / "console.txt"
+    console_path = Path(__file__).parent / "admin_console.txt"
     fmt = logging.Formatter(
         "%(asctime)s - %(levelname)s - %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
     )
@@ -250,17 +253,17 @@ def setup_console_logging():
 
 def write_to_console(message, level="INFO"):
     # 確保 console.txt 路徑正確
-    console_path = ROOT / "console.txt"
+    console_path = ROOT / "admin_console.txt"
     ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     try:
         with open(console_path, "a", encoding="utf-8") as f:
             f.write(f"{ts} - {level} - {message}\n")
     except Exception as e:
-        print(f"寫入 console.txt 失敗: {e}")  # 如果連 log 都寫不了，印在主控台
+        print(f"寫入 admin_console.txt 失敗: {e}")  # 如果連 log 都寫不了，印在主控台
 
 
 def clear_console_log():
-    console_path = ROOT / "console.txt"
+    console_path = ROOT / "admin_console.txt"
     try:
         with open(console_path, "w", encoding="utf-8") as f:
             f.write("")
@@ -288,6 +291,13 @@ def home():
 def index_shortcut():
     return send_from_directory(ROOT / "html", "index.html")
 
+@app.route("/admin")
+@app.route("/admin.html")
+def admin_shortcut():
+    # 這裡指定你的管理者介面檔案
+    return send_from_directory(ROOT / "html", "admin.html")
+
+
 
 @app.route("/html/<path:filename>")
 def html_files(filename):
@@ -313,6 +323,29 @@ def images_files(filename):
 def video_files(filename):
     return send_from_directory(ROOT / "video", filename)
 
+# --- NEW: 通用檔案輸出（圖片/影片） ---
+import fnmatch
+
+ALLOWED_PREFIXES = ["kid/", "result/"]
+CHAPTER_RESULT_GLOB = "ch?-t?/result/*"   # 例如 ch2-t5/result/xxx.jpg
+
+@app.route("/artifact/<path:relpath>")
+def artifact(relpath):
+    # 防止路徑跳脫
+    relpath = relpath.replace("\\", "/")
+    if ".." in relpath or relpath.startswith("/"):
+        return ("", 404)
+
+    ok = any(relpath.startswith(p) for p in ALLOWED_PREFIXES) or \
+         fnmatch.fnmatch(relpath, CHAPTER_RESULT_GLOB)
+    if not ok:
+        return ("", 404)
+
+    abs_path = ROOT / relpath
+    if not abs_path.exists():
+        return ("", 404)
+    return send_from_directory(abs_path.parent, abs_path.name)
+
 
 @app.route("/favicon.ico")
 def favicon():
@@ -328,9 +361,9 @@ def chrome_devtools():
 def logs_tail():
     try:
         n = int(request.args.get("n", 200))
-        p = ROOT / "console.txt"
+        p = ROOT / "admin_console.txt"
         if not p.exists():
-            return jsonify({"ok": False, "msg": "console.txt not found"}), 404
+            return jsonify({"ok": False, "msg": "admin_console.txt not found"}), 404
         with open(p, "r", encoding="utf-8") as f:
             lines = f.readlines()[-n:]
         return jsonify({"ok": True, "lines": lines})
@@ -379,9 +412,14 @@ def _log_response(resp):
 
 @app.errorhandler(Exception)
 def _handle_err(e):
+    if isinstance(e, HTTPException):
+        write_to_console(f"[HTTPERR {e.code}] {request.method} {request.path} - {e.description}", "ERROR")
+        return jsonify({"success": False, "error": f"{e.code} {e.name}: {e.description}"}), e.code
+
     tb = traceback.format_exc()
     write_to_console(f"[ERR] {request.method} {request.path}\n{tb}", "ERROR")
     return jsonify({"success": False, "error": str(e)}), 500
+
 
 
 def _open_browser():
@@ -446,45 +484,72 @@ def clear_session_uid():
     return jsonify({"success": True, "message": "UID 已清除"})
 
 
+# === Auth: 最小版本（前端 admin.js 的 ensureAuth 會呼叫這支）===
+@app.post("/api/auth/login")
+def api_login():
+    """
+    從 admin_users 資料表驗證帳號密碼：
+      admin_users(account PK, password, email, level)
+    目前先用明文比對，之後可以改成密碼雜湊。
+    """
+    data = request.get_json() or {}
+    account = (data.get("account") or "").strip()
+    password = (data.get("password") or "").strip()
+
+    if not account or not password:
+        return jsonify({"ok": False, "msg": "請輸入帳號與密碼"}), 400
+
+    try:
+        row = db_exec(
+            "SELECT account, password, email, level FROM admin_users WHERE account=%s",
+            (account,),
+            fetch="one",
+        )
+    except Exception as e:
+        write_to_console(f"[AUTH] 讀取 admin_users 失敗: {e}", "ERROR")
+        return jsonify({"ok": False, "msg": "系統錯誤，請稍後再試"}), 500
+
+    # 查不到或密碼不符
+    if (not row) or row["password"] != password:
+        return jsonify({"ok": False, "msg": "帳號或密碼錯誤"}), 401
+
+    session["user"] = {
+        "account": row["account"],
+        "level": int(row.get("level") or 0),
+        "name": row.get("email") or row["account"],  # 暫時用 email 當顯示名稱
+    }
+    return jsonify({"ok": True, "user": session["user"]})
+
+
+
+@app.get("/api/auth/whoami")
+def api_whoami():
+    user = session.get("user")
+    if not user:
+        return jsonify({"ok": True, "logged_in": False})
+    return jsonify({"ok": True, "logged_in": True, "user": user})
+
+@app.post("/api/auth/logout")
+def api_logout():
+    if "user" in session:
+        write_to_console(f"[AUTH] logout: {session['user']}", "INFO")
+    session.pop("user", None)
+    return jsonify({"ok": True})
+
+
 @app.route("/test-score", methods=["POST"])
 def test_score():
     try:
         data = request.get_json()
         uid = data["uid"]
         task_id = data["task_id"]
-
-        # 測試用分數
         score = 3
-
-        # 會同時幫你寫入 score_list，並回傳日期 + 時間
-        test_date, test_time = insert_score(uid=uid, task_id=task_id)
-
-        # 再把同一個日期 + 時間寫進任務子表
-        insert_task_payload(
-            task_id=task_id,
-            uid=uid,
-            test_date=test_date,
-            test_time=test_time,     # 🔸 新增這個
-            score=score,
-            result_img_path="",
-            data1=None,
-        )
-
-        return jsonify(
-            {
-                "success": True,
-                "uid": uid,
-                "task_id": task_id,
-                "test_date": test_date.isoformat(),
-                "time": test_time.strftime("%H:%M:%S"),
-                "score": score,
-            }
-        )
-
+        score_id = insert_score(uid, task_id, score)
+        insert_task_payload(task_id, score_id, None, None)  # 寫入子表
+        return jsonify({"success": True, "score_id": score_id, "score": score})
     except Exception as e:
         write_to_console(f"/test-score 錯誤: {e}", "ERROR")
         return jsonify({"success": False, "error": str(e)}), 500
-
 
 
 # =========================
@@ -509,7 +574,7 @@ def safe_subprocess_run(cmd, **kwargs):
         encoding="utf-8",
         errors="replace",
         env=env,
-        creationflags=creation_flags,
+        creationflags=creation_flags,  
     )
     default_kwargs.update(kwargs)
     return subprocess.run(cmd, **default_kwargs)
@@ -539,9 +604,8 @@ def resolve_script_path(task_code: str) -> Optional[Path]:
     return None
 
 
-def run_analysis_in_background(
-    task_id, uid, img_id, script_path, stair_type=None, cam_index_input=None
-):
+# === [修正] run_analysis_in_background (簡化，移除 video_path 邏輯，強制顯示 Ch5-t1 視窗) ===
+def run_analysis_in_background(task_id, uid, img_id, script_path, stair_type=None, cam_index_input=None):
     try:
         processing_tasks[task_id] = {
             "status": "running",
@@ -560,34 +624,20 @@ def run_analysis_in_background(
 
         camera_to_use = SIDE  # Ch5-t1 的預設值
         if is_game and cam_index_input is not None:
+            # 如果是 Ch5-t1 且前端有傳 cam_index，則使用傳入的值
             try:
                 camera_to_use = int(cam_index_input)
             except ValueError:
-                write_to_console(
-                    f"無效的 cam_index: {cam_index_input}，使用預設 SIDE={SIDE}", "WARN"
-                )
-                pass
+                write_to_console(f"無效的 cam_index: {cam_index_input}，使用預設 SIDE={SIDE}", "WARN")
+                pass  # 使用預設的 SIDE
 
         if is_game:
-            # ===== 重要：Ch5-t1 遊戲模式，先確保前端相機已釋放 =====
-            write_to_console(
-                f"Ch5-t1 遊戲模式：準備使用相機索引 {camera_to_use}", "INFO"
-            )
-
-            # 強制釋放前端相機
-            release_camera()
-            write_to_console("[Ch5-t1] 前端相機已釋放", "INFO")
-
-            # 等待相機資源完全釋放
-            write_to_console("[Ch5-t1] 等待相機資源釋放...", "INFO")
-            time.sleep(1.5)
-
-            # 遊戲模式：傳遞 uid 和相機索引
-            cmd = base_cmd + [uid, str(camera_to_use)]
-            write_to_console(f"[Ch5-t1] 啟動遊戲命令: {' '.join(cmd)}", "INFO")
+            # 遊戲模式：傳遞 uid 和 SIDE 相機索引
+            cmd = base_cmd + [uid, str(camera_to_use)]  # <-- 使用全域 SIDE
         else:
-            # 靜態分析模式：傳遞 uid 和 img_id (檔名)
+            # 靜態分析模式：傳遞 uid 和 img_id (檔名或任務代碼)
             cmd = base_cmd + [uid, img_id]
+            # 如果是階梯任務，再加入 stair_type
             if stair_type:
                 cmd.append(stair_type)
 
@@ -602,12 +652,13 @@ def run_analysis_in_background(
             # 靜態任務使用 CREATE_NO_WINDOW 隱藏主控台
             if not is_game:
                 creation_flags = subprocess.CREATE_NO_WINDOW
-            # 遊戲任務不隱藏，讓 OpenCV 視窗可以正常顯示
+            # 遊戲任務也使用 CREATE_NO_WINDOW 隱藏主控台，但會彈出 OpenCV 視窗
             else:
-                creation_flags = 0
+                creation_flags = subprocess.CREATE_NO_WINDOW
 
-        # 遊戲任務也擷取輸出，以便看到錯誤訊息
-        capture_output_flag = True
+        # 決定是否擷取輸出
+        # 靜態任務擷取 stdout/stderr，遊戲任務不擷取 (因為 stdout 可能被 opencv 阻塞)
+        capture_output_flag = not is_game
 
         # 執行子程序
         result = subprocess.run(
@@ -621,47 +672,71 @@ def run_analysis_in_background(
             creationflags=creation_flags,
         )
 
-        # 從執行結果中取得分數（exit code）
+        # 從執行結果中取得分數和輸出
         score = int(result.returncode)
 
-        stdout_str = result.stdout if result.stdout else ""
-        stderr_str = result.stderr if result.stderr else ""
+        if is_game:
+            stdout_str = "Game executed in foreground (Console Hidden)."
+            stderr_str = ""
+        else:
+            stdout_str = result.stdout
+            stderr_str = result.stderr
 
         if stdout_str:
             write_to_console(f"腳本輸出 (任務 {task_id})：\n{stdout_str}", "INFO")
         if stderr_str:
             write_to_console(f"腳本錯誤輸出 (任務 {task_id})：\n{stderr_str}", "ERROR")
 
-        # 正規化成 Ch1-t1 / Ch2-t1 這種
+        # 統一標準化任務代碼（Ch2-t6 / ch2-t6 → Ch2-t6）
         task_id_std = normalize_task_id(img_id)
         uid_eff = uid or "unknown"
 
-        # 🔸 這裡開始：同時拿 test_date + test_time
-        test_date = None
-        test_time = None
+        # 1) 寫入分數（score_list + 各任務表的 score）
+        score_id = None
         try:
-            test_date, test_time = insert_score(uid_eff, task_id_std)
+            score_id = insert_score(uid_eff, task_id_std, score)
         except Exception as e:
-            write_to_console(f"寫入 score_list 失敗：{e}", "ERROR")
+            write_to_console(f"寫分數失敗：{e}", "ERROR")
 
-        # 靜態任務才寫任務子表（遊戲任務目前不寫）
-        if (test_date is not None) and (test_time is not None) and (not is_game):
+        # 2) 若是「靜態任務」，自動補上 result_img_path（不改 main.py）
+        #    路徑格式：kid/<uid>/<任務代碼>.jpg  例如 kid/a012/Ch2-t6.jpg
+        if not is_game:
             try:
-                insert_task_payload(
-                    task_id=task_id_std,
-                    uid=uid_eff,
-                    test_date=test_date,
-                    test_time=test_time,   # 🔸 新增：時間一起寫入
-                    score=score,
-                    result_img_path="",
-                    data1=None,
+                table_name = task_id_to_table(task_id_std)  # 例如 Ch2-t6 → connect_dots
+                test_date = date.today()  # insert_score 預設也用今天
+                rel_path = f"kid/{uid_eff}/{task_id_std}.jpg"
+
+                db_exec(
+                    f"""
+                    UPDATE `{table_name}`
+                       SET result_img_path = %s
+                     WHERE uid = %s AND test_date = %s
+                    """,
+                    (rel_path, uid_eff, test_date),
+                )
+                write_to_console(
+                    f"[DB] 更新 {table_name}.result_img_path = {rel_path} "
+                    f"(uid={uid_eff}, test_date={test_date})",
+                    "INFO",
                 )
             except Exception as e:
+                # 就算路徑更新失敗，也不要影響整體流程
+                write_to_console(f"更新 result_img_path 失敗: {e}", "ERROR")
+
+        # 3) 若需要，維持舊的 insert_task_payload 相容（目前不寫 data1）
+        if score_id:
+            try:
+                # 遊戲(Ch5-t1)不需要寫入子表
+                if not is_game:
+                    insert_task_payload(task_id_std, score_id, None, None)
+            except Exception as e:
+                # 子表寫入失敗也只記錄錯誤
                 write_to_console(
-                    f"寫入任務子表失敗 (uid={uid_eff}, task={task_id_std}): {e}",
+                    f"寫入子表失敗 (score_id={score_id}, task={task_id_std}): {e}",
                     "ERROR",
                 )
 
+        # 4) 更新 processing_tasks 狀態
         processing_tasks[task_id] = {
             "status": "completed",
             "uid": uid_eff,
@@ -674,14 +749,12 @@ def run_analysis_in_background(
                 "stdout": stdout_str,
                 "stderr": stderr_str,
                 "returncode": score,
+                "score_id": score_id,
                 "task_id": task_id_std,
-                "test_date": test_date.isoformat() if test_date else None,
-                "test_time": test_time.strftime("%H:%M:%S") if test_time else None,
             },
         }
         write_to_console(
-            f"任務 {task_id} 完成：uid={uid_eff}, task={task_id_std}, "
-            f"score={score}, test_date={test_date}, test_time={test_time}",
+            f"任務 {task_id} 完成：uid={uid_eff}, task={task_id_std}, score={score}, score_id={score_id}",
             "INFO",
         )
 
@@ -699,14 +772,16 @@ def run_analysis_in_background(
         write_to_console(f"背景任務 {task_id} 發生嚴重錯誤：{e}\n{tb}", "ERROR")
 
 
+
 @app.post("/run-python")
 def run_python_script():
     try:
         data = request.get_json() or {}
         img_id = (data.get("id") or "").strip()
         uid = (data.get("uid") or "").strip() or session.get("uid")
-
+        
         cam_index_input = data.get("cam_index")
+        
 
         if not img_id:
             return jsonify({"success": False, "error": "缺少 id(task_id)"}), 400
@@ -733,10 +808,10 @@ def run_python_script():
             target=run_analysis_in_background,
             args=(task_id, uid, img_id, script_path, stair_type, cam_index_input),
         )
-
+        
         t.daemon = True
         t.start()
-
+        
         return jsonify(
             {
                 "success": True,
@@ -748,6 +823,8 @@ def run_python_script():
         write_to_console(f"/run-python 發生錯誤: {e}", "ERROR")
         return jsonify({"success": False, "error": str(e)}), 500
 
+
+# ===== 移除：不再需要 run_analysis_in_background_with_video 函數 =====
 
 @app.get("/check-task/<task_id>")
 def check_task_status(task_id):
@@ -786,18 +863,269 @@ def db_ping():
     except Exception as e:
         return jsonify({"ok": False, "err": str(e)}), 500
 
+@app.route("/db/smoke", methods=["GET", "POST"])
+def db_smoke():
+    """
+    重現同學 main()：insert → select → update → select
+    備註：不改既有結構，純作連線/權限/表結構健康檢查。
+    回傳整個過程的紀錄，方便前端顯示與除錯。
+    """
+    try:
+        uid = uuid.uuid4().hex[:8]
+        name = f"local_test_{uid}"
+        birthday = "2016-06-22"  # 要測 None 也可換成 None
 
-# @app.get("/scores")
-# def list_scores():
-#     try:
-#         rows = db_exec(
-#             "SELECT score_id, uid, task_id, score, no, test_date "
-#             "FROM score_list ORDER BY test_date DESC, score_id DESC LIMIT 50",
-#             fetch="all",
-#         )
-#         return jsonify(rows or [])
-#     except Exception as e:
-#         return jsonify({"success": False, "error": str(e)}), 500
+        logs = []
+
+        # 插入一筆
+        db_exec(
+            "INSERT INTO user_list (uid, name, birthday) VALUES (%s, %s, %s)",
+            (uid, name, birthday)
+        )
+        logs.append({"step": "insert", "uid": uid, "name": name, "birthday": birthday})
+
+        # 讀回確認
+        r1 = db_exec(
+            "SELECT uid, name, birthday FROM user_list WHERE uid=%s",
+            (uid,), fetch="one"
+        )
+        logs.append({"step": "select_after_insert", "row": r1})
+
+        # 修改名稱
+        new_name = name + "_edited"
+        db_exec(
+            "UPDATE user_list SET name=%s WHERE uid=%s",
+            (new_name, uid)
+        )
+        logs.append({"step": "update_name", "new_name": new_name})
+
+        # 再讀回確認
+        r2 = db_exec(
+            "SELECT uid, name, birthday FROM user_list WHERE uid=%s",
+            (uid,), fetch="one"
+        )
+        logs.append({"step": "select_after_update", "row": r2})
+
+        return jsonify({"ok": True, "logs": logs})
+
+    except Exception as e:
+        write_to_console(f"[DB] smoke 失敗: {e}", "ERROR")
+        return jsonify({"ok": False, "err": str(e)}), 500
+
+
+def _rows_date_to_str(rows):
+    out = []
+    for r in rows or []:
+        r = dict(r)
+        td = r.get("test_date")
+        if isinstance(td, (date, datetime)):
+            r["test_date"] = td.isoformat()
+        out.append(r)
+    return out
+
+def make_row_key(uid, task_id, test_date_str: str):
+    """用來識別一筆紀錄：uid|task_id|YYYY-MM-DD"""
+    return f"{uid}|{task_id}|{test_date_str}"
+
+
+
+@app.get("/scores")
+def list_scores():
+    """
+    列出分數記錄（給 admin.html 用）
+
+    新 schema：
+      - score_list(uid, task_id, test_date)
+      - task_list(task_id, task_name)
+      - user_list(uid, name, birthday)
+      - 各任務表：uid, test_date, score, result_img_path, data1
+
+    回傳欄位：
+      uid, name, task_id, task_name, score, test_date, result_img_path, row_key
+    """
+    try:
+        all_rows_raw = []
+
+        # 逐一走訪每個任務，從對應任務表抓 score / result_img_path
+        for task_id, table_name in TASK_MAP.items():
+            sql = f"""
+                SELECT
+                    s.uid,
+                    u.name,
+                    s.task_id,
+                    t.task_name,
+                    d.score,
+                    d.result_img_path,
+                    s.test_date
+                FROM score_list AS s
+                JOIN user_list AS u ON u.uid = s.uid
+                JOIN task_list AS t ON t.task_id = s.task_id
+                LEFT JOIN `{table_name}` AS d
+                     ON d.uid = s.uid AND d.test_date = s.test_date
+                WHERE s.task_id = %s
+            """
+            rows = db_exec(sql, (task_id,), fetch="all") or []
+            all_rows_raw.extend(rows)
+
+        # 轉換 test_date 成字串
+        rows = _rows_date_to_str(all_rows_raw)
+
+        # 每一筆補上 row_key
+        for r in rows:
+            uid = r.get("uid") or ""
+            tid = r.get("task_id") or ""
+            td  = r.get("test_date") or ""
+            r["row_key"] = make_row_key(uid, tid, td)
+
+        # 排序：日期新→舊，再來 uid / task_id
+        rows.sort(
+            key=lambda r: (r.get("test_date") or "", r.get("uid") or "", r.get("task_id") or ""),
+            reverse=True
+        )
+
+        return jsonify(rows)
+    except Exception as e:
+        write_to_console(f"/scores 最外層錯誤：{e}", "ERROR")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+    
+@app.get("/tasks")
+def list_tasks():
+    try:
+        rows = db_exec("SELECT task_id FROM task_list ORDER BY task_id", fetch="all")
+        tasks = [r["task_id"] for r in (rows or [])]
+        return jsonify({"ok": True, "tasks": tasks})
+    except Exception as e:
+        return jsonify({"ok": False, "err": str(e)}), 500
+
+@app.get("/users")
+def list_users():
+    try:
+        rows = db_exec("SELECT uid FROM user_list ORDER BY uid", fetch="all")
+        users = [r["uid"] for r in (rows or [])]
+        return jsonify({"ok": True, "users": users})
+    except Exception as e:
+        return jsonify({"ok": False, "err": str(e)}), 500
+
+
+
+@app.post("/scores/upsert")
+def upsert_score():
+    """
+    以 (uid, task_id, test_date) 為基準做 upsert：
+
+    - score_list: INSERT ... ON DUPLICATE KEY UPDATE test_date
+    - 任務表(例如 string_blocks): INSERT ... ON DUPLICATE KEY UPDATE score
+      （result_img_path、data1 由分析程式去更新，這裡不動）
+    """
+    try:
+        user = session.get("user") or {}
+        lvl = int(user.get("level") or 0)
+        if lvl < 2:
+            return jsonify({"ok": False, "msg": "需要醫療人員(等級2)以上"}), 403
+
+        data = request.get_json() or {}
+        uid = (data.get("uid") or "").strip()
+        task_id = (data.get("task_id") or "").strip()
+        score = int(data.get("score") or 0)
+        test_date_str = (data.get("test_date") or "").strip()
+
+        if not uid or not task_id:
+            return jsonify({"ok": False, "msg": "uid / task_id 不可為空"}), 400
+
+        # test_date 沒填就用今天
+        if test_date_str:
+            try:
+                test_date = datetime.strptime(test_date_str, "%Y-%m-%d").date()
+            except Exception:
+                return jsonify({"ok": False, "msg": "test_date 需為 YYYY-MM-DD"}), 400
+        else:
+            test_date = date.today()
+            test_date_str = test_date.isoformat()
+
+        ensure_user(uid)
+        ensure_task(task_id)
+
+        # 1) score_list：記錄這次有做哪關、哪一天
+        db_exec(
+            """
+            INSERT INTO score_list(uid, task_id, test_date)
+            VALUES (%s, %s, %s)
+            ON DUPLICATE KEY UPDATE
+                test_date = VALUES(test_date)
+            """,
+            (uid, task_id, test_date),
+        )
+
+        # 2) 對應任務表（string_blocks, pyramid, ...）：寫入分數
+        table_name = task_id_to_table(task_id)
+        db_exec(
+            f"""
+            INSERT INTO `{table_name}`(uid, test_date, score)
+            VALUES (%s, %s, %s)
+            ON DUPLICATE KEY UPDATE
+                score = VALUES(score)
+            """,
+            (uid, test_date, score),
+        )
+
+        row_key = make_row_key(uid, task_id, test_date_str)
+        return jsonify({"ok": True, "row_key": row_key})
+    except Exception as e:
+        return jsonify({"ok": False, "msg": str(e)}), 500
+
+
+
+@app.delete("/scores")
+def delete_score():
+    """
+    以 (uid, task_id, test_date) 刪除一筆紀錄：
+      - score_list 裡的那筆
+      - 對應任務表裡的那筆
+    前端會以 row_key=uid|task_id|YYYY-MM-DD 傳進來
+    """
+    try:
+        user = session.get("user") or {}
+        lvl = int(user.get("level") or 0)
+        if lvl < 2:
+            return jsonify({"ok": False, "msg": "需要醫療人員(等級2)以上"}), 403
+
+        row_key = (request.args.get("row_key") or "").strip()
+        if not row_key:
+            return jsonify({"ok": False, "msg": "請帶 row_key 參數"}), 400
+
+        try:
+            uid, task_id, test_date_str = row_key.split("|", 2)
+        except ValueError:
+            return jsonify({"ok": False, "msg": "row_key 格式錯誤"}), 400
+
+        if not uid or not task_id or not test_date_str:
+            return jsonify({"ok": False, "msg": "row_key 內容不完整"}), 400
+
+        # 直接用字串刪，MySQL 會自己轉 date
+        test_date = test_date_str
+
+        # 1) 刪 score_list
+        db_exec(
+            "DELETE FROM score_list WHERE uid=%s AND task_id=%s AND test_date=%s",
+            (uid, task_id, test_date),
+        )
+
+        # 2) 刪對應任務表資料
+        table = TASK_MAP.get(task_id)
+        if table:
+            db_exec(
+                f"DELETE FROM `{table}` WHERE uid=%s AND test_date=%s",
+                (uid, test_date),
+            )
+
+        return jsonify({"ok": True})
+    except Exception as e:
+        return jsonify({"ok": False, "msg": str(e)}), 500
+
+
+
 
 
 # =========================
@@ -806,54 +1134,44 @@ def db_ping():
 camera = None
 camera_active = False
 
-
 def release_camera():
     global camera, camera_active
     if camera is not None:
-        try:
+        try:  
             camera.release()
-            write_to_console("[相機] 相機已釋放", "INFO")
-        except Exception as e:
-            write_to_console(f"[相機] 釋放相機時發生錯誤: {e}", "WARN")
+        except Exception:
+            pass
         camera = None
     camera_active = False
-    # 給系統一點時間完全釋放資源
-    time.sleep(0.3)
 
-
-CROP_RATE = 0.7
-
+CROP_RATE = 0.8
 
 def init_camera(camera_index=TOP):
     global camera, camera_active
     try:
         release_camera()
-
+        
         # 靜態拍照模式，仍優先嘗試 MSMF
-        camera = cv2.VideoCapture(camera_index + cv2.CAP_MSMF)
+        camera = cv2.VideoCapture(camera_index + cv2.CAP_MSMF) 
 
         if not camera.isOpened():
-            write_to_console(
-                f"MSMF 無法開啟相機 {camera_index}，嘗試預設後端。", "WARN"
-            )
+            write_to_console(f"MSMF 無法開啟相機 {camera_index}，嘗試預設後端。", "WARN")
             camera = cv2.VideoCapture(camera_index)
             if not camera.isOpened():
-                raise Exception(f"無法開啟指定的相機索引: {camera_index}")
+                 raise Exception(f"無法開啟指定的相機索引: {camera_index}")
+
 
         # 設定解析度和 FPS (僅用於拍照取圖，不需要強制 1280x720)
         # 這裡保留設定，以確保相機啟動後能正常取幀
         camera.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
         camera.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
-        camera.set(cv2.CAP_PROP_FPS, 30)
+        camera.set(cv2.CAP_PROP_FPS, 30) 
 
         actual_width = int(camera.get(cv2.CAP_PROP_FRAME_WIDTH))
         actual_height = int(camera.get(cv2.CAP_PROP_FRAME_HEIGHT))
         actual_fps = camera.get(cv2.CAP_PROP_FPS)
 
-        write_to_console(
-            f"相機實際設定：{actual_width}x{actual_height} @ {actual_fps:.1f} FPS (用於靜態拍照)",
-            "INFO",
-        )
+        write_to_console(f"相機實際設定：{actual_width}x{actual_height} @ {actual_fps:.1f} FPS (用於靜態拍照)", "INFO")
 
         ret, frame = camera.read()
         if not ret:
@@ -868,8 +1186,8 @@ def init_camera(camera_index=TOP):
         camera_active = True
         return True
     except Exception as e:
-        print(f"相機初始化失敗: {e}")
-        release_camera()
+        print(f"相機初始化失敗: {e}")  
+        release_camera()  
         return False
 
 
@@ -881,7 +1199,7 @@ def crop_center(frame, rate):
     crop_h = int(h * rate)
     start_x = (w - crop_w) // 2
     start_y = (h - crop_h) // 2
-    return frame[start_y : start_y + crop_h, start_x : start_x + crop_w]
+    return frame[start_y:start_y+crop_h, start_x:start_x+crop_w]
 
 
 def get_frame():
@@ -892,17 +1210,15 @@ def get_frame():
         ret, frame = camera.read()
         if not ret:
             return None
-
+        
         # 切割畫面 CROP_RATE
         frame = crop_center(frame, CROP_RATE)
-
+        
         _, buffer = cv2.imencode(".jpg", frame, [cv2.IMWRITE_JPEG_QUALITY, 85])
         return buffer.tobytes()
     except Exception as e:
         write_to_console(f"get_frame 錯誤: {e}", "ERROR")
         return None
-
-
 # 相機路由
 @app.post("/opencv-camera/stop")
 def stop_opencv_camera():
@@ -942,7 +1258,7 @@ def get_opencv_frame():
 
 @app.post("/opencv-camera/capture")
 def capture_opencv_photo():
-    """拍照並存儲,存儲成功後立即啟動小應任務的 main.py 做評分"""
+    """拍照並存儲，存儲成功後立即啟動小應任務的 main.py 做評分"""
     try:
         data = request.get_json() or {}
         task_id_input = (data.get("task_id") or "").strip()
@@ -955,11 +1271,6 @@ def capture_opencv_photo():
         if frame_data is None:
             write_to_console("capture: 無法取得畫面", "ERROR")
             return jsonify({"success": False}), 500
-
-        # ===== 重點：拍照後立即釋放相機 =====
-        release_camera()
-        write_to_console("[相機] 拍照後已釋放相機資源", "INFO")
-        # =====================================
 
         target_dir = ROOT / "kid" / uid
         target_dir.mkdir(parents=True, exist_ok=True)
@@ -999,7 +1310,7 @@ def capture_opencv_photo():
 
         stair_type = session.get("stair_type")
 
-        # 靜態拍照任務,執行背景分析
+        # 靜態拍照任務，執行背景分析
         t = Thread(
             target=run_analysis_in_background,
             args=(bg_task_id, uid, script_task_id, script_path, stair_type),
@@ -1018,63 +1329,9 @@ def capture_opencv_photo():
             }
         )
 
-    except Exception as e:
-        write_to_console(f"/opencv-camera/capture 錯誤: {e}", "ERROR")
-        # 發生錯誤時也要確保釋放相機
-        release_camera()
+    except Exception:
+        write_to_console(f"/opencv-camera/capture 錯誤", "ERROR")
         return jsonify({"success": False}), 500
-
-@app.get("/game-state/<uid>")
-def get_game_state(uid):
-    """取得 Ch5-t1 遊戲狀態"""
-    try:
-        state_file = ROOT / "kid" / uid / "Ch5-t1_state.json"
-        if not state_file.exists():
-            return jsonify({"success": False, "error": "狀態檔案不存在"}), 404
-
-        with open(state_file, "r", encoding="utf-8") as f:
-            state = json.load(f)
-
-        return jsonify({"success": True, "state": state})
-    except Exception as e:
-        write_to_console(f"讀取遊戲狀態失敗: {e}", "ERROR")
-        return jsonify({"success": False, "error": str(e)}), 500
-
-
-@app.post("/clear-game-state")
-def clear_game_state():
-    """清空 Ch5-t1 遊戲狀態 JSON"""
-    try:
-        data = request.get_json() or {}
-        uid = (data.get("uid") or "").strip()
-
-        if not uid:
-            return jsonify({"success": False, "error": "缺少 UID"}), 400
-
-        state_file = ROOT / "kid" / uid / "Ch5-t1_state.json"
-
-        # 寫入初始狀態
-        initial_state = {
-            "running": False,
-            "bean_count": 0,
-            "remaining_time": 60,
-            "warning": False,
-            "game_over": False,
-            "score": -1,
-        }
-
-        state_file.parent.mkdir(parents=True, exist_ok=True)
-
-        with open(state_file, "w", encoding="utf-8") as f:
-            json.dump(initial_state, f, ensure_ascii=False, indent=2)
-
-        write_to_console(f"[Ch5-t1] 遊戲狀態已清空: {uid}", "INFO")
-        return jsonify({"success": True, "message": "遊戲狀態已重置"})
-
-    except Exception as e:
-        write_to_console(f"[Ch5-t1] 清空遊戲狀態失敗: {e}", "ERROR")
-        return jsonify({"success": False, "error": str(e)}), 500
-
 
 if __name__ == "__main__":
     try:
