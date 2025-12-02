@@ -351,11 +351,9 @@ def artifact(relpath):
 def favicon():
     return ("", 204)
 
-
 @app.route("/.well-known/appspecific/com.chrome.devtools.json")
 def chrome_devtools():
     return ("", 204)
-
 
 @app.get("/logs/tail")
 def logs_tail():
