@@ -27,7 +27,8 @@ if __name__ == "__main__":
         img_id = sys.argv[2]
         # uid = "lull222"
         # img_id = "ch3-t1"
-        image_path = rf"kid\{uid}\{img_id}.jpg"
+        # image_path = rf"kid\{uid}\{img_id}.jpg"
+        image_path = os.path.join('kid', uid, f'{img_id}.jpg')
         # img = 1
         # for img in range(1, 5):
         #     image_path = rf"raw\img{img}.jpg"
@@ -63,7 +64,8 @@ if __name__ == "__main__":
                         box1=black_corners_int, image_path=detector_path
                     )
                     result_img, kid = analyzer.analyze(pixel_per_cm=pixel_per_cm)
-                    result_path = rf"kid\{uid}\{img_id}_result.jpg"
+                    # result_path = rf"kid\{uid}\{img_id}_result.jpg"
+                    result_path = os.path.join('kid', uid, f'{img_id}_result.jpg')
                     cv2.imwrite(result_path, result_img)
                 if kid is not None:
                     if kid < 0.6:

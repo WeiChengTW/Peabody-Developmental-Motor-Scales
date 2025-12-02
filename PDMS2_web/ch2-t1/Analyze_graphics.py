@@ -8,8 +8,10 @@ import os
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent
-MODEL_PATH = BASE_DIR.parent / "ch2-t1" / "model" / "YOLO.pt"
-target_dir = BASE_DIR.parent / "ch2-t1"
+# MODEL_PATH = BASE_DIR.parent / "ch2-t1" / "model" / "YOLO.pt"
+MODEL_PATH = os.path.join(BASE_DIR.parent , "ch2-t1" , "model" , "YOLO.pt")
+# target_dir = BASE_DIR.parent / "ch2-t1"
+target_dir = os.path.join(BASE_DIR.parent, "ch2-t1")
 
 class Analyze_graphics:
     def __init__(
@@ -223,8 +225,11 @@ class Analyze_graphics:
                     print(f"切割結果為空，跳過索引 {index}")
                     continue
 
-                ready_path = ready_dir / f"{image_name}_{index}_{class_name}.jpg"
-                ready_binary_path = ready_dir / f"{image_name}_{index}_{class_name}_binary.jpg"
+                # ready_path = ready_dir / f"{image_name}_{index}_{class_name}.jpg"
+                ready_path = os.path.join(ready_dir, f"{image_name}_{index}_{class_name}.jpg")
+
+                # ready_binary_path = ready_dir / f"{image_name}_{index}_{class_name}_binary.jpg"
+                ready_binary_path = os.path.join(ready_dir , f"{image_name}_{index}_{class_name}_binary.jpg")
 
                 ready_path = self.get_unique_filename(ready_path)
                 ready_binary_path = self.get_unique_filename(ready_binary_path)

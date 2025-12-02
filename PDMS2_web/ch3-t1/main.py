@@ -19,9 +19,11 @@ if __name__ == "__main__":
         img_id = sys.argv[2]
         # uid = "lull222"
         # # img_id = "ch3-t1"
-        image_path = rf"kid\{uid}\{img_id}.jpg"
+        # image_path = rf"kid\{uid}\{img_id}.jpg"
+        image_path = os.path.join('kid', uid, f'{img_id}.jpg')
         # image_path = rf"ch3-t1.jpg"
-        _, json_path = get_pixel_per_cm_from_a4(rf"ch3-t1\a4_2.jpg", show_debug=False)
+        a4_path = os.path.join('ch3-t1', 'a4_2.jpg')
+        _, json_path = get_pixel_per_cm_from_a4(a4_path, show_debug=False)
         # 提取紙張區域
         print(f"\n正在處理圖片: {image_path}")
         print("====提取紙張區域====")
@@ -46,7 +48,8 @@ if __name__ == "__main__":
                 result_img, min_dist_cm, max_dist_cm = BoxDistanceAnalyzer(
                     detector_path
                 )
-                result_path = rf"kid\{uid}\{img_id}_result.jpg"
+                # result_path = rf"kid\{uid}\{img_id}_result.jpg"
+                result_path = os.path.join('kid', uid, f'{img_id}_result.jpg')
                 cv2.imwrite(result_path, result_img)
 
             if min_dist_cm is not None and max_dist_cm is not None:

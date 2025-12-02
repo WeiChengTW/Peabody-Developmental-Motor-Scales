@@ -10,7 +10,7 @@ class CrossScorer:
         angle_min=70.0,
         angle_max=110.0,
         max_spread_cm=0.6,  # 只有在 cm_per_pixel 有值時才會使用
-        out_dir="PDMS2_web\ch2-t3\output",
+        out_dir=os.path.join("PDMS2_web", "ch2-t3", "output"),
         output_jpg_quality=95,
     ):
         self.cm_per_pixel = cm_per_pixel

@@ -32,12 +32,14 @@ def main():
     if len(sys.argv) > 2:
         uid = sys.argv[1]
         img_id = sys.argv[2]
-        image_path = rf"kid\{uid}\{img_id}.jpg"
+        # image_path = rf"kid\{uid}\{img_id}.jpg"
+        image_path = os.path.join('kid', uid, f"{img_id}.jpg")
     else:
         # 後備：避免未給參數時變數未定義（開發測試用）
         uid = "devuser"
         img_id = "ch2-t4"
-        image_path = rf"kid\{uid}\{img_id}.jpg"
+        # image_path = rf"kid\{uid}\{img_id}.jpg"
+        image_path = os.path.join('kid', uid, f"{img_id}.jpg")
 
     if not os.path.exists(image_path):
         raise FileNotFoundError(f"找不到圖片：{image_path}")
@@ -56,7 +58,8 @@ def main():
         score = find_baseline_and_show_all(img, pixel_per_cm)
 
     # 5) 準備輸出路徑：存到 kid\<uid>\<img_id>\ 下
-    out_dir = rf"kid\{uid}\{img_id}"
+    # out_dir = rf"kid\{uid}\{img_id}"
+    out_dir = os.path.join('kid', uid, f"{img_id}")
     ensure_dir(out_dir)
     out_name = f"{img_id}_result.jpg"
     out_path = os.path.join(out_dir, out_name)

@@ -8,8 +8,11 @@ import os
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent
-MODEL_PATH = BASE_DIR.parent / "ch2-t2" / "model" / "YOLO.pt"
-target_dir = BASE_DIR.parent / "ch2-t2"
+# MODEL_PATH = BASE_DIR.parent / "ch2-t2" / "model" / "YOLO.pt"
+MODEL_PATH = os.path.join(BASE_DIR.parent, "ch2-t2", "model", "YOLO.pt")
+
+# target_dir = BASE_DIR.parent / "ch2-t2"
+target_dir = os.path.join(BASE_DIR.parent, "ch2-t2")
 
 class Analyze_graphics:
     def __init__(
@@ -50,7 +53,8 @@ class Analyze_graphics:
 
     def clear_multiple_dirs(self, dir_list):
         for dir_name in dir_list:
-            dir_path = self.base_dir / dir_name # 結合基底路徑
+            # dir_path = self.base_dir / dir_name # 結合基底路徑
+            dir_patj = os.path.join(self.base_dir, dir_name)
             if dir_path.exists():
                 print(f"清空資料夾: {dir_path}")
                 shutil.rmtree(dir_path)
@@ -58,7 +62,8 @@ class Analyze_graphics:
             print(f"重新建立資料夾: {dir_path}")
 
     def ensure_dir(self, dir_name):
-        dir_path = self.base_dir / dir_name # 結合基底路徑
+        # dir_path = self.base_dir / dir_name # 結合基底路徑
+        dir_patj = os.path.join(self.base_dir, dir_name)
         if not dir_path.exists():
             dir_path.mkdir(parents=True, exist_ok=True)
 
@@ -72,7 +77,7 @@ class Analyze_graphics:
             print("=== 確保工作空間資料夾存在 ===")
             for dir_name in workspace_dirs:
                 self.ensure_dir(dir_name) # ensure_dir 會自動加上 self.base_dir
-                print(f"確保資料夾存在: {self.base_dir / dir_name}")
+                print(f"確保資料夾存在: {os.path.join(self.base_dir, dir_name)}")
         print("工作空間初始化完成！\n")
 
     def get_next_index(self, ready_dir, image_name):
@@ -166,7 +171,8 @@ class Analyze_graphics:
             return []
 
         ready_dir_name = "ready"
-        ready_dir = self.base_dir / ready_dir_name
+        # ready_dir = self.base_dir / ready_dir_name
+        ready_dir = os.path.join(self.base_dir, ready_dir_name)
 
         if save_results:
             if clear_dir:
@@ -222,8 +228,11 @@ class Analyze_graphics:
                     print(f"切割結果為空，跳過索引 {index}")
                     continue
 
-                ready_path = ready_dir / f"{image_name}_{index}_{class_name}.jpg"
-                ready_binary_path = ready_dir / f"{image_name}_{index}_{class_name}_binary.jpg"
+                # ready_path = ready_dir / f"{image_name}_{index}_{class_name}.jpg"
+                ready_path = os.path.join(ready_dir, f"{image_name}_{index}_{class_name}.jpg")
+
+                # ready_binary_path = ready_dir / f"{image_name}_{index}_{class_name}_binary.jpg"
+                ready_binary_path = os.path.join(ready_dir f"{image_name}_{index}_{class_name}_binary.jpg")
 
                 # 若你不想版本尾碼，可改成 clear_dir=True 或移除下面兩行
                 ready_path = self.get_unique_filename(ready_path)

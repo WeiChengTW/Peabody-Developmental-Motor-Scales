@@ -281,7 +281,9 @@ if __name__ == "__main__":
     BASE_DIR = Path(__file__).parent.parent
     OUTPUT_DIR = BASE_DIR / "kid" / UID
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-    VIDEO_PATH = OUTPUT_DIR / "Ch5-t1_result.mp4"
+    # VIDEO_PATH = OUTPUT_DIR / "Ch5-t1_result.mp4"
+
+    VIDEO_PATH = os.path.join(BASE_DIR, 'kid', UID, "Ch5-t1_result.mp4")
     
     print(f"影片將儲存至: {VIDEO_PATH}")
 

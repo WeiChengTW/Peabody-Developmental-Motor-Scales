@@ -19,13 +19,16 @@ if __name__ == "__main__":
         img_id = sys.argv[2]
         # uid = "lull222"
         # img_id = "ch3-t1"
-        image_path = rf"kid\{uid}\{img_id}.jpg"
+
+        # image_path = rf"kid\{uid}\{img_id}.jpg"
+        image_path = os.path.jpin('kid', uid, f"{img_id}.jpg")
 
     # img = 3
     # image_path = rf"PDMS2_web\ch2-t5\image\{img}.jpg"
     # in_path = os.path.join("image", f"{img}.jpg")  # ✅ 跨平台路徑
 
-    out_path = rf"PDMS2_web\ch2-t5\new\new{img_id}.jpg"
+    # out_path = rf"PDMS2_web\ch2-t5\new\new{img_id}.jpg"
+    out_path = os.path.join('PDMS2_web', 'ch2-t5', 'new', f"new{img_id}.jpg")
 
     # 1) 裁切
     warped = get_pixel_per_cm_from_a4(image_path,show_debug=False)
@@ -45,6 +48,8 @@ if __name__ == "__main__":
     score,result_img = analyze_paint(warped, int(y_top), int(y_bot), show_windows=True)
     # print("得分：", result["score"])
     # print("說明：", result["rule"])
-    result_path = rf"kid\{uid}\{img_id}_result.jpg"
+
+    # result_path = rf"kid\{uid}\{img_id}_result.jpg"
+    result_path = os.join.path('kid', uid, f'{img_id}_result.jpg')
     cv2.imwrite(result_path,result_img)
     return_score(score)
