@@ -435,7 +435,6 @@ function renderStars(){
   const lit = Math.round(pct*5);
   for(let i=0;i<lit;i++) stars[i].classList.add("lit");
 }
-
 function celebrate(){
   const box = $("#confetti");
   box.innerHTML="";
@@ -511,7 +510,6 @@ function renderAll(){
   renderAdmin();
   renderStars();
 }
-
 loadState();
 window.addEventListener("DOMContentLoaded", ()=>{ 
   bindEvents(); 
