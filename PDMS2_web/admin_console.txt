@@ -1,0 +1,14 @@
+2025-12-02 22:38:24 - INFO - === 遠端 PyMySQL 模式 ===
+2025-12-02 22:38:24 - INFO - Flask 應用程式啟動
+2025-12-02 22:38:24 - INFO - 準備啟動 Flask 應用程式，HOST=127.0.0.1, PORT=5050
+2025-12-02 22:38:24 - INFO - 已設定瀏覽器自動開啟
+2025-12-02 22:38:24 - INFO - Flask 應用程式開始運行
+2025-12-02 22:38:49 - INFO - [RESP] GET /artifact/kid/a012/Ch2-t6.jpg -> 404
+2025-12-02 22:40:41 - INFO - [RESP] GET /artifact/kid/a012/Ch2-t6.jpg -> 404
+2025-12-02 22:52:10 - INFO - [RESP] GET /artifact/kid/a012/Ch2-t6.jpg -> 404
+2025-12-02 22:52:10 - INFO - [RESP] GET /artifact/kid/1202/Ch3-t1.jpg -> 404
+2025-12-02 22:52:16 - INFO - [RESP] GET /artifact/kid/1202/Ch3-t1.jpg -> 404
+2025-12-02 22:52:16 - INFO - [RESP] GET /artifact/kid/1202/Ch3-t1_result.jpg -> 404
+2025-12-02 22:52:26 - INFO - [RESP] GET /artifact/kid/1202/Ch3-t1_result.jpg -> 404
+2025-12-02 22:52:26 - INFO - [RESP] GET /artifact/kid/1202/Ch3-t1.jpg -> 404
+2025-12-02 23:03:40 - INFO - Flask 應用程式已關閉
