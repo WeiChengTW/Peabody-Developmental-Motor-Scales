@@ -107,7 +107,8 @@ def insert_task_payload(
     task_id: str,
     uid: str,
     test_date: date,
-    test_time: dtime,          
+    test_time: dtime,      # time 欄位
+    score: int,            # ⬅ 新增這個參數
     result_img_path: str,
     data1: Optional[str] = None,
 ) -> None:
