@@ -237,7 +237,7 @@ CORS(app, supports_credentials=True)
 
 
 def setup_console_logging():
-    console_path = Path(__file__).parent / "console.txt"
+    console_path = Path(__file__).parent / "admin_console.txt"
     fmt = logging.Formatter(
         "%(asctime)s - %(levelname)s - %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
     )
@@ -253,17 +253,17 @@ def setup_console_logging():
 
 def write_to_console(message, level="INFO"):
     # 確保 console.txt 路徑正確
-    console_path = ROOT / "console.txt"
+    console_path = ROOT / "admin_console.txt"
     ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     try:
         with open(console_path, "a", encoding="utf-8") as f:
             f.write(f"{ts} - {level} - {message}\n")
     except Exception as e:
-        print(f"寫入 console.txt 失敗: {e}")  # 如果連 log 都寫不了，印在主控台
+        print(f"寫入 admin_console.txt 失敗: {e}")  # 如果連 log 都寫不了，印在主控台
 
 
 def clear_console_log():
-    console_path = ROOT / "console.txt"
+    console_path = ROOT / "admin_console.txt"
     try:
         with open(console_path, "w", encoding="utf-8") as f:
             f.write("")
@@ -361,9 +361,9 @@ def chrome_devtools():
 def logs_tail():
     try:
         n = int(request.args.get("n", 200))
-        p = ROOT / "console.txt"
+        p = ROOT / "admin_console.txt"
         if not p.exists():
-            return jsonify({"ok": False, "msg": "console.txt not found"}), 404
+            return jsonify({"ok": False, "msg": "admin_console.txt not found"}), 404
         with open(p, "r", encoding="utf-8") as f:
             lines = f.readlines()[-n:]
         return jsonify({"ok": True, "lines": lines})
