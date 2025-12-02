@@ -64,44 +64,24 @@
           <div class="title">小朋友作答紀錄（依姓名或關卡檢索）</div>
         </div>
       </div>
-<<<<<<< HEAD
-      <div class="muted">Piyan</div>
-=======
       <div class="muted"></div>
->>>>>>> Leo
     </div>
   </div>
 
   <div class="wrap">
-<<<<<<< HEAD
-=======
     <!-- 篩選列 -->
->>>>>>> Leo
     <div class="card">
       <div class="body">
         <div class="toolbar">
           <div class="tool-left">
-<<<<<<< HEAD
-            <!-- 依姓名（userId - 姓名） -->
             <select class="input" data-role="sel-name" title="依姓名篩選">
               <option value="">（請選擇姓名）</option>
             </select>
-            <!-- 依關卡（如 ch1-t1） -->
-=======
-            <select class="input" data-role="sel-name" title="依姓名篩選">
-              <option value="">（請選擇姓名）</option>
-            </select>
->>>>>>> Leo
             <select class="input" data-role="sel-level" title="依關卡篩選">
               <option value="">（請選擇關卡）</option>
             </select>
             <button class="btn" data-action="reset">清空</button>
           </div>
-<<<<<<< HEAD
-
-          <!-- 右側按鈕：只保留「新增紀錄」，其他三顆已移除 -->
-=======
->>>>>>> Leo
           <div class="tool-right">
             <button class="btn primary" data-icon="add" data-action="new">新增紀錄</button>
           </div>
@@ -111,45 +91,23 @@
 
     <div class="spacer-12"></div>
 
-<<<<<<< HEAD
-=======
     <!-- 資料表 -->
->>>>>>> Leo
     <div class="card">
       <div class="body">
         <div class="table-wrap">
           <table>
-<<<<<<< HEAD
-            <!-- 固定欄寬，讓表頭/內容精準對齊 -->
-            <colgroup>
-              <col style="width:120px">      <!-- 操作固定 -->
-=======
             <colgroup>
               <col style="width:120px">      <!-- 操作 -->
->>>>>>> Leo
               <col class="equal">            <!-- uid -->
               <col class="equal">            <!-- 姓名 -->
               <col class="equal">            <!-- 關卡 -->
               <col class="equal">            <!-- 分數 -->
-<<<<<<< HEAD
-=======
               <col class="equal">            <!-- 測試日期 -->
               <col class="equal">            <!-- 結果縮圖 -->
->>>>>>> Leo
             </colgroup>
             <thead>
               <tr>
                 <th style="width:96px;">操作</th>
-<<<<<<< HEAD
-                <th><button data-sort="userId">uid ▲▼</button></th>
-                <th><button data-sort="name">姓名 ▲▼</button></th>
-                <th><button data-sort="level">關卡 ▲▼</button></th>
-                <th><button data-sort="score">分數 ▲▼</button></th>
-              </tr>
-            </thead>
-            <tbody data-role="tbody">
-              <tr><td colspan="5" class="empty">讀取中…</td></tr>
-=======
                 <th><button data-sort="uid">uid ▲▼</button></th>
                 <th><button data-sort="name">姓名 ▲▼</button></th>
                 <th><button data-sort="task_id">關卡 ▲▼</button></th>
@@ -160,7 +118,6 @@
             </thead>
             <tbody data-role="tbody">
               <tr><td colspan="7" class="empty">讀取中…</td></tr>
->>>>>>> Leo
             </tbody>
           </table>
         </div>
@@ -168,11 +125,7 @@
     </div>
   </div>
 
-<<<<<<< HEAD
-  <!-- 新增/修改 Dialog（可改 uid / 姓名 / 關卡 / 分數） -->
-=======
   <!-- 新增/修改 Dialog -->
->>>>>>> Leo
   <dialog data-role="dialog">
     <form method="dialog">
       <h3 class="dlg-title">新增/修改紀錄</h3>
@@ -187,14 +140,6 @@
             <input class="input" data-field="name" placeholder="張小朋友" />
           </div>
           <div>
-<<<<<<< HEAD
-            <div class="muted mb-6">關卡（例如 ch1-t1）</div>
-            <input class="input" data-field="level" placeholder="ch1-t1" />
-          </div>
-          <div>
-            <div class="muted mb-6">分數：<span data-field="score-text">0</span></div>
-            <input type="range" min="0" max="100" step="1" value="0" data-field="score" class="range" />
-=======
             <div class="muted mb-6">關卡（例如 Ch1-t1）</div>
             <input class="input" data-field="level" placeholder="Ch1-t1" />
           </div>
@@ -206,7 +151,6 @@
           <div>
             <div class="muted mb-6">測試日期</div>
             <input class="input" data-field="test_date" type="date" />
->>>>>>> Leo
           </div>
         </div>
       </div>
@@ -217,8 +161,6 @@
     </form>
   </dialog>
 
-<<<<<<< HEAD
-=======
   <!-- 預覽 Modal（保留，實際預覽邏輯在 admin.js） -->
   <div id="preview-modal" class="modal hidden">
     <div class="modal-content">
@@ -235,7 +177,6 @@
     </div>
   </div>
 
->>>>>>> Leo
   <script src="../js/admin.js"></script>
 </body>
 </html>
