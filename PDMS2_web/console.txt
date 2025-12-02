@@ -1,6 +1,9 @@
-2025-12-02 12:55:07 - INFO - === 遠端 PyMySQL 模式 ===
-2025-12-02 12:55:07 - INFO - Flask 應用程式啟動
-2025-12-02 12:55:07 - INFO - 準備啟動 Flask 應用程式，HOST=127.0.0.1, PORT=8000
-2025-12-02 12:55:07 - INFO - 已設定瀏覽器自動開啟
-2025-12-02 12:55:07 - INFO - Flask 應用程式開始運行
-2025-12-02 12:57:18 - INFO - Flask 應用程式已關閉
+2025-12-02 15:54:38 - INFO - === 遠端 PyMySQL 模式 ===
+2025-12-02 15:54:38 - INFO - Flask 應用程式啟動
+2025-12-02 15:54:38 - INFO - 準備啟動 Flask 應用程式，HOST=127.0.0.1, PORT=8000
+2025-12-02 15:54:38 - INFO - 已設定瀏覽器自動開啟
+2025-12-02 15:54:38 - INFO - Flask 應用程式開始運行
+2025-12-02 15:54:43 - INFO - [REQ] POST /create-uid-folder
+2025-12-02 15:54:44 - INFO - [DB] ensure_user ok: uid=001
+2025-12-02 15:54:44 - INFO - [FS] 建立資料夾：C:\Users\chang\Desktop\Peabody-Developmental-Motor-Scales\PDMS2_web\kid\001
+2025-12-02 15:54:44 - INFO - [RESP] POST /create-uid-folder -> 200
