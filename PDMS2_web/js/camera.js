@@ -2,7 +2,7 @@
 
 const KEY = "kid-quest-progress-v1";
 const TOP = 0; 
-const SIDE = 1; 
+const SIDE = 6; 
 const waittime = 3;
 
 // 遊戲狀態輪詢變數
