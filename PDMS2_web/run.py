@@ -7,16 +7,15 @@ from threading import Thread
 import subprocess, sys, logging, json, secrets, uuid, os, base64, re
 from datetime import datetime, date
 import cv2, numpy as np
-from PIL import Image  
+from PIL import Image
 from flask_cors import CORS
 import traceback
 from typing import Optional
 import time
-# 移除 imageio 依賴，因為錄影功能已移除
 
 # ======相機參數 (使用 runFortest.py 的值) =====
 TOP = 1
-SIDE = 2  # <-- Ch5-t1 會使用這個索引
+SIDE = 0  # <-- Ch5-t1 會使用這個索引
 # ============================================
 
 # =========================
@@ -25,7 +24,7 @@ SIDE = 2  # <-- Ch5-t1 會使用這個索引
 import pymysql
 
 DB = dict(
-    host="16.176.187.101",
+    host="13.238.239.23",
     port=3306,
     user="project",
     password="project",
@@ -62,6 +61,7 @@ TASK_MAP = {
     "Ch1-t1": "string_blocks",
     "Ch1-t2": "pyramid",
     "Ch1-t3": "stair",
+    "Ch1-t4": "wall",
     "Ch2-t1": "draw_circle",
     "Ch2-t2": "draw_square",
     "Ch2-t3": "draw_cross",
@@ -70,6 +70,8 @@ TASK_MAP = {
     "Ch2-t6": "connect_dots",
     "Ch3-t1": "cut_circle",
     "Ch3-t2": "cut_square",
+    "Ch3-t3": "cut_paper",
+    "Ch3-t4": "cut_line",
     "Ch4-t1": "one_fold",
     "Ch4-t2": "two_fold",
     "Ch5-t1": "collect_raisins",
@@ -101,16 +103,28 @@ def task_id_to_table(task_id: str) -> str:
     raise ValueError(f"未知的 task_id: {task_id}")
 
 
-def insert_task_payload(task_id: str, score_id: str, data1=None, data2=None):
-    """寫入任務子表 (PyMySQL)"""
+def insert_task_payload(
+    task_id: str,
+    uid: str,
+    test_date: date,
+    score: int,
+    result_img_path: str,
+    data1: Optional[str] = None,
+) -> None:
+
     table = task_id_to_table(task_id)
+    sql = f"""
+        INSERT INTO `{table}` (uid, test_date, score, result_img_path, data1)
+        VALUES (%s, %s, %s, %s, %s)
+        ON DUPLICATE KEY UPDATE
+            score           = VALUES(score),
+            result_img_path = VALUES(result_img_path),
+            data1           = VALUES(data1)
+    """
     try:
-        db_exec(
-            f"INSERT INTO `{table}` (score_id, data1, data2) VALUES (%s, %s, %s)",
-            (score_id, data1, data2),
-        )
-    except Exception as e:
-        # 錯誤已在 db_exec 中記錄，此處只需 raise
+        db_exec(sql, (uid, test_date, score, result_img_path, data1))
+    except Exception:
+        # 保留原始 traceback 往外丟
         raise
 
 
@@ -127,7 +141,7 @@ def ensure_task(task_id: str):
         )
         write_to_console(f"[DB] ensure_task ok: {task_id} -> {task_name}", "INFO")
     except Exception as e:
-        # 錯誤已在 db_exec 中記錄，此處只需 raise
+
         raise
 
 
@@ -161,40 +175,31 @@ def _parse_score_from_stdout(stdout: str):
 def insert_score(
     uid: str,
     task_id: str,
-    score: int,
-    no: Optional[int] = None,
     test_date: Optional[date] = None,
-) -> str:
-    """在 score_list 新增一筆分數 (PyMySQL)"""
+) -> date:
+
     ensure_user(uid)
     ensure_task(task_id)
 
-    if no is None:
-        row = db_exec(
-            "SELECT COUNT(*) AS cnt FROM score_list WHERE uid=%s AND task_id=%s",
-            (uid, task_id),
-            fetch="one",
-        )
-        # PyMySQL 的 COUNT(*) 可能回傳 None 或 {'cnt': 0}
-        no = (int(row["cnt"]) + 1) if row and row.get("cnt") is not None else 1
-
-    score_id = uuid.uuid4().hex
     if test_date is None:
         test_date = date.today()
 
-    try:
-        db_exec(
-            "INSERT INTO score_list(score_id, task_id, uid, score, no, test_date) VALUES (%s,%s,%s,%s,%s,%s)",
-            (score_id, task_id, uid, int(score), no, test_date),
-        )
-        write_to_console(
-            f"[DB] insert_score ok: uid={uid}, task_id={task_id}, score={score}, score_id={score_id}",
-            "INFO",
-        )
-        return score_id
-    except Exception as e:
-        # 錯誤已在 db_exec 中記錄，此處只需 raise
-        raise
+    db_exec(
+        """
+        INSERT INTO score_list (uid, task_id, test_date)
+        VALUES (%s, %s, %s)
+        ON DUPLICATE KEY UPDATE
+            test_date = VALUES(test_date)
+        """,
+        (uid, task_id, test_date),
+    )
+
+    write_to_console(
+        f"[DB] insert_score ok: uid={uid}, task_id={task_id}, test_date={test_date.isoformat()}",
+        "INFO",
+    )
+
+    return test_date
 
 
 # =========================
@@ -431,10 +436,29 @@ def test_score():
         data = request.get_json()
         uid = data["uid"]
         task_id = data["task_id"]
+        # 測試用
         score = 3
-        score_id = insert_score(uid, task_id, score)
-        insert_task_payload(task_id, score_id, None, None)  # 寫入子表
-        return jsonify({"success": True, "score_id": score_id, "score": score})
+        test_date = insert_score(uid=uid, task_id=task_id)
+
+        insert_task_payload(
+            task_id=task_id,
+            uid=uid,
+            test_date=test_date,
+            score=score,
+            result_img_path="",
+            data1=None,
+        )
+
+        return jsonify(
+            {
+                "success": True,
+                "uid": uid,
+                "task_id": task_id,
+                "test_date": test_date.isoformat(),
+                "score": score,
+            }
+        )
+
     except Exception as e:
         write_to_console(f"/test-score 錯誤: {e}", "ERROR")
         return jsonify({"success": False, "error": str(e)}), 500
@@ -462,7 +486,7 @@ def safe_subprocess_run(cmd, **kwargs):
         encoding="utf-8",
         errors="replace",
         env=env,
-        creationflags=creation_flags,  
+        creationflags=creation_flags,
     )
     default_kwargs.update(kwargs)
     return subprocess.run(cmd, **default_kwargs)
@@ -492,8 +516,9 @@ def resolve_script_path(task_code: str) -> Optional[Path]:
     return None
 
 
-# === [修正] run_analysis_in_background (簡化，移除 video_path 邏輯，強制顯示 Ch5-t1 視窗) ===
-def run_analysis_in_background(task_id, uid, img_id, script_path, stair_type=None, cam_index_input=None):
+def run_analysis_in_background(
+    task_id, uid, img_id, script_path, stair_type=None, cam_index_input=None
+):
     try:
         processing_tasks[task_id] = {
             "status": "running",
@@ -510,22 +535,36 @@ def run_analysis_in_background(task_id, uid, img_id, script_path, stair_type=Non
         # 判斷是否為遊戲，並決定參數
         is_game = normalize_task_id(img_id) == "Ch5-t1"
 
-        camera_to_use = SIDE # Ch5-t1 的預設值
+        camera_to_use = SIDE  # Ch5-t1 的預設值
         if is_game and cam_index_input is not None:
-             # 如果是 Ch5-t1 且前端有傳 cam_index，則使用傳入的值
-             try:
-                 camera_to_use = int(cam_index_input)
-             except ValueError:
-                 write_to_console(f"無效的 cam_index: {cam_index_input}，使用預設 SIDE={SIDE}", "WARN")
-                 pass # 使用預設的 SIDE
+            try:
+                camera_to_use = int(cam_index_input)
+            except ValueError:
+                write_to_console(
+                    f"無效的 cam_index: {cam_index_input}，使用預設 SIDE={SIDE}", "WARN"
+                )
+                pass
 
         if is_game:
-            # 遊戲模式：傳遞 uid 和 SIDE 相機索引
-            cmd = base_cmd + [uid, str(camera_to_use)]  # <-- 使用全域 SIDE
+            # ===== 重要：Ch5-t1 遊戲模式，先確保前端相機已釋放 =====
+            write_to_console(
+                f"Ch5-t1 遊戲模式：準備使用相機索引 {camera_to_use}", "INFO"
+            )
+
+            # 強制釋放前端相機
+            release_camera()
+            write_to_console("[Ch5-t1] 前端相機已釋放", "INFO")
+
+            # 等待相機資源完全釋放
+            write_to_console("[Ch5-t1] 等待相機資源釋放...", "INFO")
+            time.sleep(1.5)
+
+            # 遊戲模式：傳遞 uid 和相機索引
+            cmd = base_cmd + [uid, str(camera_to_use)]
+            write_to_console(f"[Ch5-t1] 啟動遊戲命令: {' '.join(cmd)}", "INFO")
         else:
             # 靜態分析模式：傳遞 uid 和 img_id (檔名)
             cmd = base_cmd + [uid, img_id]
-            # 如果是階梯任務，再加入 stair_type
             if stair_type:
                 cmd.append(stair_type)
 
@@ -540,12 +579,12 @@ def run_analysis_in_background(task_id, uid, img_id, script_path, stair_type=Non
             # 靜態任務使用 CREATE_NO_WINDOW 隱藏主控台
             if not is_game:
                 creation_flags = subprocess.CREATE_NO_WINDOW
-            # 遊戲任務也使用 CREATE_NO_WINDOW 隱藏主控台，但會彈出 OpenCV 視窗
-            else: 
-                creation_flags = subprocess.CREATE_NO_WINDOW
+            # 遊戲任務不隱藏，讓 OpenCV 視窗可以正常顯示
+            else:
+                creation_flags = 0
 
-        # 決定是否擷取輸出
-        capture_output_flag = not is_game # 靜態任務擷取，遊戲任務不擷取 (因為 stdout 可能被 opencv 阻塞)
+        # 遊戲任務也擷取輸出，以便看到錯誤訊息
+        capture_output_flag = True
 
         # 執行子程序
         result = subprocess.run(
@@ -556,41 +595,44 @@ def run_analysis_in_background(task_id, uid, img_id, script_path, stair_type=Non
             text=True,
             encoding="utf-8",
             errors="replace",
-            creationflags=creation_flags
+            creationflags=creation_flags,
         )
-        
-        # 從執行結果中取得分數和輸出
+
+        # 從執行結果中取得分數（exit code）
         score = int(result.returncode)
 
-        if is_game:
-            stdout_str = "Game executed in foreground (Console Hidden)."
-            stderr_str = ""
-        else:
-            stdout_str = result.stdout
-            stderr_str = result.stderr
+        stdout_str = result.stdout if result.stdout else ""
+        stderr_str = result.stderr if result.stderr else ""
 
         if stdout_str:
             write_to_console(f"腳本輸出 (任務 {task_id})：\n{stdout_str}", "INFO")
         if stderr_str:
             write_to_console(f"腳本錯誤輸出 (任務 {task_id})：\n{stderr_str}", "ERROR")
+
+        # 正規化成 Ch1-t1 / Ch2-t1 這種
         task_id_std = normalize_task_id(img_id)
         uid_eff = uid or "unknown"
 
-        score_id = None
+        test_date = None
         try:
-            score_id = insert_score(uid_eff, task_id_std, score)
+            test_date = insert_score(uid_eff, task_id_std)
         except Exception as e:
-            write_to_console(f"寫分數失敗：{e}", "ERROR")  
+            write_to_console(f"寫入 score_list 失敗：{e}", "ERROR")
 
-        if score_id:
+        if (test_date is not None) and (not is_game):
             try:
-                # 遊戲(Ch5-t1)不需要寫入子表
-                if not is_game:
-                    insert_task_payload(task_id_std, score_id, None, None)
+
+                insert_task_payload(
+                    task_id=task_id_std,
+                    uid=uid_eff,
+                    test_date=test_date,
+                    score=score,
+                    result_img_path="",
+                    data1=None,
+                )
             except Exception as e:
-                # 子表寫入失敗也只記錄錯誤
                 write_to_console(
-                    f"寫入子表失敗 (score_id={score_id}, task={task_id_std}): {e}",
+                    f"寫入任務子表失敗 (uid={uid_eff}, task={task_id_std}): {e}",
                     "ERROR",
                 )
 
@@ -606,12 +648,12 @@ def run_analysis_in_background(task_id, uid, img_id, script_path, stair_type=Non
                 "stdout": stdout_str,
                 "stderr": stderr_str,
                 "returncode": score,
-                "score_id": score_id,
                 "task_id": task_id_std,
+                "test_date": test_date.isoformat() if test_date else None,
             },
         }
         write_to_console(
-            f"任務 {task_id} 完成：uid={uid_eff}, task={task_id_std}, score={score}, score_id={score_id}",
+            f"任務 {task_id} 完成：uid={uid_eff}, task={task_id_std}, score={score}, test_date={test_date}",
             "INFO",
         )
 
@@ -635,9 +677,8 @@ def run_python_script():
         data = request.get_json() or {}
         img_id = (data.get("id") or "").strip()
         uid = (data.get("uid") or "").strip() or session.get("uid")
-        
+
         cam_index_input = data.get("cam_index")
-        
 
         if not img_id:
             return jsonify({"success": False, "error": "缺少 id(task_id)"}), 400
@@ -664,10 +705,10 @@ def run_python_script():
             target=run_analysis_in_background,
             args=(task_id, uid, img_id, script_path, stair_type, cam_index_input),
         )
-        
+
         t.daemon = True
         t.start()
-        
+
         return jsonify(
             {
                 "success": True,
@@ -679,8 +720,6 @@ def run_python_script():
         write_to_console(f"/run-python 發生錯誤: {e}", "ERROR")
         return jsonify({"success": False, "error": str(e)}), 500
 
-
-# ===== 移除：不再需要 run_analysis_in_background_with_video 函數 =====
 
 @app.get("/check-task/<task_id>")
 def check_task_status(task_id):
@@ -720,17 +759,17 @@ def db_ping():
         return jsonify({"ok": False, "err": str(e)}), 500
 
 
-@app.get("/scores")
-def list_scores():
-    try:
-        rows = db_exec(
-            "SELECT score_id, uid, task_id, score, no, test_date "
-            "FROM score_list ORDER BY test_date DESC, score_id DESC LIMIT 50",
-            fetch="all",
-        )
-        return jsonify(rows or []) 
-    except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
+# @app.get("/scores")
+# def list_scores():
+#     try:
+#         rows = db_exec(
+#             "SELECT score_id, uid, task_id, score, no, test_date "
+#             "FROM score_list ORDER BY test_date DESC, score_id DESC LIMIT 50",
+#             fetch="all",
+#         )
+#         return jsonify(rows or [])
+#     except Exception as e:
+#         return jsonify({"success": False, "error": str(e)}), 500
 
 
 # =========================
@@ -739,44 +778,54 @@ def list_scores():
 camera = None
 camera_active = False
 
+
 def release_camera():
     global camera, camera_active
     if camera is not None:
-        try:  
+        try:
             camera.release()
-        except Exception:
-            pass
+            write_to_console("[相機] 相機已釋放", "INFO")
+        except Exception as e:
+            write_to_console(f"[相機] 釋放相機時發生錯誤: {e}", "WARN")
         camera = None
     camera_active = False
+    # 給系統一點時間完全釋放資源
+    time.sleep(0.3)
 
-CROP_RATE = 0.8
+
+CROP_RATE = 0.7
+
 
 def init_camera(camera_index=TOP):
     global camera, camera_active
     try:
         release_camera()
-        
+
         # 靜態拍照模式，仍優先嘗試 MSMF
-        camera = cv2.VideoCapture(camera_index + cv2.CAP_MSMF) 
+        camera = cv2.VideoCapture(camera_index + cv2.CAP_MSMF)
 
         if not camera.isOpened():
-            write_to_console(f"MSMF 無法開啟相機 {camera_index}，嘗試預設後端。", "WARN")
+            write_to_console(
+                f"MSMF 無法開啟相機 {camera_index}，嘗試預設後端。", "WARN"
+            )
             camera = cv2.VideoCapture(camera_index)
             if not camera.isOpened():
-                 raise Exception(f"無法開啟指定的相機索引: {camera_index}")
-
+                raise Exception(f"無法開啟指定的相機索引: {camera_index}")
 
         # 設定解析度和 FPS (僅用於拍照取圖，不需要強制 1280x720)
         # 這裡保留設定，以確保相機啟動後能正常取幀
         camera.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
         camera.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
-        camera.set(cv2.CAP_PROP_FPS, 30) 
+        camera.set(cv2.CAP_PROP_FPS, 30)
 
         actual_width = int(camera.get(cv2.CAP_PROP_FRAME_WIDTH))
         actual_height = int(camera.get(cv2.CAP_PROP_FRAME_HEIGHT))
         actual_fps = camera.get(cv2.CAP_PROP_FPS)
 
-        write_to_console(f"相機實際設定：{actual_width}x{actual_height} @ {actual_fps:.1f} FPS (用於靜態拍照)", "INFO")
+        write_to_console(
+            f"相機實際設定：{actual_width}x{actual_height} @ {actual_fps:.1f} FPS (用於靜態拍照)",
+            "INFO",
+        )
 
         ret, frame = camera.read()
         if not ret:
@@ -791,8 +840,8 @@ def init_camera(camera_index=TOP):
         camera_active = True
         return True
     except Exception as e:
-        print(f"相機初始化失敗: {e}")  
-        release_camera()  
+        print(f"相機初始化失敗: {e}")
+        release_camera()
         return False
 
 
@@ -804,7 +853,7 @@ def crop_center(frame, rate):
     crop_h = int(h * rate)
     start_x = (w - crop_w) // 2
     start_y = (h - crop_h) // 2
-    return frame[start_y:start_y+crop_h, start_x:start_x+crop_w]
+    return frame[start_y : start_y + crop_h, start_x : start_x + crop_w]
 
 
 def get_frame():
@@ -815,15 +864,17 @@ def get_frame():
         ret, frame = camera.read()
         if not ret:
             return None
-        
+
         # 切割畫面 CROP_RATE
         frame = crop_center(frame, CROP_RATE)
-        
+
         _, buffer = cv2.imencode(".jpg", frame, [cv2.IMWRITE_JPEG_QUALITY, 85])
         return buffer.tobytes()
     except Exception as e:
         write_to_console(f"get_frame 錯誤: {e}", "ERROR")
         return None
+
+
 # 相機路由
 @app.post("/opencv-camera/stop")
 def stop_opencv_camera():
@@ -937,6 +988,59 @@ def capture_opencv_photo():
     except Exception:
         write_to_console(f"/opencv-camera/capture 錯誤", "ERROR")
         return jsonify({"success": False}), 500
+
+
+@app.get("/game-state/<uid>")
+def get_game_state(uid):
+    """取得 Ch5-t1 遊戲狀態"""
+    try:
+        state_file = ROOT / "kid" / uid / "Ch5-t1_state.json"
+        if not state_file.exists():
+            return jsonify({"success": False, "error": "狀態檔案不存在"}), 404
+
+        with open(state_file, "r", encoding="utf-8") as f:
+            state = json.load(f)
+
+        return jsonify({"success": True, "state": state})
+    except Exception as e:
+        write_to_console(f"讀取遊戲狀態失敗: {e}", "ERROR")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.post("/clear-game-state")
+def clear_game_state():
+    """清空 Ch5-t1 遊戲狀態 JSON"""
+    try:
+        data = request.get_json() or {}
+        uid = (data.get("uid") or "").strip()
+
+        if not uid:
+            return jsonify({"success": False, "error": "缺少 UID"}), 400
+
+        state_file = ROOT / "kid" / uid / "Ch5-t1_state.json"
+
+        # 寫入初始狀態
+        initial_state = {
+            "running": False,
+            "bean_count": 0,
+            "remaining_time": 60,
+            "warning": False,
+            "game_over": False,
+            "score": -1,
+        }
+
+        state_file.parent.mkdir(parents=True, exist_ok=True)
+
+        with open(state_file, "w", encoding="utf-8") as f:
+            json.dump(initial_state, f, ensure_ascii=False, indent=2)
+
+        write_to_console(f"[Ch5-t1] 遊戲狀態已清空: {uid}", "INFO")
+        return jsonify({"success": True, "message": "遊戲狀態已重置"})
+
+    except Exception as e:
+        write_to_console(f"[Ch5-t1] 清空遊戲狀態失敗: {e}", "ERROR")
+        return jsonify({"success": False, "error": str(e)}), 500
+
 
 if __name__ == "__main__":
     try:

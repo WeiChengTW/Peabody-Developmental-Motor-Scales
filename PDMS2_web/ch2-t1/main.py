@@ -53,7 +53,7 @@ def get_pixel_per_cm_from_a4(
     if show_debug:
         debug_img = img.copy()
         cv2.drawContours(debug_img, [approx], -1, (0, 0, 255), 3)
-        cv2.imshow("Detected A4 Contour", cv2.resize(debug_img, (800, 600)))
+        # cv2.imshow("Detected A4 Contour", cv2.resize(debug_img, (800, 600)))
         cv2.waitKey(0)
         cv2.destroyAllWindows()
 
@@ -209,7 +209,7 @@ def main(img_path):
             img_path,
             show_debug=False,  # 關掉視覺化避免卡住
             save_cropped=True,
-            output_folder="cropped_a4",
+            output_folder=target_dir / "cropped_a4",
         )
         print(f"{img_path} pixel_per_cm = {pixel_per_cm}")
     except ValueError as e:

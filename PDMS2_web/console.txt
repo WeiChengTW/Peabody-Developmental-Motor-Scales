@@ -1,37 +1,6 @@
-2025-11-18 12:29:05 - INFO - === 遠端 PyMySQL 模式 ===
-2025-11-18 12:29:05 - INFO - Flask 應用程式啟動
-2025-11-18 12:29:05 - INFO - 準備啟動 Flask 應用程式，HOST=127.0.0.1, PORT=8000
-2025-11-18 12:29:05 - INFO - 已設定瀏覽器自動開啟
-2025-11-18 12:29:05 - INFO - Flask 應用程式開始運行
-2025-11-18 12:29:15 - INFO - [REQ] POST /create-uid-folder
-2025-11-18 12:29:16 - INFO - [DB] ensure_user ok: uid=uuuuuuu
-2025-11-18 12:29:16 - INFO - [RESP] POST /create-uid-folder -> 200
-2025-11-18 12:29:30 - INFO - [Ch5-t1] 遊戲狀態已清空: uuuuuuu
-2025-11-18 12:29:31 - INFO - [REQ] POST /run-python
-2025-11-18 12:29:31 - INFO - 開始背景任務 12790906-41d2-48a7-ba85-e1267018ac0b: uid=uuuuuuu, task=ch5-t1
-2025-11-18 12:29:31 - INFO - [RESP] POST /run-python -> 200
-2025-11-18 12:29:31 - INFO - Ch5-t1 遊戲模式：準備使用相機索引 1
-2025-11-18 12:29:31 - INFO - [Ch5-t1] 前端相機已釋放
-2025-11-18 12:29:31 - INFO - [Ch5-t1] 等待相機資源釋放...
-2025-11-18 12:29:33 - INFO - [Ch5-t1] 啟動遊戲命令: C:\Users\hiimd\miniconda3\envs\cnn39\python.exe C:\Users\hiimd\Desktop\vscode\Peabody-Developmental-Motor-Scales\PDMS2_web\ch5-t1\main.py uuuuuuu 1
-2025-11-18 12:29:33 - INFO - 執行命令：C:\Users\hiimd\miniconda3\envs\cnn39\python.exe C:\Users\hiimd\Desktop\vscode\Peabody-Developmental-Motor-Scales\PDMS2_web\ch5-t1\main.py uuuuuuu 1
-2025-11-18 12:30:05 - INFO - 腳本輸出 (任務 12790906-41d2-48a7-ba85-e1267018ac0b)：
-從 run.py 接收到 UID: uuuuuuu, 相機索引: 1
-影片將儲存至: C:\Users\hiimd\Desktop\vscode\Peabody-Developmental-Motor-Scales\PDMS2_web\kid\uuuuuuu\Ch5-t1_result.mp4
-遊戲狀態已初始化並儲存
-嘗試開啟相機 (索引 1)，第 1/3 次...
-相機開啟成功！
-模型預熱完成！
-遊戲開始！
-開始錄影: (448, 336) @ 30 FPS, 路徑: C:\Users\hiimd\Desktop\vscode\Peabody-Developmental-Motor-Scales\PDMS2_web\kid\uuuuuuu\Ch5-t1_result.mp4
-WARNING !
-score : 1
-
-錄影已儲存: C:\Users\hiimd\Desktop\vscode\Peabody-Developmental-Motor-Scales\PDMS2_web\kid\uuuuuuu\Ch5-t1_result.mp4
-最終分數: 1
-
-2025-11-18 12:30:06 - INFO - [DB] ensure_user ok: uid=uuuuuuu
-2025-11-18 12:30:07 - INFO - [DB] ensure_task ok: Ch5-t1 -> collect_raisins
-2025-11-18 12:30:09 - INFO - [DB] insert_score ok: uid=uuuuuuu, task_id=Ch5-t1, score=1, score_id=16fecd10301b416583c10dba1a59503c
-2025-11-18 12:30:09 - INFO - 任務 12790906-41d2-48a7-ba85-e1267018ac0b 完成：uid=uuuuuuu, task=Ch5-t1, score=1, score_id=16fecd10301b416583c10dba1a59503c
-2025-11-18 12:48:23 - INFO - Flask 應用程式已關閉
+2025-12-02 12:55:07 - INFO - === 遠端 PyMySQL 模式 ===
+2025-12-02 12:55:07 - INFO - Flask 應用程式啟動
+2025-12-02 12:55:07 - INFO - 準備啟動 Flask 應用程式，HOST=127.0.0.1, PORT=8000
+2025-12-02 12:55:07 - INFO - 已設定瀏覽器自動開啟
+2025-12-02 12:55:07 - INFO - Flask 應用程式開始運行
+2025-12-02 12:57:18 - INFO - Flask 應用程式已關閉
