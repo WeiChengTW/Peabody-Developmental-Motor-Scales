@@ -1,0 +1,12 @@
+2025-12-02 22:07:24 - INFO - === 遠端 PyMySQL 模式 ===
+2025-12-02 22:07:24 - INFO - Flask 應用程式啟動
+2025-12-02 22:07:24 - INFO - 準備啟動 Flask 應用程式，HOST=127.0.0.1, PORT=5050
+2025-12-02 22:07:24 - INFO - 已設定瀏覽器自動開啟
+2025-12-02 22:07:24 - INFO - Flask 應用程式開始運行
+2025-12-02 22:12:06 - ERROR - [HTTPERR 404] GET /admin_login - The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2025-12-02 22:12:06 - INFO - [RESP] GET /admin_login -> 404
+2025-12-02 22:12:28 - INFO - [RESP] GET /artifact/kid/a012/Ch2-t6.jpg -> 404
+2025-12-02 22:13:20 - INFO - [RESP] GET /artifact/kid/a012/Ch2-t6.jpg -> 404
+2025-12-02 22:13:20 - INFO - [RESP] GET /artifact/kid/a012/Ch2-t6_result.jpg -> 404
+2025-12-02 22:18:47 - INFO - [RESP] GET /artifact/kid/a012/Ch2-t6.jpg -> 404
+2025-12-02 22:18:47 - INFO - [RESP] GET /artifact/kid/a012/Ch2-t6_result.jpg -> 404
