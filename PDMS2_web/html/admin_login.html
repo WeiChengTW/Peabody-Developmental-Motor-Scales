@@ -66,11 +66,13 @@
         return;
       }
 
-      const res = await fetch('/api/admin/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ account, password })
-      });
+    const res = await fetch('/api/auth/login', {   // ✅ 改路徑
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ account, password }),
+      credentials: 'include'   // ✅ 加這行，讓瀏覽器帶 cookie
+    });
+
       const js = await res.json();
 
       if (!js.ok) {
