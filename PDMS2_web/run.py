@@ -14,8 +14,8 @@ from typing import Optional
 import time
 
 # ======相機參數 (使用 runFortest.py 的值) =====
-TOP = 1
-SIDE = 0  # <-- Ch5-t1 會使用這個索引
+TOP = 0
+SIDE = 6  # <-- Ch5-t1 會使用這個索引
 # ============================================
 
 # =========================

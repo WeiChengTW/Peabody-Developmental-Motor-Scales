@@ -5,6 +5,54 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>管理者介面（關卡/姓名查詢）</title>
   <link rel="stylesheet" href="../css/admin.css">
+  <style>
+    /* modal 與縮圖 */
+    .modal.hidden { display: none; }
+    .modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.45);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+    }
+    .modal-content {
+      background: #fff;
+      width: min(900px, 92vw);
+      max-height: 88vh;
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 8px 28px rgba(0,0,0,.25);
+    }
+    .modal-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px;
+      border-bottom: 1px solid #eee;
+    }
+    .modal-body {
+      padding: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-body img,
+    .modal-body video {
+      max-width: 100%;
+      max-height: 72vh;
+    }
+    .thumb {
+      width: 48px;
+      height: 48px;
+      object-fit: cover;
+      border-radius: 8px;
+      border: 1px solid #eee;
+      cursor: pointer;
+      vertical-align: middle;
+    }
+  </style>
 </head>
 <body>
   <div class="header">
@@ -16,27 +64,24 @@
           <div class="title">小朋友作答紀錄（依姓名或關卡檢索）</div>
         </div>
       </div>
-      <div class="muted">Piyan</div>
+      <div class="muted"></div>
     </div>
   </div>
 
   <div class="wrap">
+    <!-- 篩選列 -->
     <div class="card">
       <div class="body">
         <div class="toolbar">
           <div class="tool-left">
-            <!-- 依姓名（userId - 姓名） -->
             <select class="input" data-role="sel-name" title="依姓名篩選">
               <option value="">（請選擇姓名）</option>
             </select>
-            <!-- 依關卡（如 ch1-t1） -->
             <select class="input" data-role="sel-level" title="依關卡篩選">
               <option value="">（請選擇關卡）</option>
             </select>
             <button class="btn" data-action="reset">清空</button>
           </div>
-
-          <!-- 右側按鈕：只保留「新增紀錄」，其他三顆已移除 -->
           <div class="tool-right">
             <button class="btn primary" data-icon="add" data-action="new">新增紀錄</button>
           </div>
@@ -46,29 +91,33 @@
 
     <div class="spacer-12"></div>
 
+    <!-- 資料表 -->
     <div class="card">
       <div class="body">
         <div class="table-wrap">
           <table>
-            <!-- 固定欄寬，讓表頭/內容精準對齊 -->
             <colgroup>
-              <col style="width:120px">      <!-- 操作固定 -->
+              <col style="width:120px">      <!-- 操作 -->
               <col class="equal">            <!-- uid -->
               <col class="equal">            <!-- 姓名 -->
               <col class="equal">            <!-- 關卡 -->
               <col class="equal">            <!-- 分數 -->
+              <col class="equal">            <!-- 測試日期 -->
+              <col class="equal">            <!-- 結果縮圖 -->
             </colgroup>
             <thead>
               <tr>
                 <th style="width:96px;">操作</th>
-                <th><button data-sort="userId">uid ▲▼</button></th>
+                <th><button data-sort="uid">uid ▲▼</button></th>
                 <th><button data-sort="name">姓名 ▲▼</button></th>
-                <th><button data-sort="level">關卡 ▲▼</button></th>
+                <th><button data-sort="task_id">關卡 ▲▼</button></th>
                 <th><button data-sort="score">分數 ▲▼</button></th>
+                <th><button data-sort="test_date">測試日期 ▲▼</button></th>
+                <th>結果</th>
               </tr>
             </thead>
             <tbody data-role="tbody">
-              <tr><td colspan="5" class="empty">讀取中…</td></tr>
+              <tr><td colspan="7" class="empty">讀取中…</td></tr>
             </tbody>
           </table>
         </div>
@@ -76,7 +125,7 @@
     </div>
   </div>
 
-  <!-- 新增/修改 Dialog（可改 uid / 姓名 / 關卡 / 分數） -->
+  <!-- 新增/修改 Dialog -->
   <dialog data-role="dialog">
     <form method="dialog">
       <h3 class="dlg-title">新增/修改紀錄</h3>
@@ -91,12 +140,17 @@
             <input class="input" data-field="name" placeholder="張小朋友" />
           </div>
           <div>
-            <div class="muted mb-6">關卡（例如 ch1-t1）</div>
-            <input class="input" data-field="level" placeholder="ch1-t1" />
+            <div class="muted mb-6">關卡（例如 Ch1-t1）</div>
+            <input class="input" data-field="level" placeholder="Ch1-t1" />
           </div>
           <div>
             <div class="muted mb-6">分數：<span data-field="score-text">0</span></div>
-            <input type="range" min="0" max="100" step="1" value="0" data-field="score" class="range" />
+            <input type="range" min="0" max="100" step="1" value="0"
+                   data-field="score" class="range" />
+          </div>
+          <div>
+            <div class="muted mb-6">測試日期</div>
+            <input class="input" data-field="test_date" type="date" />
           </div>
         </div>
       </div>
@@ -106,6 +160,22 @@
       </div>
     </form>
   </dialog>
+
+  <!-- 預覽 Modal（保留，實際預覽邏輯在 admin.js） -->
+  <div id="preview-modal" class="modal hidden">
+    <div class="modal-content">
+      <div class="modal-head">
+        <div class="tools">
+          <a id="pv-open" target="_blank">開新分頁</a>
+          <button id="pv-copy" type="button">複製連結</button>
+          <a id="pv-download">下載</a>
+        </div>
+        <button class="close"
+                onclick="document.getElementById('preview-modal').classList.add('hidden')">✕</button>
+      </div>
+      <div id="preview-body" class="modal-body"></div>
+    </div>
+  </div>
 
   <script src="../js/admin.js"></script>
 </body>

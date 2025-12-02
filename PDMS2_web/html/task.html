@@ -97,46 +97,22 @@
 <body>
   <header class="kidbar">
     <div class="kidbar-left">
-      <span class="logo" aria-hidden="true"><svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" width="40" height="40">
-  <line x1="20" y1="80" x2="70" y2="30" stroke="#8B4513" stroke-width="4" stroke-linecap="round"/>
-  <polygon points="70,20 75,30 85,25 80,35 90,40 80,45 85,55 75,50 70,60 65,50 55,55 60,45 50,40 60,35 55,25 65,30" fill="#FFD700"/>
-  <circle cx="35" cy="65" r="3" fill="#FFD700" opacity="0.6"/>
-  <circle cx="45" cy="55" r="2" fill="#FF69B4" opacity="0.6"/>
-  <circle cx="25" cy="70" r="2" fill="#87CEEB" opacity="0.6"/>
-  <circle cx="55" cy="45" r="3" fill="#FFF" opacity="0.7"/>
-</svg>
-<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" width="40" height="40">
-  <polygon points="50,20 55,45 80,50 55,55 50,80 45,55 20,50 45,45" fill="#FFD700"/>
-  <polygon points="50,30 52,45 65,50 52,55 50,70 48,55 35,50 48,45" fill="#FFF"/>
-</svg></span>
+      <span class="logo" aria-hidden="true">🪄✨</span>
       <div class="title-wrap">
         <h1 class="app-title">任務操作</h1>
         <div class="subtitle">跟著指示一步一步完成！</div>
       </div>
     </div>
     <div class="kidbar-right">
-      <button id="readBtn" class="btn"><svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" width="40" height="40">
-  <ellipse cx="50" cy="35" rx="12" ry="18" fill="#2C3E50" stroke="#34495E" stroke-width="2"/>
-  <rect x="38" y="28" width="24" height="3" fill="#95A5A6" rx="1"/>
-  <rect x="38" y="38" width="24" height="3" fill="#95A5A6" rx="1"/>
-  <line x1="50" y1="53" x2="50" y2="70" stroke="#34495E" stroke-width="3" stroke-linecap="round"/>
-  <path d="M 35 70 L 50 70 L 65 70 L 60 80 L 40 80 Z" fill="#2C3E50"/>
-  <path d="M 60 35 Q 68 35, 68 45 Q 68 55, 60 55" stroke="#7F8C8D" stroke-width="2" fill="none" stroke-linecap="round"/>
-  <path d="M 40 35 Q 32 35, 32 45 Q 32 55, 40 55" stroke="#7F8C8D" stroke-width="2" fill="none" stroke-linecap="round"/>
-</svg> 讀指示</button>
-      <button id="stopBtn" class="btn danger fat"><svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" width="40" height="40">
-  <rect x="25" y="25" width="50" height="50" fill="#DC143C" rx="5"/>
-</svg> 停止朗讀</button>
+      <button id="readBtn" class="btn">🎤 讀指示</button>
+      <button id="stopBtn" class="btn danger fat">⏹ 停止朗讀</button>
       <a id="backBtn" href="/html/index.html" class="btn ghost pill">← 回關卡</a>
     </div>
   </header>
 
   <main class="task-stage" aria-live="polite">
     <section class="task-head">
-      <div class="task-emoji" id="emoji"><svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" width="40" height="40">
-  <polygon points="50,20 55,45 80,50 55,55 50,80 45,55 20,50 45,45" fill="#FFD700"/>
-  <polygon points="50,30 52,45 65,50 52,55 50,70 48,55 35,50 48,45" fill="#FFF"/>
-</svg></div>
+      <div class="task-emoji" id="emoji">✨</div>
       <div>
         <h2 class="task-title" id="title">任務標題</h2>
         <p class="task-desc" id="desc">任務說明</p>
@@ -153,12 +129,12 @@
     <section class="task-steps">
       <h3 style="margin:0 0 6px">步驟</h3>
       <ol id="steps"></ol>
-      <div class="hint">完成後按右下角「完成」，會自動幫你在主頁打勾。</div>
+      <div class="hint">完成後按右下角「完成 ✅」，會自動幫你在主頁打勾。</div>
     </section>
 
     <div class="task-actions">
       <a id="backBtnBottom" href="/html/index.html" class="btn secondary fat">← 回上一頁</a>
-      <button id="doneBtn" class="btn primary fat">完成</button>
+      <button id="doneBtn" class="btn primary fat">完成 ✅</button>
     </div>
   </main>
 
