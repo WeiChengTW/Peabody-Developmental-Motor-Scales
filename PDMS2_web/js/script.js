@@ -145,6 +145,24 @@ const SVG_ICONS = {
       <circle cx="10" cy="10" r="10" fill="none" stroke="#DC143C" stroke-width="4"/>
     </g>
   </svg>`,
+  scissorsHalfpaper: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <rect x="25" y="15" width="50" height="70" fill="none" stroke="#4169E1" stroke-width="2" stroke-dasharray="5,3"/>
+    <line x1="50" y1="15" x2="50" y2="85" stroke="#4169E1" stroke-width="3" stroke-dasharray="6,4"/>
+    <g transform="translate(50, 50) rotate(-90) scale(0.5)">
+       <path d="M -5 0 L -5 -40 M 5 0 L 5 -40" stroke="#C0C0C0" stroke-width="6"/>
+       <circle cx="-10" cy="10" r="10" fill="none" stroke="#DC143C" stroke-width="4"/>
+       <circle cx="10" cy="10" r="10" fill="none" stroke="#DC143C" stroke-width="4"/>
+    </g>
+  </svg>`,
+
+  scissorsLine: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <line x1="10" y1="50" x2="90" y2="50" stroke="#4169E1" stroke-width="4" stroke-dasharray="8,5"/>
+    <g transform="translate(50, 50) rotate(-90) scale(0.5)">
+       <path d="M -5 0 L -5 -40 M 5 0 L 5 -40" stroke="#C0C0C0" stroke-width="6"/>
+       <circle cx="-10" cy="10" r="10" fill="none" stroke="#DC143C" stroke-width="4"/>
+       <circle cx="10" cy="10" r="10" fill="none" stroke="#DC143C" stroke-width="4"/>
+    </g>
+  </svg>`,
 
   // 紙張：增加了摺痕細節
   paper: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
@@ -238,7 +256,9 @@ const STORY = [
     intro:"幫助精靈修好小屋，他會給我們魔法紙作為回報。",
     tasks:[
       {icon:"scissorsCircle", title:"剪圓：做圓形窗戶", note:"幫小精靈剪出一個圓窗。"},
-      {icon:"scissorsSquare", title:"剪方：做方方正正的門", note:"幫小精靈剪出正方形的門。"}
+      {icon:"scissorsSquare", title:"剪方：做方方正正的門", note:"幫小精靈剪出正方形的門。"},
+      {icon:"scissorsLine", title:"剪圓：把窗戶剪開", note:"幫小精靈把窗戶剪開。"},
+      {icon:"scissorsHalfpaper", title:"剪方：剪窗簾", note:"幫小精靈將紙平分成兩半當窗簾。"}
     ]
   },
   {
