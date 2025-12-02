@@ -5,7 +5,7 @@ from flask import Flask, send_from_directory, request, jsonify, session
 import webbrowser, threading
 from threading import Thread
 import subprocess, sys, logging, json, secrets, uuid, os, base64, re
-from datetime import datetime, date
+from datetime import datetime, date, time as dtime
 import cv2, numpy as np
 from PIL import Image
 from flask_cors import CORS
@@ -61,7 +61,7 @@ TASK_MAP = {
     "Ch1-t1": "string_blocks",
     "Ch1-t2": "pyramid",
     "Ch1-t3": "stair",
-    "Ch1-t4": "wall",
+    "Ch1-t4": "build_wall",
     "Ch2-t1": "draw_circle",
     "Ch2-t2": "draw_square",
     "Ch2-t3": "draw_cross",
@@ -107,25 +107,26 @@ def insert_task_payload(
     task_id: str,
     uid: str,
     test_date: date,
-    score: int,
+    test_time: dtime,          
     result_img_path: str,
     data1: Optional[str] = None,
 ) -> None:
 
     table = task_id_to_table(task_id)
     sql = f"""
-        INSERT INTO `{table}` (uid, test_date, score, result_img_path, data1)
-        VALUES (%s, %s, %s, %s, %s)
+        INSERT INTO `{table}` (`uid`, `test_date`, `time`, `score`, `result_img_path`, `data1`)
+        VALUES (%s, %s, %s, %s, %s, %s)
         ON DUPLICATE KEY UPDATE
-            score           = VALUES(score),
-            result_img_path = VALUES(result_img_path),
-            data1           = VALUES(data1)
+            `score`           = VALUES(`score`),
+            `result_img_path` = VALUES(`result_img_path`),
+            `data1`           = VALUES(`data1`)
     """
     try:
-        db_exec(sql, (uid, test_date, score, result_img_path, data1))
+        db_exec(sql, (uid, test_date, test_time, score, result_img_path, data1))
     except Exception:
         # 保留原始 traceback 往外丟
         raise
+
 
 
 def ensure_task(task_id: str):
@@ -172,34 +173,48 @@ def _parse_score_from_stdout(stdout: str):
     return None
 
 
+from datetime import datetime, date, time as dtime
+from typing import Optional
+
 def insert_score(
     uid: str,
     task_id: str,
     test_date: Optional[date] = None,
-) -> date:
+    test_time: Optional[dtime] = None,   
+) -> tuple[date, dtime]:
 
     ensure_user(uid)
     ensure_task(task_id)
 
+    # 處理 test_date
     if test_date is None:
-        test_date = date.today()
+        now = datetime.now()
+        test_date = now.date()
+    else:
+        now = datetime.now()
+
+    # 處理 test_time
+    if test_time is None:
+        test_time = now.time().replace(microsecond=0)
 
     db_exec(
         """
-        INSERT INTO score_list (uid, task_id, test_date)
-        VALUES (%s, %s, %s)
+        INSERT INTO score_list (uid, task_id, test_date, time)
+        VALUES (%s, %s, %s, %s)
         ON DUPLICATE KEY UPDATE
-            test_date = VALUES(test_date)
+            test_date = VALUES(test_date),
+            time = VALUES(time)
         """,
-        (uid, task_id, test_date),
+        (uid, task_id, test_date, test_time),
     )
 
     write_to_console(
-        f"[DB] insert_score ok: uid={uid}, task_id={task_id}, test_date={test_date.isoformat()}",
+        f"[DB] insert_score ok: uid={uid}, task_id={task_id}, test_date={test_date.isoformat()}, test_time={test_time}",
         "INFO",
     )
 
-    return test_date
+    return test_date, test_time
+
 
 
 # =========================
@@ -436,14 +451,19 @@ def test_score():
         data = request.get_json()
         uid = data["uid"]
         task_id = data["task_id"]
-        # 測試用
-        score = 3
-        test_date = insert_score(uid=uid, task_id=task_id)
 
+        # 測試用分數
+        score = 3
+
+        # 會同時幫你寫入 score_list，並回傳日期 + 時間
+        test_date, test_time = insert_score(uid=uid, task_id=task_id)
+
+        # 再把同一個日期 + 時間寫進任務子表
         insert_task_payload(
             task_id=task_id,
             uid=uid,
             test_date=test_date,
+            test_time=test_time,     # 🔸 新增這個
             score=score,
             result_img_path="",
             data1=None,
@@ -455,6 +475,7 @@ def test_score():
                 "uid": uid,
                 "task_id": task_id,
                 "test_date": test_date.isoformat(),
+                "time": test_time.strftime("%H:%M:%S"),
                 "score": score,
             }
         )
@@ -462,6 +483,7 @@ def test_score():
     except Exception as e:
         write_to_console(f"/test-score 錯誤: {e}", "ERROR")
         return jsonify({"success": False, "error": str(e)}), 500
+
 
 
 # =========================
@@ -613,19 +635,22 @@ def run_analysis_in_background(
         task_id_std = normalize_task_id(img_id)
         uid_eff = uid or "unknown"
 
+        # 🔸 這裡開始：同時拿 test_date + test_time
         test_date = None
+        test_time = None
         try:
-            test_date = insert_score(uid_eff, task_id_std)
+            test_date, test_time = insert_score(uid_eff, task_id_std)
         except Exception as e:
             write_to_console(f"寫入 score_list 失敗：{e}", "ERROR")
 
-        if (test_date is not None) and (not is_game):
+        # 靜態任務才寫任務子表（遊戲任務目前不寫）
+        if (test_date is not None) and (test_time is not None) and (not is_game):
             try:
-
                 insert_task_payload(
                     task_id=task_id_std,
                     uid=uid_eff,
                     test_date=test_date,
+                    test_time=test_time,   # 🔸 新增：時間一起寫入
                     score=score,
                     result_img_path="",
                     data1=None,
@@ -650,10 +675,12 @@ def run_analysis_in_background(
                 "returncode": score,
                 "task_id": task_id_std,
                 "test_date": test_date.isoformat() if test_date else None,
+                "test_time": test_time.strftime("%H:%M:%S") if test_time else None,
             },
         }
         write_to_console(
-            f"任務 {task_id} 完成：uid={uid_eff}, task={task_id_std}, score={score}, test_date={test_date}",
+            f"任務 {task_id} 完成：uid={uid_eff}, task={task_id_std}, "
+            f"score={score}, test_date={test_date}, test_time={test_time}",
             "INFO",
         )
 
