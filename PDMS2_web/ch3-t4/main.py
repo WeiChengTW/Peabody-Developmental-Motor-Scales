@@ -163,7 +163,7 @@ def show_result(result_data):
 
 
 # 1. 設定基準面積 (請填入你之前測得的數值)
-STANDARD_AREA = 760170
+STANDARD_AREA = 217270
 
 if __name__ == "__main__":
     # 使用方式範例: python main.py 1125 ch3-t3
