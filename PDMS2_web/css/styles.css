@@ -389,3 +389,33 @@ body {
 #stopBtn:hover {
   background-color: #c0392b; /* 滑鼠移上去深紅 */
 }
+
+/* SVG 圖示樣式 */
+.emoji svg,
+.task-icon svg,
+#storyEmoji svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* 確保 sticker 按鈕中的 emoji 容器有尺寸 */
+.sticker .emoji {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 任務卡片的圖示 */
+.task-icon {
+  width: 60px;
+  height: 60px;
+}
+
+/* 故事區塊的大圖示 */
+#storyEmoji {
+  width: 80px;
+  height: 80px;
+}

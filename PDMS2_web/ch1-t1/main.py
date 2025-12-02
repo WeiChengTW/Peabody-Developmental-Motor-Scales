@@ -163,7 +163,6 @@ def score_from_image(img_path, conf=CONF):
     # ===== 新增: 中心裁剪 75% 區域 =====
     img = crop_center(img, CROP_RATIO)
     # ==================================
-
     display_frame = img.copy()
 
     # 灰階 + 模糊
@@ -190,7 +189,6 @@ def score_from_image(img_path, conf=CONF):
 
     # 骨架化
     skeleton = extract_line_skeleton(binary_masked)
-
     # 檢查每個方塊是否靠近骨架
     is_correct = []
     correct_num = 0
@@ -210,7 +208,6 @@ def score_from_image(img_path, conf=CONF):
     # 將單通道的二值圖轉為三通道才能繪製彩色標記
     binary_bgr = cv2.cvtColor(binary_masked, cv2.COLOR_GRAY2BGR)
     binary_with_markers = draw_block_markers(binary_bgr, boxes, masks, is_correct)
-
     # 骨架圖 (GRAY/BGR)
     skeleton_bgr = cv2.cvtColor(skeleton, cv2.COLOR_GRAY2BGR)
     skeleton_with_markers = draw_block_markers(skeleton_bgr, boxes, masks, is_correct)
@@ -235,7 +232,6 @@ def score_from_image(img_path, conf=CONF):
         score = 1
     else:
         score = 0
-
     cv2.waitKey(0)
     cv2.destroyAllWindows()
 
