@@ -2,7 +2,7 @@ import cv2
 import os
 from cut_paper import get_pixel_per_cm_from_a4
 from exceed_correct import detect_horizontal_lines
-from draw_range_correct import analyze_paint  # 或 analyze_image
+from draw_range_correct import analyze_paint
 import json
 import sys
 
@@ -12,44 +12,59 @@ def return_score(score):
 
 
 if __name__ == "__main__":
-    # 檢查是否有傳入 id 參數
+    # === 必須有 uid + img_id ===
     if len(sys.argv) > 2:
-        # 使用傳入的 uid 和 id 作為圖片路徑
         uid = sys.argv[1]
         img_id = sys.argv[2]
-        # uid = "lull222"
-        # img_id = "ch3-t1"
+        image_path = os.path.join("kid", uid, f'{img_id}.jpg')
+    else:
+        print("參數不足，需要 uid 與 img_id")
+        return_score(0)
 
-        # image_path = rf"kid\{uid}\{img_id}.jpg"
-        image_path = os.path.jpin('kid', uid, f"{img_id}.jpg")
+    # === 中途輸出路徑（裁紙後）===
+    # out_dir = r"PDMS2_web\ch2-t5\new"
+    out_dir = os.path.join("ch2-t5", "new")
 
-    # img = 3
-    # image_path = rf"PDMS2_web\ch2-t5\image\{img}.jpg"
-    # in_path = os.path.join("image", f"{img}.jpg")  # ✅ 跨平台路徑
+    os.makedirs(out_dir, exist_ok=True)
+    # out_path = rf"{out_dir}\new{img_id}.jpg"
+    out_path = os.path.join(out_dir, f"new{img_id}.jpg")
 
-    # out_path = rf"PDMS2_web\ch2-t5\new\new{img_id}.jpg"
-    out_path = os.path.join('PDMS2_web', 'ch2-t5', 'new', f"new{img_id}.jpg")
+    # ========= 1) 裁紙（偵測 A4） =========
+    warped = get_pixel_per_cm_from_a4(image_path, show_debug=False)
 
-    # 1) 裁切
-    warped = get_pixel_per_cm_from_a4(image_path,show_debug=False)
-    cv2.imwrite(out_path,warped)
+    # 如果函式只把檔案寫到硬碟，但沒回傳 ndarray ⇒ fallback 読取 out_path
     if warped is None:
-        # 若你的 crop_paper 只存檔不回傳，可改成：warped = cv2.imread(out_path)
         warped = cv2.imread(out_path)
-        if warped is None:
-            raise RuntimeError(f"裁切後讀不到影像：{out_path}")
 
-    # 2) 找兩條線（函式已改為回傳 (y_top, y_bot)）
+    if warped is None:
+        print(f"裁切失敗：讀不到 {out_path}")
+        return_score(0)
+
+    # 寫出裁好的紙
+    cv2.imwrite(out_path, warped)
+
+    # ========= 2) 找兩條水平線 =========
     y_top, y_bot = detect_horizontal_lines(warped, show_debug=False)
     if y_top is None or y_bot is None:
-        raise RuntimeError("偵測不到兩條主線")
+        print("偵測不到兩條主線")
+        return_score(0)
 
-    # 3) 分析塗色 + 超出
-    score,result_img = analyze_paint(warped, int(y_top), int(y_bot), show_windows=True)
-    # print("得分：", result["score"])
-    # print("說明：", result["rule"])
+    # ========= 3) 分析塗色 + 超出區域 =========
+    score, result_img = analyze_paint(
+        warped,
+        int(y_top),
+        int(y_bot),
+        show_windows=False
+    )
 
-    # result_path = rf"kid\{uid}\{img_id}_result.jpg"
-    result_path = os.join.path('kid', uid, f'{img_id}_result.jpg')
-    cv2.imwrite(result_path,result_img)
+    # ========= 4) 最終結果圖（給 admin 預覽的）=========
+    result_dir = os.path.join("kid", uid)
+    os.makedirs(result_dir, exist_ok=True)
+    
+    result_path = os.path.join(result_dir, f"{img_id}_result.jpg")
+    cv2.imwrite(result_path, result_img)
+
+    print("完成結果圖：", result_path)
+    print("得分：", score)
+
     return_score(score)

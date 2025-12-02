@@ -233,7 +233,7 @@ def main(img_path):
     print("\n==裁切圖形==")
 
     # print(cropped_path)
-    ready = segmenter.infer_and_draw(img_path, expand_ratio=0.15)
+    ready = segmenter.infer_and_draw(cropped_path, expand_ratio=0.15)
 
     # 分類圖形(圓 橢圓 其他)
     print("\n==分類圖形==\n")

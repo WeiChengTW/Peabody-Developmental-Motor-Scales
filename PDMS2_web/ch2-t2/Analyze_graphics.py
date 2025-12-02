@@ -53,8 +53,9 @@ class Analyze_graphics:
 
     def clear_multiple_dirs(self, dir_list):
         for dir_name in dir_list:
-            # dir_path = self.base_dir / dir_name # 結合基底路徑
-            dir_patj = os.path.join(self.base_dir, dir_name)
+            dir_path = os.path.join(self.base_dir, dir_name) # 結合基底路徑
+            dir_path = Path(dir_path)
+
             if dir_path.exists():
                 print(f"清空資料夾: {dir_path}")
                 shutil.rmtree(dir_path)
@@ -63,7 +64,8 @@ class Analyze_graphics:
 
     def ensure_dir(self, dir_name):
         # dir_path = self.base_dir / dir_name # 結合基底路徑
-        dir_patj = os.path.join(self.base_dir, dir_name)
+        dir_path = os.path.join(self.base_dir, dir_name)
+        dir_path = Path(dir_path)
         if not dir_path.exists():
             dir_path.mkdir(parents=True, exist_ok=True)
 
@@ -140,16 +142,16 @@ class Analyze_graphics:
 
     def save_224_pair(self, cropped_img, ready_path, ready_binary_path, keep_ratio=True):
         """將彩色與二值圖都存成 224×224，並立即印出 shape 驗證。"""
-        if keep_ratio:
-            img224 = self.resize_with_padding(cropped_img, 224)
-        else:
-            img224 = cv2.resize(cropped_img, (224, 224), interpolation=cv2.INTER_AREA)
+        # if keep_ratio:
+        #     img224 = self.resize_with_padding(cropped_img, 224)
+        # else:
+        #     img224 = cv2.resize(cropped_img, (224, 224), interpolation=cv2.INTER_AREA)
 
         # 彩色 224×224
-        cv2.imwrite(ready_path, img224)
+        cv2.imwrite(ready_path, cropped_img)
 
         # Binary 以 224×224 來做
-        gray = cv2.cvtColor(img224, cv2.COLOR_BGR2GRAY)
+        gray = cv2.cvtColor(cropped_img, cv2.COLOR_BGR2GRAY)
         _, binary = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
         binary_inverted = cv2.bitwise_not(binary)
         cv2.imwrite(ready_binary_path, binary_inverted)
@@ -162,7 +164,7 @@ class Analyze_graphics:
 
     # ------------ 推論＋切割 ------------
     def infer_and_draw(self, image_path, save_results=True, expand_ratio=0.15, clear_dir=False):
-        results = self.model(image_path, conf=0.3, iou=0.3, max_det=100, imgsz=640)
+        results = self.model(image_path, conf=0.7, iou=0.3, max_det=100, imgsz=640)
         image_name = os.path.splitext(os.path.basename(image_path))[0]
         ori_img = cv2.imread(image_path)
 
@@ -232,7 +234,7 @@ class Analyze_graphics:
                 ready_path = os.path.join(ready_dir, f"{image_name}_{index}_{class_name}.jpg")
 
                 # ready_binary_path = ready_dir / f"{image_name}_{index}_{class_name}_binary.jpg"
-                ready_binary_path = os.path.join(ready_dir f"{image_name}_{index}_{class_name}_binary.jpg")
+                ready_binary_path = os.path.join(ready_dir, f"{image_name}_{index}_{class_name}_binary.jpg")
 
                 # 若你不想版本尾碼，可改成 clear_dir=True 或移除下面兩行
                 ready_path = self.get_unique_filename(ready_path)

@@ -224,12 +224,12 @@ def main(img_path):
     )
     
     # 單張處理
-    print(f"\n=== 處理 {img_path} ===\n")
+    print(f"\n=== 處理 {cropped_path} ===\n")
 
     # 裁切圖形
     print("\n==裁切圖形==")
     # print(cropped_path)
-    ready = segmenter.infer_and_draw(img_path)
+    ready = segmenter.infer_and_draw(cropped_path)
 
     # 分類圖形
     print("\n==分類圖形==\n")
@@ -244,7 +244,7 @@ def main(img_path):
 
             # 直接分類存檔
             if predicted_class_name == "cross":
-                shutil.copy(url, cross_dir / os.path.basename(url))
+                shutil.copy(url, os.path.join(cross_dir, os.path.basename(url)))
                 results, result_img, _, _, _ = cs.score_image(url)
                 return results["score"], result_img
 

@@ -40,7 +40,7 @@ def get_pixel_per_cm_from_a4(
         raise ValueError("圖片讀取失敗，請確認路徑正確")
 
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    blur = cv2.GaussianBlur(gray, (5, 5), 0)
+    blur = cv2.GaussianBlur(gray, (1, 1), 0)
 
     edges = cv2.Canny(blur, 50, 150)
     contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
@@ -172,6 +172,7 @@ def read_all_images_from_folder(folder_path):
 
             # 在這裡處理你的圖片
             # image.show()  # 顯示圖片
+            
 
         except Exception as e:
             print(f"無法讀取 {image_path}: {e}")
@@ -194,7 +195,8 @@ def main(img_path):
     # circle_dir = target_dir / "circle_or_oval"
     circle_dir = os.path.join(target_dir, "circle_or_oval")
     # other_dir = target_dir / "Other"
-    other_dir = os.path.join(other_dir, "Other")
+    other_dir = os.path.join(target_dir, "Other")
+    
     os.makedirs(circle_dir, exist_ok=True)
     os.makedirs(other_dir, exist_ok=True)
 
@@ -267,7 +269,8 @@ def main(img_path):
                 return 2, result_img
             else:
                 offset = px / pixel_per_cm
-                print(f"{url} : {offset}cm")
+                print(f'\noffset = {px}\n')
+                print(f"\n{url} : {offset}cm\n")
                 if offset <= 1.2:
                     return 2, result_img
                 elif offset > 1.2 and offset <= 2.5:

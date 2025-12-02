@@ -19,28 +19,24 @@ if __name__ == "__main__":
         uid = sys.argv[1]
         img_id = sys.argv[2]
         # uid = "lull222"
-        # img_id = "ch3-t1"
-        # image_path = Path(rf"kid\{uid}\{img_id}.jpg")
-        image_path = os.path.join('kid', uid, f'{img_id}.jpg')
+        # img_id = "ch2-t6"
+        image_path = Path(os.path.join("kid", uid, f"{img_id}.jpg"))
+    else:
+        print("參數不足，需傳入 uid 與 img_id")
+        return_score(0)
 
-    # === 以這支 .py 所在資料夾為基準，避免工作目錄不同造成找不到檔案 ===
-    # BASE = Path(__file__).resolve().parent
-    # img = 1  # 你要處理的圖片編號
+    # === 輸出路徑：中間處理用 ===
+    output_dir = Path(os.path.join("ch2-t6", "new"))  # e.g. .../ch2-t6/new/
+    output_dir.mkdir(parents=True, exist_ok=True)
+    out_path = os.path.join(output_dir, f"new{img_id}.jpg")   # e.g. .../ch2-t6/new/newch2-t6.jpg
 
-    # === 乾淨的輸入/輸出路徑（不要把中途資料夾夾到檔名裡）===
-    # image_path = rf"kid\{uid}\{img_id}.jpg"        # e.g. .../ch2-t6/image/6.jpg
-    # output_dir = Path(rf"PDMS2_web\ch2-t6\new")  # e.g. .../ch2-t6/new/
-    output_dir = os.path.join('PDMS2_web', 'ch2-t6', 'new')
-    # output_dir.mkdir(exist_ok=True)
-    # out_path = output_dir / f"new{img_id}.jpg"  # e.g. .../ch2-t6/new/new6.jpg
-    out_path = os.path.join(output_dir, f'new{img_id}.jpg')
     # === 讀圖 ===
     image = cv2.imread(str(image_path))
     if image is None:
         print(f"無法讀取：{image_path}")
         return_score(0)  # 或者 sys.exit(1)
 
-    # === 木板偵測：失敗就用原圖（你說「不一定要偵測木板」）===
+    # === 木板偵測：失敗就用原圖 ===
     try:
         board = auto_crop_wood_board(image, debug=False)
     except Exception:
@@ -54,20 +50,29 @@ if __name__ == "__main__":
         print(f"裁紙失敗：{e}")
         return_score(0)
 
-    # === 先寫檔，成功才做 analyze ===
-    ok = cv2.imwrite(out_path, paper)
+    # === 先寫裁好的紙，成功才做 analyze ===
+    ok = cv2.imwrite(str(out_path), paper)
     if not ok:
         print(f"⚠️ 影像儲存失敗：{out_path}")
         return_score(0)
 
-    print(f"{image_path.name} → {out_path.name}")
+    # print(f"{image_path.name} → {out_path.name}")
 
-    # === 呼叫分析（傳「絕對路徑」最穩）===
+    # === 呼叫分析，並把結果圖存成 kid\uid\ch2-t6_result.jpg（跟 ch3-t1 一樣規則）===
     try:
         score, result_img = analyze_image(str(out_path), dot_distance_cm=10.0)
-        # result_path = rf"kid\{uid}\{img_id}_result.jpg"
-        result_path = os.path.join('kid', uid, f"{img_id}_result.jpg")
+
+        # 注意：這裡才是真正給 admin 預覽的「結果圖」位置
+        result_dir = Path(os.path.join("kid", uid))
+        result_dir.mkdir(parents=True, exist_ok=True)
+        result_path = os.path.join(result_dir, f"{img_id}_result.jpg")
+
+        # 寫入結果圖
+        cv2.imwrite(str(result_path), result_img)
+
         print("得分：", score)
+        print("結果圖：", result_path)  # 這行純粹方便你 debug，看路徑對不對
+
         return_score(score)
     except Exception as e:
         print(f"分析失敗：{e}")
