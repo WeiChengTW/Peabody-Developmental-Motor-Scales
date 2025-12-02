@@ -1,0 +1,7 @@
+# 不要把模型檔 (.h5) 放進 Git
+*.h5
+
+# 各關卡的 model 資料夾也全部忽略
+PDMS2_web/ch2-t1/model/
+PDMS2_web/ch2-t2/model/
+PDMS2_web/ch2-t3/model/
