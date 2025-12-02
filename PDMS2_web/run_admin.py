@@ -227,7 +227,7 @@ def insert_score(
 os.environ["PYTHONIOENCODING"] = "utf-8"
 os.environ["PYTHONUTF8"] = "1"
 
-PORT = 8000
+PORT = 5050
 HOST = "127.0.0.1"
 ROOT = Path(__file__).parent.resolve()
 
