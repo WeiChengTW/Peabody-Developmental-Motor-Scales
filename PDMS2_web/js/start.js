@@ -28,17 +28,19 @@ const STORY_HOME = "/html/index.html";
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ uid: uid }),
+      body: JSON.stringify({ uid: uid }),
       });
 
       const result = await response.json();
 
       if (result.success) {
         // UID 已由後端存入 session，同時備份到 localStorage
-        const KEY = "kid-quest-progress-v1";
-        const st = JSON.parse(localStorage.getItem(KEY) || "{}");
+        // UID 已由後端存入 session，同時備份到 localStorage（只存目前是誰）
+        const META_KEY = "kid-quest-progress-v1-meta";
+        const st = JSON.parse(localStorage.getItem(META_KEY) || "{}");
         st.currentUid = uid;
-        localStorage.setItem(KEY, JSON.stringify(st));
+        localStorage.setItem(META_KEY, JSON.stringify(st));
+
         
         // 成功創建資料夾，跳轉到故事首頁（不需要 URL 參數）
         setTimeout(() => { 

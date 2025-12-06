@@ -1,4 +1,4 @@
-// camera.js (修改版：Ch5-t1 自動開始遊戲)
+// camera.js (修正跳轉邏輯：存檔後直接回主頁)
 
 const KEY = "kid-quest-progress-v1";
 const TOP = 0; 
@@ -72,6 +72,11 @@ let cameraActive = false;
 let streamInterval = null;
 const id = getId();
 
+// 統一跳回首頁的函數
+function goHome() {
+    window.location.href = "/html/index.html";
+}
+
 function updateStatus(message, type = 'info') {
   els.statusInfo.textContent = message;
   els.statusInfo.className = `status-info ${type}`;
@@ -84,7 +89,7 @@ function updateStatus(message, type = 'info') {
   if(meta.title) els.taskTitle.textContent = meta.title;
   
   if (els.stopBtn) {
-     els.stopBtn.style.display = 'none';
+      els.stopBtn.style.display = 'none';
   }
   
   if (id === "ch5-t1") {
@@ -103,7 +108,7 @@ function updateStatus(message, type = 'info') {
       els.placeholderText.textContent = '遊戲準備中...';
     }
   } else {
-     els.shotBtn.textContent = "🎞️ 拍照、存檔並回主頁"; 
+      els.shotBtn.textContent = "🎞️ 拍照、存檔並回主頁"; 
   }
 })();
 
@@ -220,9 +225,9 @@ async function pollGameState(uid) {
           
           updateStatus(`遊戲結束！${resultMsg}`, 'success');
           
-          // 3秒後跳轉
+          // 3秒後跳轉回主頁
           setTimeout(() => {
-            redirectToNextTask(id);
+            goHome(); // <--- 修改這裡：跳轉回主頁
           }, 3000);
         }
       }
@@ -295,17 +300,6 @@ async function triggerBackgroundAnalysis(taskId, uid) {
   }
 }
 
-function redirectToNextTask(currentId) {
-  const TASK_IDS = Object.keys(ID_TO_META);
-  const idx = TASK_IDS.indexOf(currentId);
-  const nextTaskId = (idx >= 0 && idx < TASK_IDS.length - 1) ? TASK_IDS[idx + 1] : null;
-  if (nextTaskId){
-    location.href = `/html/task.html?id=${nextTaskId}`;
-  } else {
-    location.href = "/html/index.html";
-  }
-}
-
 // 清空遊戲狀態的函數
 async function clearGameState(uid) {
   try {
@@ -366,40 +360,56 @@ async function takeShot() {
     els.shotBtn.disabled = true;
     
     if (id === "ch5-t1") {
-      // Ch5-t1 不再使用此函數，改用 autoStartGame
+      // Ch5-t1 走自動流程，不應執行到此
       console.log('[takeShot] Ch5-t1 應該使用自動開始，不應執行到此處');
       return;
       
     } else if (["ch1-t2", "ch1-t3", "ch1-t4"].includes(id)) {
+      // === 針對需要拍兩張照片的任務 ===
       await countdown(waittime);
       await closeCamera();
       
+      // 1. 拍側面
       updateStatus('正在拍攝側面鏡頭...', 'loading');
       await captureWithCamera(SIDE, `${id}-side`, currentUid);
       
+      // 2. 拍上方
       updateStatus('側面完成，切換上方鏡頭...', 'loading');
       await captureWithCamera(TOP, `${id}-top`, currentUid);
 
-      updateStatus('照片拍攝完成！背景分析已啟動，準備跳轉...', 'success');
+      // 3. 【新增】呼叫後端分析並存檔 (這是資料寫入資料庫的關鍵)
+      updateStatus('正在分析並寫入資料庫...', 'loading');
+      await triggerBackgroundAnalysis(id, currentUid);
+
+      // 4. 完成後才跳轉
+      updateStatus('存檔完成！準備回主頁...', 'success');
       await new Promise(r => setTimeout(r, 800));
-      redirectToNextTask(id);
+      goHome();
       
     } else {
+      // === 一般單張照片任務 ===
       await countdown(waittime);
       await closeCamera();
       
+      // 1. 拍上方
       updateStatus('正在拍照（上方鏡頭）...', 'loading');
       await captureWithCamera(TOP, id, currentUid);
       
-      updateStatus('照片拍攝完成！背景分析已啟動，準備跳轉...', 'success');
+      // 2. 【新增】呼叫後端分析並存檔
+      updateStatus('正在分析並寫入資料庫...', 'loading');
+      await triggerBackgroundAnalysis(id, currentUid);
+      
+      // 3. 完成後才跳轉
+      updateStatus('存檔完成！準備回主頁...', 'success');
       await new Promise(r => setTimeout(r, 800));
-      redirectToNextTask(id);
+      goHome();
     }
     
   } catch (error) {
     console.error('操作錯誤:', error);
     updateStatus(`操作失敗: ${error.message}`, 'error');
     els.shotBtn.disabled = false;
+    // 如果失敗，重新開啟相機讓使用者重試
     if (id !== "ch5-t1") {
       await openCamera();
     }
@@ -442,8 +452,16 @@ document.addEventListener("DOMContentLoaded", async () => {
   await openCamera();
 });
 
-window.addEventListener("beforeunload", () => {
+// ✅ 新的寫法 (消除警告，且更穩定)
+window.addEventListener("pagehide", () => {
+  // 1. 清除計時器
   if (streamInterval) clearInterval(streamInterval);
   if (gameStateInterval) clearInterval(gameStateInterval);
-  if (cameraActive) closeCamera();
+
+  // 2. 如果相機還開著，通知後端關閉
+  // 使用 sendBeacon 是因為頁面關閉時，一般的 fetch/await 容易被瀏覽器取消
+  if (cameraActive) {
+      // 這裡不需要 async/await，sendBeacon 是發後不理的
+      navigator.sendBeacon('/opencv-camera/stop');
+  }
 });
