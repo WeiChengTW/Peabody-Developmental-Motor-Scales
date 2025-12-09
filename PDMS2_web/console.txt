@@ -1,16 +1,12 @@
-2025-12-09 14:46:44 - INFO - === 遠端 PyMySQL 模式 ===
-2025-12-09 14:46:44 - INFO - Flask 應用程式啟動
-2025-12-09 14:46:44 - INFO - 準備啟動 Flask 應用程式，HOST=127.0.0.1, PORT=8000
-2025-12-09 14:46:44 - INFO - 已設定瀏覽器自動開啟
-2025-12-09 14:46:44 - INFO - Flask 應用程式開始運行
-2025-12-09 14:46:55 - INFO - [REQ] POST /create-uid-folder
-2025-12-09 14:46:55 - INFO - [REQ] POST /create-uid-folder
-2025-12-09 14:46:55 - INFO - [REQ] 進入 create_uid_folder
-2025-12-09 14:46:55 - INFO - [REQ] 進入 create_uid_folder
-2025-12-09 14:46:55 - INFO - [FS] 建立資料夾：/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/kid/F111122222
-2025-12-09 14:46:55 - INFO - [RESP] POST /create-uid-folder -> 200
-2025-12-09 14:46:55 - INFO - [RESP] POST /create-uid-folder -> 200
-2025-12-09 14:46:56 - ERROR - [ERR] GET /static/img/icons/house.png
+2025-12-09 14:53:19 - INFO - === 遠端 PyMySQL 模式 ===
+2025-12-09 14:53:19 - INFO - Flask 應用程式啟動
+2025-12-09 14:53:19 - INFO - 準備啟動 Flask 應用程式，HOST=127.0.0.1, PORT=8000
+2025-12-09 14:53:19 - INFO - 已設定瀏覽器自動開啟
+2025-12-09 14:53:19 - INFO - Flask 應用程式開始運行
+2025-12-09 14:53:25 - INFO - [REQ] POST /create-uid-folder
+2025-12-09 14:53:25 - INFO - [REQ] 進入 create_uid_folder
+2025-12-09 14:53:26 - INFO - [RESP] POST /create-uid-folder -> 200
+2025-12-09 14:53:27 - ERROR - [ERR] GET /static/img/icons/castle.jpg
 Traceback (most recent call last):
   File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 917, in full_dispatch_request
     rv = self.dispatch_request()
@@ -26,7 +22,7 @@ Traceback (most recent call last):
     raise NotFound()
 werkzeug.exceptions.NotFound: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
 
-2025-12-09 14:46:56 - ERROR - [ERR] GET /static/img/icons/treasure.png
+2025-12-09 14:53:27 - ERROR - [ERR] GET /static/img/icons/maze.jpg
 Traceback (most recent call last):
   File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 917, in full_dispatch_request
     rv = self.dispatch_request()
@@ -42,7 +38,7 @@ Traceback (most recent call last):
     raise NotFound()
 werkzeug.exceptions.NotFound: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
 
-2025-12-09 14:46:56 - ERROR - [ERR] GET /static/img/icons/bridge.png
+2025-12-09 14:53:27 - ERROR - [ERR] GET /static/img/icons/treasure.jpg
 Traceback (most recent call last):
   File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 917, in full_dispatch_request
     rv = self.dispatch_request()
@@ -58,9 +54,9 @@ Traceback (most recent call last):
     raise NotFound()
 werkzeug.exceptions.NotFound: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
 
-2025-12-09 14:46:56 - INFO - [RESP] GET /static/img/icons/house.png -> 500
-2025-12-09 14:46:56 - INFO - [RESP] GET /static/img/icons/treasure.png -> 500
-2025-12-09 14:46:56 - ERROR - [ERR] GET /static/img/icons/maze.png
+2025-12-09 14:53:27 - INFO - [RESP] GET /static/img/icons/castle.jpg -> 500
+2025-12-09 14:53:27 - INFO - [RESP] GET /static/img/icons/maze.jpg -> 500
+2025-12-09 14:53:27 - ERROR - [ERR] GET /static/img/icons/house.jpg
 Traceback (most recent call last):
   File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 917, in full_dispatch_request
     rv = self.dispatch_request()
@@ -76,7 +72,7 @@ Traceback (most recent call last):
     raise NotFound()
 werkzeug.exceptions.NotFound: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
 
-2025-12-09 14:46:56 - ERROR - [ERR] GET /static/img/icons/castle.png
+2025-12-09 14:53:27 - ERROR - [ERR] GET /static/img/icons/paper.jpg
 Traceback (most recent call last):
   File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 917, in full_dispatch_request
     rv = self.dispatch_request()
@@ -92,7 +88,7 @@ Traceback (most recent call last):
     raise NotFound()
 werkzeug.exceptions.NotFound: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
 
-2025-12-09 14:46:56 - ERROR - [ERR] GET /static/img/icons/paper.png
+2025-12-09 14:53:27 - ERROR - [ERR] GET /static/img/icons/bridge.jpg
 Traceback (most recent call last):
   File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 917, in full_dispatch_request
     rv = self.dispatch_request()
@@ -108,11 +104,11 @@ Traceback (most recent call last):
     raise NotFound()
 werkzeug.exceptions.NotFound: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
 
-2025-12-09 14:46:56 - INFO - [RESP] GET /static/img/icons/maze.png -> 500
-2025-12-09 14:46:56 - INFO - [RESP] GET /static/img/icons/bridge.png -> 500
-2025-12-09 14:46:56 - INFO - [RESP] GET /static/img/icons/castle.png -> 500
-2025-12-09 14:46:56 - INFO - [RESP] GET /static/img/icons/paper.png -> 500
-2025-12-09 14:46:56 - ERROR - [ERR] GET /static/img/icons/wall.png
+2025-12-09 14:53:27 - INFO - [RESP] GET /static/img/icons/house.jpg -> 500
+2025-12-09 14:53:27 - INFO - [RESP] GET /static/img/icons/treasure.jpg -> 500
+2025-12-09 14:53:27 - INFO - [RESP] GET /static/img/icons/paper.jpg -> 500
+2025-12-09 14:53:27 - INFO - [RESP] GET /static/img/icons/bridge.jpg -> 500
+2025-12-09 14:53:27 - ERROR - [ERR] GET /static/img/icons/stairs.jpg
 Traceback (most recent call last):
   File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 917, in full_dispatch_request
     rv = self.dispatch_request()
@@ -128,7 +124,7 @@ Traceback (most recent call last):
     raise NotFound()
 werkzeug.exceptions.NotFound: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
 
-2025-12-09 14:46:56 - ERROR - [ERR] GET /static/img/icons/stairs.png
+2025-12-09 14:53:27 - ERROR - [ERR] GET /static/img/icons/wall.jpg
 Traceback (most recent call last):
   File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 917, in full_dispatch_request
     rv = self.dispatch_request()
@@ -144,5 +140,5 @@ Traceback (most recent call last):
     raise NotFound()
 werkzeug.exceptions.NotFound: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
 
-2025-12-09 14:46:56 - INFO - [RESP] GET /static/img/icons/wall.png -> 500
-2025-12-09 14:46:56 - INFO - [RESP] GET /static/img/icons/stairs.png -> 500
+2025-12-09 14:53:27 - INFO - [RESP] GET /static/img/icons/wall.jpg -> 500
+2025-12-09 14:53:27 - INFO - [RESP] GET /static/img/icons/stairs.jpg -> 500
