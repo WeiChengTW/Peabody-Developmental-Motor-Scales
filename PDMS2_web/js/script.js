@@ -229,7 +229,7 @@
  *  → 圖片實際放在：PDMS2_web/static/img/icons/bridge.jpg
  *  → 瀏覽器路徑：   /static/img/icons/bridge.jpg
  */
-const ICON_BASE = "../images/icons/";   // ★ 如果你不是放這裡，只要改這一行
+const ICON_BASE = "/images/icons/";   // ★ 如果你不是放這裡，只要改這一行
 
 /** 各個任務 / 關卡的檔名（不含路徑） */
 const ICON_PATHS = {
