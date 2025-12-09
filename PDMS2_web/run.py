@@ -83,16 +83,24 @@ TASK_MAP = {
     "Ch5-t1": "collect_raisins",
 }
 
-def ensure_user(uid: str, name: Optional[str] = None, birthday: Optional[str] = None):
-    try:
-        db_exec(
-            "INSERT INTO user_list(uid, name, birthday) VALUES (%s,%s,%s) "
-            "ON DUPLICATE KEY UPDATE name=COALESCE(VALUES(name),name), birthday=COALESCE(VALUES(birthday),birthday)",
-            (uid, name, birthday),
-        )
-        write_to_console(f"[DB] ensure_user ok: uid={uid}", "INFO")
-    except Exception as e:
-        raise
+# def ensure_user(uid: str, name: Optional[str] = None, birthday: Optional[str] = None):
+#     try:
+#         db_exec(
+#             "INSERT INTO user_list(uid, name, birthday) VALUES (%s,%s,%s) "
+#             "ON DUPLICATE KEY UPDATE name=COALESCE(VALUES(name),name), birthday=COALESCE(VALUES(birthday),birthday)",
+#             (uid, name, birthday),
+#         )
+#         write_to_console(f"[DB] ensure_user ok: uid={uid}", "INFO")
+#     except Exception as e:
+#         raise
+def user_exists(uid: str) -> bool:
+    """回傳這個 uid 是否存在於 user_list"""
+    row = db_exec(
+        "SELECT 1 FROM user_list WHERE uid=%s",
+        (uid,),
+        fetch="one",   # 如果你的 db_exec 寫法不一樣，這裡用你原本查一筆資料的方式
+    )
+    return row is not None
 
 def task_id_to_table(task_id: str) -> str:
     if task_id in TASK_MAP:
@@ -139,17 +147,25 @@ def ensure_task(task_id: str):
     except Exception as e:
         raise
 
+
+
 def insert_score(
     uid: str,
     task_id: str,
     test_date: Optional[date] = None,
 ) -> date:
-    ensure_user(uid)
+
+    if not user_exists(uid):
+        write_to_console(f"[DB] insert_score: UID 不存在 -> {uid}", "WARN")
+        # 丟一個明確的錯誤，讓呼叫的人去決定要怎麼回應前端
+        raise ValueError("USER_NOT_FOUND")
+
+    # task 邏輯照舊（如果你希望只有管理者能新增 task，也可以之後再改 ensure_task）
     ensure_task(task_id)
 
     if test_date is None:
         test_date = date.today()
-    
+
     current_time = datetime.now().strftime("%H:%M:%S")
 
     db_exec(
@@ -162,7 +178,10 @@ def insert_score(
         """,
         (uid, task_id, test_date, current_time),
     )
-    write_to_console(f"[DB] insert_score ok: uid={uid}, task_id={task_id}, date={test_date}, time={current_time}", "INFO")
+    write_to_console(
+        f"[DB] insert_score ok: uid={uid}, task_id={task_id}, date={test_date}, time={current_time}",
+        "INFO",
+    )
     return test_date
 
 # =========================
@@ -317,6 +336,16 @@ def set_session_uid():
             return jsonify({"success": False, "error": "UID 不能為空"}), 400
         if any(c in uid for c in ["/", "\\", ":", "*", "?", '"', "<", ">", "|"]):
             return jsonify({"success": False, "error": "UID 包含無效字符"}), 400
+
+        # ⭐ 新增：只能用資料庫裡已存在的 UID
+        if not user_exists(uid):
+            write_to_console(f"set_session_uid: UID 不存在 -> {uid}", "WARN")
+            return jsonify({
+                "success": False,
+                "error": "此使用者不存在，請請管理者建立帳號",
+                "code": "USER_NOT_FOUND",
+            }), 404
+
         session["uid"] = uid
         write_to_console(f"成功設置 UID：{uid}", "INFO")
         return jsonify({"success": True, "uid": uid})
@@ -331,22 +360,35 @@ def get_session_uid():
 
 @app.post("/create-uid-folder")
 def create_uid_folder():
+    write_to_console("[REQ] 進入 create_uid_folder", "INFO")
     data = request.get_json(silent=True) or {}
     uid = (data.get("uid") or "").strip()
     if not uid:
         write_to_console("create_uid_folder: UID 不能為空", "ERROR")
         return jsonify({"success": False, "error": "UID 不能為空"}), 400
+
     bad = ["/", "\\", ":", "*", "?", '"', "<", ">", "|"]
     if any(c in uid for c in bad):
         write_to_console(f"create_uid_folder: UID 非法 -> {uid}", "ERROR")
         return jsonify({"success": False, "error": "UID 包含無效字符"}), 400
-    ensure_user(uid)
+
+    # ⭐ 不再自動新增，只允許已存在的 UID
+    if not user_exists(uid):
+        write_to_console(f"create_uid_folder: UID 不存在 -> {uid}", "WARN")
+        return jsonify({
+            "success": False,
+            "error": "此使用者不存在，請請管理者建立帳號",
+            "code": "USER_NOT_FOUND",
+        }), 404
+
     kid_dir = ROOT / "kid" / uid
     if not kid_dir.exists():
         kid_dir.mkdir(parents=True, exist_ok=True)
         write_to_console(f"[FS] 建立資料夾：{kid_dir}", "INFO")
+
     session["uid"] = uid
-    return jsonify({"success": True, "uid": uid, "message": "使用者建立完成"})
+    return jsonify({"success": True, "uid": uid, "message": "UID 已載入"})
+
 
 @app.post("/session/clear-uid")
 def clear_session_uid():
@@ -357,13 +399,43 @@ def clear_session_uid():
 @app.route("/test-score", methods=["POST"])
 def test_score():
     try:
-        data = request.get_json()
-        uid = data["uid"]
-        task_id = data["task_id"]
-        score = 3
-        test_date = insert_score(uid=uid, task_id=task_id)
-        insert_task_payload(task_id=task_id, uid=uid, test_date=test_date, score=score, result_img_path="", data1=None)
-        return jsonify({"success": True, "uid": uid, "task_id": task_id, "test_date": test_date.isoformat(), "score": score})
+        data = request.get_json() or {}
+        uid = (data.get("uid") or "").strip()
+        task_id = (data.get("task_id") or "").strip()
+
+        if not uid or not task_id:
+            return jsonify({"success": False, "error": "uid 與 task_id 不可為空"}), 400
+
+        score = 3  # 你目前先寫死 3 分
+
+        try:
+            # 這裡可能會因為 UID 不存在而丟 ValueError("USER_NOT_FOUND")
+            test_date = insert_score(uid=uid, task_id=task_id)
+        except ValueError as e:
+            if str(e) == "USER_NOT_FOUND":
+                return jsonify({
+                    "success": False,
+                    "error": "此使用者不存在，請管理者建立帳號",
+                    "code": "USER_NOT_FOUND",
+                }), 404
+            # 其他 ValueError 再往上丟，交給外層 except
+            raise
+
+        insert_task_payload(
+            task_id=task_id,
+            uid=uid,
+            test_date=test_date,
+            score=score,
+            result_img_path="",
+            data1=None,
+        )
+        return jsonify({
+            "success": True,
+            "uid": uid,
+            "task_id": task_id,
+            "test_date": test_date.isoformat(),
+            "score": score,
+        })
     except Exception as e:
         write_to_console(f"/test-score 錯誤: {e}", "ERROR")
         return jsonify({"success": False, "error": str(e)}), 500
