@@ -3,8 +3,6 @@ from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing import image
 import numpy as np
 import os
-import tflite_runtime.interpreter as tflite
-
 
 class ImageClassifier:
     def __init__(self, model_path, class_names, image_size=(224, 224)):

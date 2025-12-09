@@ -18,10 +18,8 @@ from pathlib import Path
 from datetime import datetime
 
 BASE_DIR = Path(__file__).resolve().parent
-# target_dir = BASE_DIR.parent / "ch2-t1"
-target_dir = os.path.join(BASE_DIR.parent, 'ch2-t1')
-# MODEL_PATH = BASE_DIR.parent / "ch2-t1" / "model" / "circle_detect.h5"
-MODEL_PATH = os.path.join(BASE_DIR.parent, "ch2-t1", 'model', "circle_detect.h5")
+target_dir = BASE_DIR.parent / "ch2-t1"
+MODEL_PATH = BASE_DIR.parent / "ch2-t1" / "model" / "circle_detect.h5"
 
 
 def return_score(score):
@@ -33,14 +31,14 @@ def get_pixel_per_cm_from_a4(
     real_width_cm=29.7,
     show_debug=False,
     save_cropped=True,
-    output_folder = os.path.join(target_dir, "cropped_a4"),
+    output_folder=target_dir / "cropped_a4",
 ):
     img = cv2.imread(image_path)
     if img is None:
         raise ValueError("圖片讀取失敗，請確認路徑正確")
 
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    blur = cv2.GaussianBlur(gray, (1, 1), 0)
+    blur = cv2.GaussianBlur(gray, (5, 5), 0)
 
     edges = cv2.Canny(blur, 50, 150)
     contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
@@ -118,8 +116,7 @@ def get_pixel_per_cm_from_a4(
         print(f"A4區域已儲存至: {cropped_path}")
 
     # 儲存像素比例資料
-    # json_path = BASE_DIR.parent / "px2cm.json"
-    json_path = os.path.join(BASE_DIR.parent, "px2cm.json")
+    json_path = BASE_DIR.parent / "px2cm.json"
     current_time = datetime.now()  # Define current_time
     # json_path = r"PDMS2_web/px2cm.json"
     print(f"儲存像素比例資料至: {json_path}")
@@ -172,7 +169,6 @@ def read_all_images_from_folder(folder_path):
 
             # 在這裡處理你的圖片
             # image.show()  # 顯示圖片
-            
 
         except Exception as e:
             print(f"無法讀取 {image_path}: {e}")
@@ -192,11 +188,8 @@ def main(img_path):
     # all_images = read_all_images_from_folder(input_folder)
 
     # 建立分類資料夾（只建立一次）
-    # circle_dir = target_dir / "circle_or_oval"
-    circle_dir = os.path.join(target_dir, "circle_or_oval")
-    # other_dir = target_dir / "Other"
-    other_dir = os.path.join(target_dir, "Other")
-    
+    circle_dir = target_dir / "circle_or_oval"
+    other_dir = target_dir / "Other"
     os.makedirs(circle_dir, exist_ok=True)
     os.makedirs(other_dir, exist_ok=True)
 
@@ -216,8 +209,7 @@ def main(img_path):
             img_path,
             show_debug=False,  # 關掉視覺化避免卡住
             save_cropped=True,
-            # output_folder=target_dir / "cropped_a4",。
-            output_folder = os.path.join(target_dir , "cropped_a4")
+            output_folder=target_dir / "cropped_a4",
         )
         print(f"{img_path} pixel_per_cm = {pixel_per_cm}")
     except ValueError as e:
@@ -242,7 +234,7 @@ def main(img_path):
 
             # 直接分類存檔
             if predicted_class_name == "circle_or_oval":
-                shutil.copy(url, os.path.join(circle_dir , os.path.basename(url)))
+                shutil.copy(url, circle_dir / os.path.basename(url))
             else:
                 # 讀取圖片並加上標記
                 img = cv2.imread(url)
@@ -269,8 +261,7 @@ def main(img_path):
                 return 2, result_img
             else:
                 offset = px / pixel_per_cm
-                print(f'\noffset = {px}\n')
-                print(f"\n{url} : {offset}cm\n")
+                print(f"{url} : {offset}cm")
                 if offset <= 1.2:
                     return 2, result_img
                 elif offset > 1.2 and offset <= 2.5:
@@ -294,12 +285,10 @@ if __name__ == "__main__":
         # 使用傳入的 uid 和 id 作為圖片路徑
         uid = sys.argv[1]
         img_id = sys.argv[2]
-        # image_path = rf"kid\{uid}\{img_id}.jpg"
-        image_path = os.path.join('kid',uid, f"{img_id}.jpg")
+        image_path = rf"kid\{uid}\{img_id}.jpg"
     # image_path = rf"ch2-t1.jpg"
     score, result_img = main(image_path)
-    result_path = os.path.join('kid',uid,f"{img_id}_result.jpg")
-    cv2.imwrite(result_path, result_img)
-
+    cv2.imwrite(rf"kid\{uid}\{img_id}_result.jpg", result_img)
+    # cv2.imwrite(rf"result.jpg", result_img)
     print(score)
     return_score(score)
