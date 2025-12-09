@@ -1,23 +1,33 @@
 import cv2
+import time
 
+camera = cv2.VideoCapture(0, cv2.CAP_V4L2)
 
-for index in range(10):
-    # 嘗試開啟相機
-    cap = cv2.VideoCapture(index)
-    
-    if cap.isOpened():
-        # 嘗試讀取一個畫面來確認真的可以用
-        ret, frame = cap.read()
-        
-        if ret:
-            height, width, _ = frame.shape
-            print(f"[V] 相機 {index}: 偵測成功！ (解析度: {width}x{height})")
-        else:
-            print(f"[!] 相機 {index}: 能夠開啟連接，但讀不到畫面 (可能被其他程式占用)")
-        
-        # 記得釋放資源
-        cap.release()
-    else:
-        print(f"[X] 相機 {index}: 未偵測到")
+# 先設定 MJPG
+fourcc = cv2.VideoWriter_fourcc(*'MJPG')
+camera.set(cv2.CAP_PROP_FOURCC, fourcc)
 
-print("\n檢測結束。")
+# 再設定解析度
+camera.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
+camera.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
+camera.set(cv2.CAP_PROP_FPS, 30)
+
+time.sleep(0.5)
+
+# 確認設定
+w = int(camera.get(cv2.CAP_PROP_FRAME_WIDTH))
+h = int(camera.get(cv2.CAP_PROP_FRAME_HEIGHT))
+fps = camera.get(cv2.CAP_PROP_FPS)
+
+print(f"設定結果：{w}x{h} @ {fps} FPS")
+
+# 實際拍一張確認
+ret, frame = camera.read()
+if ret:
+    print(f"實際畫面：{frame.shape[1]}x{frame.shape[0]}")
+    cv2.imwrite("test_720p.jpg", frame)
+    print("已儲存 test_720p.jpg")
+else:
+    print("讀取畫面失敗")
+
+camera.release()

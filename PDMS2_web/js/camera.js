@@ -77,6 +77,30 @@ function goHome() {
     window.location.href = "/html/index.html";
 }
 
+//「自動下一關」功能
+function goNext() {
+  const order = [
+    "ch1-t1", "ch1-t2", "ch1-t3", "ch1-t4",
+    "ch2-t1", "ch2-t2", "ch2-t3", "ch2-t4", "ch2-t5", "ch2-t6",
+    "ch3-t1", "ch3-t2",
+    "ch4-t1", "ch4-t2",
+    "ch5-t1"
+  ];
+
+  const currentIndex = order.indexOf(id);
+
+  // 如果已經是最後一關 → 回首頁或結束頁
+  if (currentIndex === -1 || currentIndex === order.length - 1) {
+    window.location.href = "/html/index.html";
+    return;
+  }
+
+  // 否則跳到下一關
+  const nextId = order[currentIndex + 1];
+  window.location.href = `/html/task.html?id=${nextId}`;
+}
+
+
 function updateStatus(message, type = 'info') {
   els.statusInfo.textContent = message;
   els.statusInfo.className = `status-info ${type}`;
@@ -384,7 +408,7 @@ async function takeShot() {
       // 4. 完成後才跳轉
       updateStatus('存檔完成！準備回主頁...', 'success');
       await new Promise(r => setTimeout(r, 800));
-      goHome();
+      goNext();
       
     } else {
       // === 一般單張照片任務 ===
@@ -402,7 +426,7 @@ async function takeShot() {
       // 3. 完成後才跳轉
       updateStatus('存檔完成！準備回主頁...', 'success');
       await new Promise(r => setTimeout(r, 800));
-      goHome();
+      goNext();
     }
     
   } catch (error) {

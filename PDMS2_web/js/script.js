@@ -234,43 +234,45 @@ const ICON_BASE = "/images/icons/";   // ★ 如果你不是放這裡，只要�
 /** 各個任務 / 關卡的檔名（不含路徑） */
 const ICON_PATHS = {
   // 第一關
-  bridge: "bridge.jpg",
+  bridge: "bridge1.jpg",
   castle: "castle.jpg",
   stairs: "stairs.jpg",
-  wall: "wall.jpg",
+  wall: "brick.jpg",
 
   // 第二關
-  maze: "maze.jpg",
-  circle: "circle.jpg",
-  square: "square.jpg",
-  cross: "cross.jpg",
-  line: "line.jpg",
-  paint: "paint.jpg",
-  connect: "connect.jpg",
+  maze: "maze1.jpg",
+  circle: "circle1.jpg",
+  square: "square1.jpg",
+  cross: "cross1.jpg",
+  line: "ruler1.jpg",
+  paint: "magic1.jpg",
+  connect: "link1.jpg",
 
   // 第三關
-  house: "house.jpg",
-  scissorsCircle: "scissorsCircle.jpg",
-  scissorsSquare: "scissorsSquare.jpg",
-  scissorsLine: "scissorsLine.jpg",
-  scissorsHalfpaper: "scissorsHalfpaper.jpg",
+  house: "house1.jpg",
+  scissorsCircle: "cut_circle1.jpg",
+  scissorsSquare: "cut_square1.jpg",
+  scissorsLine: "cut_circle1.jpg",
+  scissorsHalfpaper: "cut_square1.jpg",
 
   // 第四關
-  paper: "paper.jpg",
-  foldOnce: "foldOnce.jpg",
-  foldTwice: "foldTwice.jpg",
+  paper: "tower.jpg",
+  foldOnce: "fold1.jpg",
+  foldTwice: "fold2.jpg",
 
   // 第五關
-  treasure: "treasure.jpg",
-  beans: "beans.jpg"
+  treasure: "treasure1.jpg",
+  beans: "beans1.jpg"
 };
 
 /** 統一產生 <img> icon 的 HTML */
 function getIconHtml(key, altText = "") {
-  const file = ICON_PATHS[key] || (key + ".jpg");   // 沒列在 ICON_PATHS 就用 key.jpg
+  const file = ICON_PATHS[key] || (key + ".jpg");
   const src = ICON_BASE + file;
   const alt = altText || key;
-  return `<img src="${src}" alt="${alt}" class="icon-img">`;
+  
+  
+  return `<img src="${src}" alt="${alt}" class="icon-img"/>`;
 }
 
 
@@ -310,8 +312,8 @@ const STORY = [
     tasks: [
       { icon: "scissorsCircle", title: "剪圓：做圓形窗戶", note: "幫小精靈剪出一個圓窗。" },
       { icon: "scissorsSquare", title: "剪方：做方方正正的門", note: "幫小精靈剪出正方形的門。" },
-      { icon: "scissorsLine", title: "剪圓：把窗戶剪開", note: "幫小精靈把窗戶剪開。" },
-      { icon: "scissorsHalfpaper", title: "剪方：剪窗簾", note: "幫小精靈將紙平分成兩半當窗簾。" },
+      { icon: "scissorsLine", title: "剪直線：把窗戶剪開", note: "幫小精靈把窗戶剪開。" },
+      { icon: "scissorsHalfpaper", title: "剪對半紙張：剪窗簾", note: "幫小精靈將紙平分成兩半當窗簾。" },
     ],
   },
   {

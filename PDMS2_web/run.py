@@ -1,4 +1,4 @@
-# run.py (已修正：相機開啟問題 + 資料表名稱錯誤)
+# run.py (已修正：加入 threading.Lock 防止 Segfault + 拍照保持開啟)
 # -*- coding: utf-8 -*-
 import os
 import sys
@@ -15,7 +15,7 @@ import webbrowser
 from pathlib import Path
 from datetime import datetime, date
 from typing import Optional
-from threading import Thread
+from threading import Thread, Lock  # 確保導入 Lock
 
 import cv2
 import numpy as np
@@ -26,7 +26,7 @@ from flask_cors import CORS
 # ====== 相機參數 =====
 TOP = 0
 SIDE = 6 # Ch5-t1 使用
-CROP_RATE = 0.8  # 預設裁切比例
+CROP_RATE = 0.8  # 預設裁切比例 (注意下方有再次定義為 0.7)
 # ====================
 
 # =========================
@@ -62,7 +62,7 @@ def db_exec(sql, params=None, fetch="none"):
         if conn:
             conn.close()
 
-# ★★★★★ 修正 1：Ch1-t4 對應 build_wall ★★★★★
+
 TASK_MAP = {
     "Ch1-t1": "string_blocks",
     "Ch1-t2": "pyramid",
@@ -83,16 +83,6 @@ TASK_MAP = {
     "Ch5-t1": "collect_raisins",
 }
 
-# def ensure_user(uid: str, name: Optional[str] = None, birthday: Optional[str] = None):
-#     try:
-#         db_exec(
-#             "INSERT INTO user_list(uid, name, birthday) VALUES (%s,%s,%s) "
-#             "ON DUPLICATE KEY UPDATE name=COALESCE(VALUES(name),name), birthday=COALESCE(VALUES(birthday),birthday)",
-#             (uid, name, birthday),
-#         )
-#         write_to_console(f"[DB] ensure_user ok: uid={uid}", "INFO")
-#     except Exception as e:
-#         raise
 def user_exists(uid: str) -> bool:
     """回傳這個 uid 是否存在於 user_list"""
     row = db_exec(
@@ -337,7 +327,7 @@ def set_session_uid():
         if any(c in uid for c in ["/", "\\", ":", "*", "?", '"', "<", ">", "|"]):
             return jsonify({"success": False, "error": "UID 包含無效字符"}), 400
 
-        # ⭐ 新增：只能用資料庫裡已存在的 UID
+        # 只能用資料庫裡已存在的 UID
         if not user_exists(uid):
             write_to_console(f"set_session_uid: UID 不存在 -> {uid}", "WARN")
             return jsonify({
@@ -372,7 +362,7 @@ def create_uid_folder():
         write_to_console(f"create_uid_folder: UID 非法 -> {uid}", "ERROR")
         return jsonify({"success": False, "error": "UID 包含無效字符"}), 400
 
-    # ⭐ 不再自動新增，只允許已存在的 UID
+    # 不再自動新增，只允許已存在的 UID
     if not user_exists(uid):
         write_to_console(f"create_uid_folder: UID 不存在 -> {uid}", "WARN")
         return jsonify({
@@ -406,7 +396,7 @@ def test_score():
         if not uid or not task_id:
             return jsonify({"success": False, "error": "uid 與 task_id 不可為空"}), 400
 
-        score = 3  # 你目前先寫死 3 分
+        score = 0  # 目前先寫死 0 分
 
         try:
             # 這裡可能會因為 UID 不存在而丟 ValueError("USER_NOT_FOUND")
@@ -740,91 +730,91 @@ def db_ping():
         return jsonify({"ok": False, "err": str(e)}), 500
 
 
-# @app.get("/scores")
-# def list_scores():
-#     try:
-#         rows = db_exec(
-#             "SELECT score_id, uid, task_id, score, no, test_date "
-#             "FROM score_list ORDER BY test_date DESC, score_id DESC LIMIT 50",
-#             fetch="all",
-#         )
-#         return jsonify(rows or [])
-#     except Exception as e:
-#         return jsonify({"success": False, "error": str(e)}), 500
-
-
 # =========================
 # 6) OpenCV 相機
 # =========================
 camera = None
 camera_active = False
 
+# 加入全域鎖，防止多執行緒同時存取相機
+camera_lock = threading.Lock()
 
 def release_camera():
     global camera, camera_active
-    if camera is not None:
-        try:
-            camera.release()
-            write_to_console("[相機] 相機已釋放", "INFO")
-        except Exception as e:
-            write_to_console(f"[相機] 釋放相機時發生錯誤: {e}", "WARN")
+    
+    # 加鎖
+    with camera_lock:
+        if camera is not None:
+            try:
+                camera.release()
+                write_to_console("[相機] 相機已釋放", "INFO")
+            except Exception as e:
+                write_to_console(f"[相機] 釋放相機時發生錯誤: {e}", "WARN")
         camera = None
-    camera_active = False
+        camera_active = False
+    
     # 給系統一點時間完全釋放資源
     time.sleep(0.3)
 
 
-CROP_RATE = 0.7
-
+CROP_RATE = 0.7  # 這裡的定義覆蓋了上面的 0.8
 
 def init_camera(camera_index=TOP):
     global camera, camera_active
-    try:
-        release_camera()
-
-        # 靜態拍照模式，仍優先嘗試 MSMF
-        camera = cv2.VideoCapture(camera_index + cv2.CAP_MSMF)
-
-        if not camera.isOpened():
-            write_to_console(
-                f"MSMF 無法開啟相機 {camera_index}，嘗試預設後端。", "WARN"
-            )
+    
+    # 加鎖：初始化也必須排隊
+    with camera_lock:
+        try:
+            # 為了安全，初始化前如果已經有相機物件，先嘗試關閉 (但不呼叫 release_camera 避免死鎖)
+            if camera is not None:
+                try:
+                    camera.release()
+                except:
+                    pass
+            
+            write_to_console(f"嘗試開啟相機 {camera_index} (自動模式)...", "INFO")
             camera = cv2.VideoCapture(camera_index)
+
             if not camera.isOpened():
-                raise Exception(f"無法開啟指定的相機索引: {camera_index}")
+                write_to_console(f"無法開啟相機 {camera_index}", "ERROR")
+                return False
 
-        # 設定解析度和 FPS (僅用於拍照取圖，不需要強制 1280x720)
-        # 這裡保留設定，以確保相機啟動後能正常取幀
-        camera.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
-        camera.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
-        camera.set(cv2.CAP_PROP_FPS, 30)
+            # 設定 MJPG
+            try:
+                fourcc = cv2.VideoWriter_fourcc(*'MJPG')
+                camera.set(cv2.CAP_PROP_FOURCC, fourcc)
+            except Exception:
+                write_to_console("警告：無法設定 MJPG 格式，將使用預設值", "WARN")
 
-        actual_width = int(camera.get(cv2.CAP_PROP_FRAME_WIDTH))
-        actual_height = int(camera.get(cv2.CAP_PROP_FRAME_HEIGHT))
-        actual_fps = camera.get(cv2.CAP_PROP_FPS)
+            # 設定解析度
+            camera.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
+            camera.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
+            camera.set(cv2.CAP_PROP_FPS, 30)
 
-        write_to_console(
-            f"相機實際設定：{actual_width}x{actual_height} @ {actual_fps:.1f} FPS (用於靜態拍照)",
-            "INFO",
-        )
+            # 讀取並檢查實際設定
+            actual_w = int(camera.get(cv2.CAP_PROP_FRAME_WIDTH))
+            actual_h = int(camera.get(cv2.CAP_PROP_FRAME_HEIGHT))
+            
+            write_to_console(f"相機已啟動: {actual_w}x{actual_h}", "INFO")
 
-        ret, frame = camera.read()
-        if not ret:
-            raise Exception(f"成功開啟相機 {camera_index} 但無法讀取畫面")
+            # 測試讀取一張畫面
+            ret, frame = camera.read()
+            if not ret:
+                write_to_console(f"相機開啟成功但無法讀取畫面", "ERROR")
+                if camera:
+                    camera.release()
+                camera = None
+                return False
 
-        # 計算裁切區域
-        h, w = frame.shape[:2]
-        crop_w = int(w * CROP_RATE)
-        crop_h = int(h * CROP_RATE)
-        write_to_console(f"裁切後尺寸：{crop_w}x{crop_h} (保留中間80%)", "INFO")
+            camera_active = True
+            return True
 
-        camera_active = True
-        return True
-    except Exception as e:
-        print(f"相機初始化失敗: {e}")
-        release_camera()
-        return False
-
+        except Exception as e:
+            write_to_console(f"相機初始化發生嚴重錯誤: {e}", "ERROR")
+            if camera:
+                camera.release()
+            camera = None
+            return False
 
 def crop_center(frame, rate):
     """裁切畫面中間區域"""
@@ -839,21 +829,24 @@ def crop_center(frame, rate):
 
 def get_frame():
     global camera, camera_active
-    if not camera_active or camera is None:
-        return None
-    try:
-        ret, frame = camera.read()
-        if not ret:
+    
+    # 🔥 加鎖：確保讀取時不會有其他人同時讀取或關閉相機
+    with camera_lock:
+        if not camera_active or camera is None:
             return None
+        try:
+            ret, frame = camera.read()
+            if not ret:
+                return None
 
-        # 切割畫面 CROP_RATE
-        frame = crop_center(frame, CROP_RATE)
+            # 切割畫面 CROP_RATE
+            frame = crop_center(frame, CROP_RATE)
 
-        _, buffer = cv2.imencode(".jpg", frame, [cv2.IMWRITE_JPEG_QUALITY, 85])
-        return buffer.tobytes()
-    except Exception as e:
-        write_to_console(f"get_frame 錯誤: {e}", "ERROR")
-        return None
+            _, buffer = cv2.imencode(".jpg", frame, [cv2.IMWRITE_JPEG_QUALITY, 85])
+            return buffer.tobytes()
+        except Exception as e:
+            write_to_console(f"get_frame 錯誤: {e}", "ERROR")
+            return None
 
 
 # 相機路由
@@ -882,6 +875,7 @@ def start_opencv_camera():
 @app.get("/opencv-camera/frame")
 def get_opencv_frame():
     try:
+        # 注意：不需要在這裡加鎖，因為鎖已經加在 get_frame() 裡面了
         if not camera_active:
             return jsonify({"success": False}), 400
         frame_data = get_frame()
@@ -909,10 +903,11 @@ def capture_opencv_photo():
             write_to_console("capture: 無法取得畫面", "ERROR")
             return jsonify({"success": False}), 500
 
-        # ===== 重點：拍照後立即釋放相機 =====
-        release_camera()
-        write_to_console("[相機] 拍照後已釋放相機資源", "INFO")
-        # =====================================
+        # ========================================================
+        # ✅ 修正：拍照後【不要】釋放相機，保持相機開啟 (Keep Alive)
+        # release_camera()  <-- 已移除
+        write_to_console("[相機] 拍照完成 (保持相機開啟中)", "INFO")
+        # ========================================================
 
         target_dir = ROOT / "kid" / uid
         target_dir.mkdir(parents=True, exist_ok=True)
@@ -973,8 +968,8 @@ def capture_opencv_photo():
 
     except Exception as e:
         write_to_console(f"/opencv-camera/capture 錯誤: {e}", "ERROR")
-        # 發生錯誤時也要確保釋放相機
-        release_camera()
+        # 發生錯誤時再考慮釋放，或者保留開啟
+        # release_camera() 
         return jsonify({"success": False}), 500
 
 @app.get("/game-state/<uid>")
