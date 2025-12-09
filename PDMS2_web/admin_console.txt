@@ -14,3 +14,4 @@
 2025-12-09 14:36:36 - INFO - [RESP] GET /artifact/kid/A123456789/ch1-t2.jpg -> 404
 2025-12-09 14:37:07 - ERROR - [HTTPERR 404] GET /api/admin/list - The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
 2025-12-09 14:37:07 - INFO - [RESP] GET /api/admin/list -> 404
+2025-12-09 14:40:12 - INFO - Flask 應用程式已關閉
