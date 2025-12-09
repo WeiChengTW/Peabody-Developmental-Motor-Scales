@@ -215,8 +215,10 @@ def main(img_path):
             pixel_per_cm = 47.4416628993705  # 預設值
         print(f"{img_path} pixel_per_cm = {pixel_per_cm}")
     except ValueError as e:
+        img = cv2.imread(img_path)
         print(f"⚠️ 跳過 {img_path}：{e}")
-        return SCORE
+        return 0, img
+
     
     # 參數要改
     cs = CrossScorer(
@@ -265,7 +267,7 @@ def main(img_path):
                 print(f"{url} 已存入 Other 資料夾並加上標記")
                 return 0, img
 
-    return SCORE
+    return SCORE, None
 
 
 if __name__ == "__main__":

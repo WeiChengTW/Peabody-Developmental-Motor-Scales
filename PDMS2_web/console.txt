@@ -1,19 +1,18 @@
-2025-12-09 17:12:44 - INFO - === 遠端 PyMySQL 模式 ===
-2025-12-09 17:12:44 - INFO - Flask 應用程式啟動
-2025-12-09 17:12:44 - INFO - 準備啟動 Flask 應用程式，HOST=127.0.0.1, PORT=8000
-2025-12-09 17:12:44 - INFO - 已設定瀏覽器自動開啟
-2025-12-09 17:12:44 - INFO - Flask 應用程式開始運行
-2025-12-09 17:12:44 - INFO - Flask 應用程式已關閉
-2025-12-09 17:12:52 - INFO - [REQ] POST /create-uid-folder
-2025-12-09 17:12:52 - INFO - [REQ] 進入 create_uid_folder
-2025-12-09 17:12:53 - INFO - [RESP] POST /create-uid-folder -> 200
-2025-12-09 17:12:53 - ERROR - [ERR] GET /images/icons/bridge.jpg
+2025-12-09 17:34:54 - INFO - === 遠端 PyMySQL 模式 ===
+2025-12-09 17:34:54 - INFO - Flask 應用程式啟動
+2025-12-09 17:34:54 - INFO - 準備啟動 Flask 應用程式，HOST=127.0.0.1, PORT=8000
+2025-12-09 17:34:54 - INFO - 已設定瀏覽器自動開啟
+2025-12-09 17:34:54 - INFO - Flask 應用程式開始運行
+2025-12-09 17:35:12 - INFO - [REQ] POST /create-uid-folder
+2025-12-09 17:35:12 - INFO - [REQ] 進入 create_uid_folder
+2025-12-09 17:35:13 - INFO - [RESP] POST /create-uid-folder -> 200
+2025-12-09 17:35:15 - ERROR - [ERR] GET /images/icons/bridge.jpg
 Traceback (most recent call last):
   File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 917, in full_dispatch_request
     rv = self.dispatch_request()
   File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 902, in dispatch_request
     return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
-  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/./run.py", line 265, in images_files
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/run.py", line 265, in images_files
     return send_from_directory(ROOT / "images", filename)
   File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/helpers.py", line 572, in send_from_directory
     return werkzeug.utils.send_from_directory(  # type: ignore[return-value]
@@ -21,13 +20,13 @@ Traceback (most recent call last):
     raise NotFound()
 werkzeug.exceptions.NotFound: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
 
-2025-12-09 17:12:53 - ERROR - [ERR] GET /images/icons/circle.jpg
+2025-12-09 17:35:15 - ERROR - [ERR] GET /images/icons/maze.jpg
 Traceback (most recent call last):
   File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 917, in full_dispatch_request
     rv = self.dispatch_request()
   File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 902, in dispatch_request
     return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
-  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/./run.py", line 265, in images_files
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/run.py", line 265, in images_files
     return send_from_directory(ROOT / "images", filename)
   File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/helpers.py", line 572, in send_from_directory
     return werkzeug.utils.send_from_directory(  # type: ignore[return-value]
@@ -35,13 +34,13 @@ Traceback (most recent call last):
     raise NotFound()
 werkzeug.exceptions.NotFound: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
 
-2025-12-09 17:12:53 - ERROR - [ERR] GET /images/icons/paper.jpg
+2025-12-09 17:35:15 - ERROR - [ERR] GET /images/icons/house.jpg
 Traceback (most recent call last):
   File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 917, in full_dispatch_request
     rv = self.dispatch_request()
   File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 902, in dispatch_request
     return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
-  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/./run.py", line 265, in images_files
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/run.py", line 265, in images_files
     return send_from_directory(ROOT / "images", filename)
   File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/helpers.py", line 572, in send_from_directory
     return werkzeug.utils.send_from_directory(  # type: ignore[return-value]
@@ -49,13 +48,13 @@ Traceback (most recent call last):
     raise NotFound()
 werkzeug.exceptions.NotFound: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
 
-2025-12-09 17:12:53 - ERROR - [ERR] GET /images/icons/maze.jpg
+2025-12-09 17:35:15 - ERROR - [ERR] GET /images/icons/paper.jpg
 Traceback (most recent call last):
   File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 917, in full_dispatch_request
     rv = self.dispatch_request()
   File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 902, in dispatch_request
     return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
-  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/./run.py", line 265, in images_files
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/run.py", line 265, in images_files
     return send_from_directory(ROOT / "images", filename)
   File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/helpers.py", line 572, in send_from_directory
     return werkzeug.utils.send_from_directory(  # type: ignore[return-value]
@@ -63,13 +62,13 @@ Traceback (most recent call last):
     raise NotFound()
 werkzeug.exceptions.NotFound: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
 
-2025-12-09 17:12:53 - ERROR - [ERR] GET /images/icons/treasure.jpg
+2025-12-09 17:35:15 - ERROR - [ERR] GET /images/icons/treasure.jpg
 Traceback (most recent call last):
   File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 917, in full_dispatch_request
     rv = self.dispatch_request()
   File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 902, in dispatch_request
     return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
-  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/./run.py", line 265, in images_files
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/run.py", line 265, in images_files
     return send_from_directory(ROOT / "images", filename)
   File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/helpers.py", line 572, in send_from_directory
     return werkzeug.utils.send_from_directory(  # type: ignore[return-value]
@@ -77,13 +76,13 @@ Traceback (most recent call last):
     raise NotFound()
 werkzeug.exceptions.NotFound: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
 
-2025-12-09 17:12:53 - ERROR - [ERR] GET /images/icons/house.jpg
+2025-12-09 17:35:15 - ERROR - [ERR] GET /images/icons/circle.jpg
 Traceback (most recent call last):
   File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 917, in full_dispatch_request
     rv = self.dispatch_request()
   File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 902, in dispatch_request
     return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
-  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/./run.py", line 265, in images_files
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/run.py", line 265, in images_files
     return send_from_directory(ROOT / "images", filename)
   File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/helpers.py", line 572, in send_from_directory
     return werkzeug.utils.send_from_directory(  # type: ignore[return-value]
@@ -91,13 +90,13 @@ Traceback (most recent call last):
     raise NotFound()
 werkzeug.exceptions.NotFound: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
 
-2025-12-09 17:12:53 - ERROR - [ERR] GET /images/icons/square.jpg
+2025-12-09 17:35:15 - ERROR - [ERR] GET /images/icons/square.jpg
 Traceback (most recent call last):
   File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 917, in full_dispatch_request
     rv = self.dispatch_request()
   File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 902, in dispatch_request
     return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
-  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/./run.py", line 265, in images_files
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/run.py", line 265, in images_files
     return send_from_directory(ROOT / "images", filename)
   File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/helpers.py", line 572, in send_from_directory
     return werkzeug.utils.send_from_directory(  # type: ignore[return-value]
@@ -105,13 +104,13 @@ Traceback (most recent call last):
     raise NotFound()
 werkzeug.exceptions.NotFound: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
 
-2025-12-09 17:12:53 - ERROR - [ERR] GET /images/icons/line.jpg
+2025-12-09 17:35:15 - ERROR - [ERR] GET /images/icons/cross.jpg
 Traceback (most recent call last):
   File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 917, in full_dispatch_request
     rv = self.dispatch_request()
   File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 902, in dispatch_request
     return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
-  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/./run.py", line 265, in images_files
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/run.py", line 265, in images_files
     return send_from_directory(ROOT / "images", filename)
   File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/helpers.py", line 572, in send_from_directory
     return werkzeug.utils.send_from_directory(  # type: ignore[return-value]
@@ -119,13 +118,13 @@ Traceback (most recent call last):
     raise NotFound()
 werkzeug.exceptions.NotFound: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
 
-2025-12-09 17:12:53 - ERROR - [ERR] GET /images/icons/cross.jpg
+2025-12-09 17:35:15 - ERROR - [ERR] GET /images/icons/connect.jpg
 Traceback (most recent call last):
   File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 917, in full_dispatch_request
     rv = self.dispatch_request()
   File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 902, in dispatch_request
     return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
-  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/./run.py", line 265, in images_files
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/run.py", line 265, in images_files
     return send_from_directory(ROOT / "images", filename)
   File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/helpers.py", line 572, in send_from_directory
     return werkzeug.utils.send_from_directory(  # type: ignore[return-value]
@@ -133,13 +132,13 @@ Traceback (most recent call last):
     raise NotFound()
 werkzeug.exceptions.NotFound: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
 
-2025-12-09 17:12:54 - ERROR - [ERR] GET /images/icons/paint.jpg
+2025-12-09 17:35:15 - ERROR - [ERR] GET /images/icons/paint.jpg
 Traceback (most recent call last):
   File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 917, in full_dispatch_request
     rv = self.dispatch_request()
   File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 902, in dispatch_request
     return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
-  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/./run.py", line 265, in images_files
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/run.py", line 265, in images_files
     return send_from_directory(ROOT / "images", filename)
   File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/helpers.py", line 572, in send_from_directory
     return werkzeug.utils.send_from_directory(  # type: ignore[return-value]
@@ -147,13 +146,13 @@ Traceback (most recent call last):
     raise NotFound()
 werkzeug.exceptions.NotFound: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
 
-2025-12-09 17:12:54 - ERROR - [ERR] GET /images/icons/connect.jpg
+2025-12-09 17:35:15 - ERROR - [ERR] GET /images/icons/line.jpg
 Traceback (most recent call last):
   File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 917, in full_dispatch_request
     rv = self.dispatch_request()
   File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 902, in dispatch_request
     return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
-  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/./run.py", line 265, in images_files
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/run.py", line 265, in images_files
     return send_from_directory(ROOT / "images", filename)
   File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/helpers.py", line 572, in send_from_directory
     return werkzeug.utils.send_from_directory(  # type: ignore[return-value]
@@ -161,29 +160,29 @@ Traceback (most recent call last):
     raise NotFound()
 werkzeug.exceptions.NotFound: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
 
-2025-12-09 17:12:59 - WARN - MSMF 無法開啟相機 0，嘗試預設後端。
-2025-12-09 17:13:00 - INFO - 相機實際設定：640x480 @ 30.0 FPS (用於靜態拍照)
-2025-12-09 17:13:00 - INFO - 裁切後尺寸：448x336 (保留中間80%)
-2025-12-09 17:13:15 - INFO - [相機] 相機已釋放
-2025-12-09 17:13:16 - WARN - MSMF 無法開啟相機 0，嘗試預設後端。
-2025-12-09 17:13:16 - INFO - 相機實際設定：640x480 @ 30.0 FPS (用於靜態拍照)
-2025-12-09 17:13:17 - INFO - 裁切後尺寸：448x336 (保留中間80%)
-2025-12-09 17:13:17 - INFO - [相機] 相機已釋放
-2025-12-09 17:13:17 - INFO - [相機] 拍照後已釋放相機資源
-2025-12-09 17:13:17 - INFO - 圖像存儲成功: /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/kid/F111122222/ch2-t1.jpg
-2025-12-09 17:13:17 - INFO - 開始背景任務 c57837d8-e6f8-4b86-b12d-100d9373ecb7: uid=F111122222, task=ch2-t1
-2025-12-09 17:13:17 - INFO - 執行命令：/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/bin/python /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t1/main.py F111122222 ch2-t1
-2025-12-09 17:13:18 - INFO - [REQ] POST /run-python
-2025-12-09 17:13:18 - INFO - 開始背景任務 b2d808db-962e-47af-ae2c-704c09aaa79c: uid=F111122222, task=ch2-t1
-2025-12-09 17:13:18 - INFO - [RESP] POST /run-python -> 200
-2025-12-09 17:13:18 - INFO - 執行命令：/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/bin/python /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t1/main.py F111122222 ch2-t1
-2025-12-09 17:13:19 - ERROR - [ERR] GET /images/icons/bridge.jpg
+2025-12-09 17:35:32 - WARN - MSMF 無法開啟相機 0，嘗試預設後端。
+2025-12-09 17:35:33 - INFO - 相機實際設定：640x480 @ 30.0 FPS (用於靜態拍照)
+2025-12-09 17:35:33 - INFO - 裁切後尺寸：448x336 (保留中間80%)
+2025-12-09 17:35:50 - INFO - [相機] 相機已釋放
+2025-12-09 17:35:51 - WARN - MSMF 無法開啟相機 0，嘗試預設後端。
+2025-12-09 17:35:52 - INFO - 相機實際設定：640x480 @ 30.0 FPS (用於靜態拍照)
+2025-12-09 17:35:52 - INFO - 裁切後尺寸：448x336 (保留中間80%)
+2025-12-09 17:35:53 - INFO - [相機] 相機已釋放
+2025-12-09 17:35:53 - INFO - [相機] 拍照後已釋放相機資源
+2025-12-09 17:35:53 - INFO - 圖像存儲成功: /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/kid/F111122222/ch2-t3.jpg
+2025-12-09 17:35:53 - INFO - 開始背景任務 e3fc192d-28f3-4fe3-b23b-3dbc94012072: uid=F111122222, task=ch2-t3
+2025-12-09 17:35:53 - INFO - 執行命令：/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/bin/python /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t3/main.py F111122222 ch2-t3
+2025-12-09 17:35:53 - INFO - [REQ] POST /run-python
+2025-12-09 17:35:53 - INFO - 開始背景任務 1e2fe89d-d2aa-48ca-a487-3a5840fdaf98: uid=F111122222, task=ch2-t3
+2025-12-09 17:35:53 - INFO - 執行命令：/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/bin/python /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t3/main.py F111122222 ch2-t3
+2025-12-09 17:35:53 - INFO - [RESP] POST /run-python -> 200
+2025-12-09 17:35:55 - ERROR - [ERR] GET /images/icons/paper.jpg
 Traceback (most recent call last):
   File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 917, in full_dispatch_request
     rv = self.dispatch_request()
   File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 902, in dispatch_request
     return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
-  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/./run.py", line 265, in images_files
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/run.py", line 265, in images_files
     return send_from_directory(ROOT / "images", filename)
   File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/helpers.py", line 572, in send_from_directory
     return werkzeug.utils.send_from_directory(  # type: ignore[return-value]
@@ -191,13 +190,13 @@ Traceback (most recent call last):
     raise NotFound()
 werkzeug.exceptions.NotFound: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
 
-2025-12-09 17:13:19 - ERROR - [ERR] GET /images/icons/maze.jpg
+2025-12-09 17:35:55 - ERROR - [ERR] GET /images/icons/maze.jpg
 Traceback (most recent call last):
   File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 917, in full_dispatch_request
     rv = self.dispatch_request()
   File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 902, in dispatch_request
     return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
-  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/./run.py", line 265, in images_files
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/run.py", line 265, in images_files
     return send_from_directory(ROOT / "images", filename)
   File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/helpers.py", line 572, in send_from_directory
     return werkzeug.utils.send_from_directory(  # type: ignore[return-value]
@@ -205,13 +204,13 @@ Traceback (most recent call last):
     raise NotFound()
 werkzeug.exceptions.NotFound: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
 
-2025-12-09 17:13:19 - ERROR - [ERR] GET /images/icons/treasure.jpg
+2025-12-09 17:35:55 - ERROR - [ERR] GET /images/icons/house.jpg
 Traceback (most recent call last):
   File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 917, in full_dispatch_request
     rv = self.dispatch_request()
   File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 902, in dispatch_request
     return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
-  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/./run.py", line 265, in images_files
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/run.py", line 265, in images_files
     return send_from_directory(ROOT / "images", filename)
   File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/helpers.py", line 572, in send_from_directory
     return werkzeug.utils.send_from_directory(  # type: ignore[return-value]
@@ -219,13 +218,13 @@ Traceback (most recent call last):
     raise NotFound()
 werkzeug.exceptions.NotFound: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
 
-2025-12-09 17:13:19 - ERROR - [ERR] GET /images/icons/paper.jpg
+2025-12-09 17:35:55 - ERROR - [ERR] GET /images/icons/treasure.jpg
 Traceback (most recent call last):
   File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 917, in full_dispatch_request
     rv = self.dispatch_request()
   File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 902, in dispatch_request
     return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
-  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/./run.py", line 265, in images_files
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/run.py", line 265, in images_files
     return send_from_directory(ROOT / "images", filename)
   File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/helpers.py", line 572, in send_from_directory
     return werkzeug.utils.send_from_directory(  # type: ignore[return-value]
@@ -233,13 +232,13 @@ Traceback (most recent call last):
     raise NotFound()
 werkzeug.exceptions.NotFound: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
 
-2025-12-09 17:13:19 - ERROR - [ERR] GET /images/icons/house.jpg
+2025-12-09 17:35:55 - ERROR - [ERR] GET /images/icons/bridge.jpg
 Traceback (most recent call last):
   File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 917, in full_dispatch_request
     rv = self.dispatch_request()
   File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 902, in dispatch_request
     return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
-  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/./run.py", line 265, in images_files
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/run.py", line 265, in images_files
     return send_from_directory(ROOT / "images", filename)
   File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/helpers.py", line 572, in send_from_directory
     return werkzeug.utils.send_from_directory(  # type: ignore[return-value]
@@ -247,13 +246,13 @@ Traceback (most recent call last):
     raise NotFound()
 werkzeug.exceptions.NotFound: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
 
-2025-12-09 17:13:19 - ERROR - [ERR] GET /images/icons/circle.jpg
+2025-12-09 17:35:55 - ERROR - [ERR] GET /images/icons/paint.jpg
 Traceback (most recent call last):
   File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 917, in full_dispatch_request
     rv = self.dispatch_request()
   File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 902, in dispatch_request
     return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
-  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/./run.py", line 265, in images_files
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/run.py", line 265, in images_files
     return send_from_directory(ROOT / "images", filename)
   File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/helpers.py", line 572, in send_from_directory
     return werkzeug.utils.send_from_directory(  # type: ignore[return-value]
@@ -261,13 +260,13 @@ Traceback (most recent call last):
     raise NotFound()
 werkzeug.exceptions.NotFound: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
 
-2025-12-09 17:13:19 - ERROR - [ERR] GET /images/icons/square.jpg
+2025-12-09 17:35:56 - ERROR - [ERR] GET /images/icons/line.jpg
 Traceback (most recent call last):
   File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 917, in full_dispatch_request
     rv = self.dispatch_request()
   File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 902, in dispatch_request
     return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
-  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/./run.py", line 265, in images_files
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/run.py", line 265, in images_files
     return send_from_directory(ROOT / "images", filename)
   File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/helpers.py", line 572, in send_from_directory
     return werkzeug.utils.send_from_directory(  # type: ignore[return-value]
@@ -275,13 +274,13 @@ Traceback (most recent call last):
     raise NotFound()
 werkzeug.exceptions.NotFound: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
 
-2025-12-09 17:13:19 - ERROR - [ERR] GET /images/icons/cross.jpg
+2025-12-09 17:35:56 - ERROR - [ERR] GET /images/icons/square.jpg
 Traceback (most recent call last):
   File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 917, in full_dispatch_request
     rv = self.dispatch_request()
   File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 902, in dispatch_request
     return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
-  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/./run.py", line 265, in images_files
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/run.py", line 265, in images_files
     return send_from_directory(ROOT / "images", filename)
   File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/helpers.py", line 572, in send_from_directory
     return werkzeug.utils.send_from_directory(  # type: ignore[return-value]
@@ -289,13 +288,13 @@ Traceback (most recent call last):
     raise NotFound()
 werkzeug.exceptions.NotFound: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
 
-2025-12-09 17:13:19 - ERROR - [ERR] GET /images/icons/line.jpg
+2025-12-09 17:35:55 - ERROR - [ERR] GET /images/icons/connect.jpg
 Traceback (most recent call last):
   File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 917, in full_dispatch_request
     rv = self.dispatch_request()
   File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 902, in dispatch_request
     return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
-  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/./run.py", line 265, in images_files
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/run.py", line 265, in images_files
     return send_from_directory(ROOT / "images", filename)
   File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/helpers.py", line 572, in send_from_directory
     return werkzeug.utils.send_from_directory(  # type: ignore[return-value]
@@ -303,13 +302,13 @@ Traceback (most recent call last):
     raise NotFound()
 werkzeug.exceptions.NotFound: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
 
-2025-12-09 17:13:19 - ERROR - [ERR] GET /images/icons/paint.jpg
+2025-12-09 17:35:56 - ERROR - [ERR] GET /images/icons/cross.jpg
 Traceback (most recent call last):
   File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 917, in full_dispatch_request
     rv = self.dispatch_request()
   File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 902, in dispatch_request
     return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
-  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/./run.py", line 265, in images_files
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/run.py", line 265, in images_files
     return send_from_directory(ROOT / "images", filename)
   File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/helpers.py", line 572, in send_from_directory
     return werkzeug.utils.send_from_directory(  # type: ignore[return-value]
@@ -317,13 +316,13 @@ Traceback (most recent call last):
     raise NotFound()
 werkzeug.exceptions.NotFound: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
 
-2025-12-09 17:13:19 - ERROR - [ERR] GET /images/icons/connect.jpg
+2025-12-09 17:35:56 - ERROR - [ERR] GET /images/icons/circle.jpg
 Traceback (most recent call last):
   File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 917, in full_dispatch_request
     rv = self.dispatch_request()
   File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 902, in dispatch_request
     return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
-  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/./run.py", line 265, in images_files
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/run.py", line 265, in images_files
     return send_from_directory(ROOT / "images", filename)
   File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/helpers.py", line 572, in send_from_directory
     return werkzeug.utils.send_from_directory(  # type: ignore[return-value]
@@ -331,324 +330,264 @@ Traceback (most recent call last):
     raise NotFound()
 werkzeug.exceptions.NotFound: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
 
-2025-12-09 17:14:05 - INFO - 腳本輸出 (任務 c57837d8-e6f8-4b86-b12d-100d9373ecb7)：
+2025-12-09 17:36:53 - INFO - 腳本輸出 (任務 e3fc192d-28f3-4fe3-b23b-3dbc94012072)：
 Model loaded successfully!
 === 初始化工作空間，清空所有資料夾 ===
-清空資料夾: /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t1/circle_or_oval
-重新建立資料夾: /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t1/circle_or_oval
-清空資料夾: /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t1/Other
-重新建立資料夾: /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t1/Other
-清空資料夾: /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t1/cropped_a4
-重新建立資料夾: /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t1/cropped_a4
-清空資料夾: /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t1/ready
-重新建立資料夾: /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t1/ready
+清空資料夾: /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t3/Cross
+重新建立資料夾: /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t3/Cross
+重新建立資料夾: /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t3/Other
+清空資料夾: /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t3/cropped_a4
+重新建立資料夾: /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t3/cropped_a4
+清空資料夾: /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t3/ready
+重新建立資料夾: /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t3/ready
 工作空間初始化完成！
 
+A4區域已儲存至: /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t3/cropped_a4/ch2-t3_a4_cropped.jpg
+kid/F111122222/ch2-t3.jpg pixel_per_cm = 47.4416628993705
 
-=== 處理 kid/F111122222/ch2-t1.jpg ===
+=== 處理 /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t3/cropped_a4/ch2-t3_a4_cropped.jpg ===
 
-A4區域已儲存至: /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t1/cropped_a4/ch2-t1_a4_cropped.jpg
-儲存像素比例資料至: /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/px2cm.json
-kid/F111122222/ch2-t1.jpg pixel_per_cm = 8.621895790100098
 
 ==裁切圖形==
 
-image 1/1 /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/kid/F111122222/ch2-t1.jpg: 480x640 1 rectangle, 1327.9ms
-Speed: 58.0ms preprocess, 1327.9ms inference, 5.4ms postprocess per image at shape (1, 3, 480, 640)
-  - 寫出彩色: /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t1/ready/ch2-t1_0_Square.jpg shape=(99, 94, 3)
-  - 寫出二值: /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t1/ready/ch2-t1_0_Square_binary.jpg shape=(99, 94)
-成功處理 Square (信心度: 0.87), 索引: 0
+image 1/1 /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t3/cropped_a4/ch2-t3_a4_cropped.jpg: 480x640 (no detections), 3084.9ms
+Speed: 249.0ms preprocess, 3084.9ms inference, 4.9ms postprocess per image at shape (1, 3, 480, 640)
 
-總共成功處理 1 個圖形
+總共成功處理 0 個圖形
 
 ==分類圖形==
 
 
-[1m1/1[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 10s/step
-[1m1/1[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m10s[0m 10s/step
-/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t1/ready/ch2-t1_0_Square.jpg → circle_or_oval (100.00%)
-
-==計算端點距離==
-
-
-offset = 11.180339887498949
-
-
-/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t1/ready/ch2-t1_0_Square.jpg : 1.2967379981948435cm
-
-result_path : kid/F111122222/ch2-t1_result.jpg
-
-1
-
-2025-12-09 17:14:05 - ERROR - 腳本錯誤輸出 (任務 c57837d8-e6f8-4b86-b12d-100d9373ecb7)：
+2025-12-09 17:36:53 - ERROR - 腳本錯誤輸出 (任務 e3fc192d-28f3-4fe3-b23b-3dbc94012072)：
 /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/keras/src/optimizers/base_optimizer.py:86: UserWarning: Argument `decay` is no longer supported and will be ignored.
   warnings.warn(
 WARNING:absl:Compiled the loaded model, but the compiled metrics have yet to be built. `model.compile_metrics` will be empty until you train or evaluate the model.
 WARNING:absl:Error in loading the saved optimizer state. As a result, your model is starting with a freshly initialized optimizer.
+Traceback (most recent call last):
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t3/main.py", line 285, in <module>
+    cv2.imwrite(result_path, result_img)
+cv2.error: OpenCV(4.12.0) /io/opencv/modules/imgcodecs/src/loadsave.cpp:1146: error: (-215:Assertion failed) !_img.empty() in function 'imwrite'
 
-2025-12-09 17:14:05 - INFO - 腳本輸出 (任務 b2d808db-962e-47af-ae2c-704c09aaa79c)：
+
+2025-12-09 17:36:53 - INFO - 腳本輸出 (任務 1e2fe89d-d2aa-48ca-a487-3a5840fdaf98)：
 Model loaded successfully!
 === 初始化工作空間，清空所有資料夾 ===
-清空資料夾: /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t1/circle_or_oval
-重新建立資料夾: /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t1/circle_or_oval
-清空資料夾: /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t1/Other
-重新建立資料夾: /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t1/Other
-清空資料夾: /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t1/cropped_a4
-重新建立資料夾: /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t1/cropped_a4
-清空資料夾: /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t1/ready
-重新建立資料夾: /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t1/ready
+清空資料夾: /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t3/Cross
+重新建立資料夾: /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t3/Cross
+清空資料夾: /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t3/Other
+重新建立資料夾: /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t3/Other
+清空資料夾: /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t3/cropped_a4
+重新建立資料夾: /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t3/cropped_a4
+清空資料夾: /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t3/ready
+重新建立資料夾: /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t3/ready
 工作空間初始化完成！
 
+A4區域已儲存至: /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t3/cropped_a4/ch2-t3_a4_cropped.jpg
+kid/F111122222/ch2-t3.jpg pixel_per_cm = 47.4416628993705
 
-=== 處理 kid/F111122222/ch2-t1.jpg ===
+=== 處理 /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t3/cropped_a4/ch2-t3_a4_cropped.jpg ===
 
-A4區域已儲存至: /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t1/cropped_a4/ch2-t1_a4_cropped.jpg
-儲存像素比例資料至: /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/px2cm.json
-kid/F111122222/ch2-t1.jpg pixel_per_cm = 8.621895790100098
 
 ==裁切圖形==
 
-image 1/1 /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/kid/F111122222/ch2-t1.jpg: 480x640 1 rectangle, 1246.4ms
-Speed: 67.5ms preprocess, 1246.4ms inference, 5.4ms postprocess per image at shape (1, 3, 480, 640)
-  - 寫出彩色: /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t1/ready/ch2-t1_1_Square.jpg shape=(99, 94, 3)
-  - 寫出二值: /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t1/ready/ch2-t1_1_Square_binary.jpg shape=(99, 94)
-成功處理 Square (信心度: 0.87), 索引: 1
+image 1/1 /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t3/cropped_a4/ch2-t3_a4_cropped.jpg: 480x640 (no detections), 3300.8ms
+Speed: 117.8ms preprocess, 3300.8ms inference, 4.5ms postprocess per image at shape (1, 3, 480, 640)
 
-總共成功處理 1 個圖形
+總共成功處理 0 個圖形
 
 ==分類圖形==
 
 
-[1m1/1[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 10s/step
-[1m1/1[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m10s[0m 10s/step
-/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t1/ready/ch2-t1_1_Square.jpg → circle_or_oval (100.00%)
-
-==計算端點距離==
-
-
-offset = 11.180339887498949
-
-
-/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t1/ready/ch2-t1_1_Square.jpg : 1.2967379981948435cm
-
-result_path : kid/F111122222/ch2-t1_result.jpg
-
-1
-
-2025-12-09 17:14:05 - ERROR - 腳本錯誤輸出 (任務 b2d808db-962e-47af-ae2c-704c09aaa79c)：
-/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/keras/src/optimizers/base_optimizer.py:86: UserWarning: Argument `decay` is no longer supported and will be ignored.
-  warnings.warn(
-WARNING:absl:Compiled the loaded model, but the compiled metrics have yet to be built. `model.compile_metrics` will be empty until you train or evaluate the model.
-WARNING:absl:Error in loading the saved optimizer state. As a result, your model is starting with a freshly initialized optimizer.
-
-2025-12-09 17:14:06 - INFO - [DB] ensure_task ok: Ch2-t1 -> draw_circle
-2025-12-09 17:14:07 - INFO - [DB] ensure_task ok: Ch2-t1 -> draw_circle
-2025-12-09 17:14:07 - INFO - [DB] insert_score ok: uid=F111122222, task_id=Ch2-t1, date=2025-12-09, time=17:14:06
-2025-12-09 17:14:07 - ERROR - 寫入 score_list 失敗：cannot unpack non-iterable datetime.date object
-2025-12-09 17:14:07 - INFO - 任務 c57837d8-e6f8-4b86-b12d-100d9373ecb7 完成：uid=F111122222, task=Ch2-t1, score=1, test_date=None, test_time=None
-2025-12-09 17:14:08 - INFO - [DB] insert_score ok: uid=F111122222, task_id=Ch2-t1, date=2025-12-09, time=17:14:07
-2025-12-09 17:14:08 - ERROR - 寫入 score_list 失敗：cannot unpack non-iterable datetime.date object
-2025-12-09 17:14:08 - INFO - 任務 b2d808db-962e-47af-ae2c-704c09aaa79c 完成：uid=F111122222, task=Ch2-t1, score=1, test_date=None, test_time=None
-2025-12-09 17:15:49 - WARN - MSMF 無法開啟相機 0，嘗試預設後端。
-2025-12-09 17:15:50 - INFO - 相機實際設定：640x480 @ 30.0 FPS (用於靜態拍照)
-2025-12-09 17:15:50 - INFO - 裁切後尺寸：448x336 (保留中間80%)
-2025-12-09 17:15:56 - INFO - [相機] 相機已釋放
-2025-12-09 17:15:56 - WARN - MSMF 無法開啟相機 0，嘗試預設後端。
-2025-12-09 17:15:57 - INFO - 相機實際設定：640x480 @ 30.0 FPS (用於靜態拍照)
-2025-12-09 17:15:57 - INFO - 裁切後尺寸：448x336 (保留中間80%)
-2025-12-09 17:15:57 - INFO - [相機] 相機已釋放
-2025-12-09 17:15:58 - INFO - [相機] 拍照後已釋放相機資源
-2025-12-09 17:15:58 - INFO - 圖像存儲成功: /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/kid/default/ch2-t2.jpg
-2025-12-09 17:15:58 - INFO - 開始背景任務 5c303720-d741-4d16-9184-8b8692bb2ed8: uid=default, task=ch2-t2
-2025-12-09 17:15:58 - INFO - 執行命令：/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/bin/python /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t2/main.py default ch2-t2
-2025-12-09 17:15:58 - INFO - [REQ] POST /run-python
-2025-12-09 17:15:58 - INFO - [RESP] POST /run-python -> 200
-2025-12-09 17:15:58 - INFO - 開始背景任務 08584b85-c5af-48f3-8a5f-df03b86190a4: uid=default, task=ch2-t2
-2025-12-09 17:15:58 - INFO - 執行命令：/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/bin/python /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t2/main.py default ch2-t2
-2025-12-09 17:15:59 - ERROR - [ERR] GET /images/icons/bridge.jpg
-Traceback (most recent call last):
-  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 917, in full_dispatch_request
-    rv = self.dispatch_request()
-  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 902, in dispatch_request
-    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
-  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/./run.py", line 265, in images_files
-    return send_from_directory(ROOT / "images", filename)
-  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/helpers.py", line 572, in send_from_directory
-    return werkzeug.utils.send_from_directory(  # type: ignore[return-value]
-  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/werkzeug/utils.py", line 575, in send_from_directory
-    raise NotFound()
-werkzeug.exceptions.NotFound: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
-
-2025-12-09 17:15:59 - ERROR - [ERR] GET /images/icons/house.jpg
-Traceback (most recent call last):
-  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 917, in full_dispatch_request
-    rv = self.dispatch_request()
-  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 902, in dispatch_request
-    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
-  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/./run.py", line 265, in images_files
-    return send_from_directory(ROOT / "images", filename)
-  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/helpers.py", line 572, in send_from_directory
-    return werkzeug.utils.send_from_directory(  # type: ignore[return-value]
-  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/werkzeug/utils.py", line 575, in send_from_directory
-    raise NotFound()
-werkzeug.exceptions.NotFound: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
-
-2025-12-09 17:15:59 - ERROR - [ERR] GET /images/icons/circle.jpg
-Traceback (most recent call last):
-  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 917, in full_dispatch_request
-    rv = self.dispatch_request()
-  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 902, in dispatch_request
-    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
-  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/./run.py", line 265, in images_files
-    return send_from_directory(ROOT / "images", filename)
-  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/helpers.py", line 572, in send_from_directory
-    return werkzeug.utils.send_from_directory(  # type: ignore[return-value]
-  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/werkzeug/utils.py", line 575, in send_from_directory
-    raise NotFound()
-werkzeug.exceptions.NotFound: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
-
-2025-12-09 17:15:59 - ERROR - [ERR] GET /images/icons/paper.jpg
-Traceback (most recent call last):
-  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 917, in full_dispatch_request
-    rv = self.dispatch_request()
-  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 902, in dispatch_request
-    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
-  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/./run.py", line 265, in images_files
-    return send_from_directory(ROOT / "images", filename)
-  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/helpers.py", line 572, in send_from_directory
-    return werkzeug.utils.send_from_directory(  # type: ignore[return-value]
-  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/werkzeug/utils.py", line 575, in send_from_directory
-    raise NotFound()
-werkzeug.exceptions.NotFound: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
-
-2025-12-09 17:15:59 - ERROR - [ERR] GET /images/icons/maze.jpg
-Traceback (most recent call last):
-  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 917, in full_dispatch_request
-    rv = self.dispatch_request()
-  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 902, in dispatch_request
-    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
-  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/./run.py", line 265, in images_files
-    return send_from_directory(ROOT / "images", filename)
-  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/helpers.py", line 572, in send_from_directory
-    return werkzeug.utils.send_from_directory(  # type: ignore[return-value]
-  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/werkzeug/utils.py", line 575, in send_from_directory
-    raise NotFound()
-werkzeug.exceptions.NotFound: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
-
-2025-12-09 17:15:59 - ERROR - [ERR] GET /images/icons/treasure.jpg
-Traceback (most recent call last):
-  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 917, in full_dispatch_request
-    rv = self.dispatch_request()
-  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 902, in dispatch_request
-    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
-  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/./run.py", line 265, in images_files
-    return send_from_directory(ROOT / "images", filename)
-  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/helpers.py", line 572, in send_from_directory
-    return werkzeug.utils.send_from_directory(  # type: ignore[return-value]
-  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/werkzeug/utils.py", line 575, in send_from_directory
-    raise NotFound()
-werkzeug.exceptions.NotFound: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
-
-2025-12-09 17:15:59 - ERROR - [ERR] GET /images/icons/connect.jpg
-Traceback (most recent call last):
-  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 917, in full_dispatch_request
-    rv = self.dispatch_request()
-  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 902, in dispatch_request
-    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
-  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/./run.py", line 265, in images_files
-    return send_from_directory(ROOT / "images", filename)
-  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/helpers.py", line 572, in send_from_directory
-    return werkzeug.utils.send_from_directory(  # type: ignore[return-value]
-  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/werkzeug/utils.py", line 575, in send_from_directory
-    raise NotFound()
-werkzeug.exceptions.NotFound: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
-
-2025-12-09 17:15:59 - ERROR - [ERR] GET /images/icons/cross.jpg
-Traceback (most recent call last):
-  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 917, in full_dispatch_request
-    rv = self.dispatch_request()
-  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 902, in dispatch_request
-    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
-  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/./run.py", line 265, in images_files
-    return send_from_directory(ROOT / "images", filename)
-  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/helpers.py", line 572, in send_from_directory
-    return werkzeug.utils.send_from_directory(  # type: ignore[return-value]
-  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/werkzeug/utils.py", line 575, in send_from_directory
-    raise NotFound()
-werkzeug.exceptions.NotFound: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
-
-2025-12-09 17:15:59 - ERROR - [ERR] GET /images/icons/paint.jpg
-Traceback (most recent call last):
-  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 917, in full_dispatch_request
-    rv = self.dispatch_request()
-  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 902, in dispatch_request
-    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
-  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/./run.py", line 265, in images_files
-    return send_from_directory(ROOT / "images", filename)
-  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/helpers.py", line 572, in send_from_directory
-    return werkzeug.utils.send_from_directory(  # type: ignore[return-value]
-  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/werkzeug/utils.py", line 575, in send_from_directory
-    raise NotFound()
-werkzeug.exceptions.NotFound: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
-
-2025-12-09 17:15:59 - ERROR - [ERR] GET /images/icons/square.jpg
-Traceback (most recent call last):
-  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 917, in full_dispatch_request
-    rv = self.dispatch_request()
-  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 902, in dispatch_request
-    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
-  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/./run.py", line 265, in images_files
-    return send_from_directory(ROOT / "images", filename)
-  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/helpers.py", line 572, in send_from_directory
-    return werkzeug.utils.send_from_directory(  # type: ignore[return-value]
-  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/werkzeug/utils.py", line 575, in send_from_directory
-    raise NotFound()
-werkzeug.exceptions.NotFound: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
-
-2025-12-09 17:15:59 - ERROR - [ERR] GET /images/icons/line.jpg
-Traceback (most recent call last):
-  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 917, in full_dispatch_request
-    rv = self.dispatch_request()
-  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 902, in dispatch_request
-    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
-  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/./run.py", line 265, in images_files
-    return send_from_directory(ROOT / "images", filename)
-  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/helpers.py", line 572, in send_from_directory
-    return werkzeug.utils.send_from_directory(  # type: ignore[return-value]
-  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/werkzeug/utils.py", line 575, in send_from_directory
-    raise NotFound()
-werkzeug.exceptions.NotFound: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
-
-2025-12-09 17:16:27 - INFO - 腳本輸出 (任務 08584b85-c5af-48f3-8a5f-df03b86190a4)：
-Model loaded successfully!
-=== 初始化工作空間，清空所有資料夾 ===
-重新建立資料夾: /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t2/quadrilateral
-清空資料夾: /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t2/Other
-
-2025-12-09 17:16:27 - ERROR - 腳本錯誤輸出 (任務 08584b85-c5af-48f3-8a5f-df03b86190a4)：
+2025-12-09 17:36:53 - ERROR - 腳本錯誤輸出 (任務 1e2fe89d-d2aa-48ca-a487-3a5840fdaf98)：
 /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/keras/src/optimizers/base_optimizer.py:86: UserWarning: Argument `decay` is no longer supported and will be ignored.
   warnings.warn(
 WARNING:absl:Compiled the loaded model, but the compiled metrics have yet to be built. `model.compile_metrics` will be empty until you train or evaluate the model.
 WARNING:absl:Error in loading the saved optimizer state. As a result, your model is starting with a freshly initialized optimizer.
 Traceback (most recent call last):
-  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t2/main.py", line 283, in <module>
-    score, result_img = main(image_path)
-  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t2/main.py", line 204, in main
-    segmenter.initialize_workspace()
-  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t2/Analyze_graphics.py", line 77, in initialize_workspace
-    self.clear_multiple_dirs(workspace_dirs)
-  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t2/Analyze_graphics.py", line 61, in clear_multiple_dirs
-    shutil.rmtree(dir_path)
-  File "/usr/local/lib/python3.9/shutil.py", line 740, in rmtree
-    onerror(os.rmdir, path, sys.exc_info())
-  File "/usr/local/lib/python3.9/shutil.py", line 738, in rmtree
-    os.rmdir(path)
-FileNotFoundError: [Errno 2] No such file or directory: '/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t2/Other'
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t3/main.py", line 285, in <module>
+    cv2.imwrite(result_path, result_img)
+cv2.error: OpenCV(4.12.0) /io/opencv/modules/imgcodecs/src/loadsave.cpp:1146: error: (-215:Assertion failed) !_img.empty() in function 'imwrite'
 
-2025-12-09 17:16:28 - WARN - [DB] insert_score: UID 不存在 -> default
-2025-12-09 17:16:28 - ERROR - 寫入 score_list 失敗：USER_NOT_FOUND
-2025-12-09 17:16:28 - INFO - 任務 08584b85-c5af-48f3-8a5f-df03b86190a4 完成：uid=default, task=Ch2-t2, score=1, test_date=None, test_time=None
-2025-12-09 17:16:36 - INFO - 腳本輸出 (任務 5c303720-d741-4d16-9184-8b8692bb2ed8)：
+
+2025-12-09 17:36:55 - INFO - [DB] ensure_task ok: Ch2-t3 -> draw_cross
+2025-12-09 17:36:55 - INFO - [DB] ensure_task ok: Ch2-t3 -> draw_cross
+2025-12-09 17:36:56 - INFO - [DB] insert_score ok: uid=F111122222, task_id=Ch2-t3, date=2025-12-09, time=17:36:55
+2025-12-09 17:36:56 - ERROR - 寫入 score_list 失敗：cannot unpack non-iterable datetime.date object
+2025-12-09 17:36:56 - INFO - 任務 e3fc192d-28f3-4fe3-b23b-3dbc94012072 完成：uid=F111122222, task=Ch2-t3, score=1, test_date=None, test_time=None
+2025-12-09 17:36:56 - INFO - [DB] insert_score ok: uid=F111122222, task_id=Ch2-t3, date=2025-12-09, time=17:36:55
+2025-12-09 17:36:56 - ERROR - 寫入 score_list 失敗：cannot unpack non-iterable datetime.date object
+2025-12-09 17:36:56 - INFO - 任務 1e2fe89d-d2aa-48ca-a487-3a5840fdaf98 完成：uid=F111122222, task=Ch2-t3, score=1, test_date=None, test_time=None
+2025-12-09 17:38:47 - WARN - MSMF 無法開啟相機 0，嘗試預設後端。
+2025-12-09 17:38:47 - INFO - 相機實際設定：640x480 @ 30.0 FPS (用於靜態拍照)
+2025-12-09 17:38:47 - INFO - 裁切後尺寸：448x336 (保留中間80%)
+2025-12-09 17:39:11 - INFO - [相機] 相機已釋放
+2025-12-09 17:39:12 - WARN - MSMF 無法開啟相機 0，嘗試預設後端。
+2025-12-09 17:39:13 - INFO - 相機實際設定：640x480 @ 30.0 FPS (用於靜態拍照)
+2025-12-09 17:39:13 - INFO - 裁切後尺寸：448x336 (保留中間80%)
+2025-12-09 17:39:14 - INFO - [相機] 相機已釋放
+2025-12-09 17:39:14 - INFO - [相機] 拍照後已釋放相機資源
+2025-12-09 17:39:14 - INFO - 圖像存儲成功: /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/kid/F111122222/ch2-t2.jpg
+2025-12-09 17:39:14 - INFO - 開始背景任務 9545e415-fdd0-4833-a53b-714c88ee9da4: uid=F111122222, task=ch2-t2
+2025-12-09 17:39:14 - INFO - 執行命令：/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/bin/python /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t2/main.py F111122222 ch2-t2
+2025-12-09 17:39:14 - INFO - [REQ] POST /run-python
+2025-12-09 17:39:14 - INFO - 開始背景任務 eed68530-41d8-47ee-8fe5-6a1068aa6535: uid=F111122222, task=ch2-t2
+2025-12-09 17:39:14 - INFO - 執行命令：/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/bin/python /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t2/main.py F111122222 ch2-t2
+2025-12-09 17:39:14 - INFO - [RESP] POST /run-python -> 200
+2025-12-09 17:39:17 - ERROR - [ERR] GET /images/icons/treasure.jpg
+Traceback (most recent call last):
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/run.py", line 265, in images_files
+    return send_from_directory(ROOT / "images", filename)
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/helpers.py", line 572, in send_from_directory
+    return werkzeug.utils.send_from_directory(  # type: ignore[return-value]
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/werkzeug/utils.py", line 575, in send_from_directory
+    raise NotFound()
+werkzeug.exceptions.NotFound: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+
+2025-12-09 17:39:17 - ERROR - [ERR] GET /images/icons/bridge.jpg
+Traceback (most recent call last):
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/run.py", line 265, in images_files
+    return send_from_directory(ROOT / "images", filename)
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/helpers.py", line 572, in send_from_directory
+    return werkzeug.utils.send_from_directory(  # type: ignore[return-value]
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/werkzeug/utils.py", line 575, in send_from_directory
+    raise NotFound()
+werkzeug.exceptions.NotFound: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+
+2025-12-09 17:39:17 - ERROR - [ERR] GET /images/icons/house.jpg
+Traceback (most recent call last):
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/run.py", line 265, in images_files
+    return send_from_directory(ROOT / "images", filename)
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/helpers.py", line 572, in send_from_directory
+    return werkzeug.utils.send_from_directory(  # type: ignore[return-value]
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/werkzeug/utils.py", line 575, in send_from_directory
+    raise NotFound()
+werkzeug.exceptions.NotFound: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+
+2025-12-09 17:39:17 - ERROR - [ERR] GET /images/icons/maze.jpg
+Traceback (most recent call last):
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/run.py", line 265, in images_files
+    return send_from_directory(ROOT / "images", filename)
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/helpers.py", line 572, in send_from_directory
+    return werkzeug.utils.send_from_directory(  # type: ignore[return-value]
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/werkzeug/utils.py", line 575, in send_from_directory
+    raise NotFound()
+werkzeug.exceptions.NotFound: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+
+2025-12-09 17:39:17 - ERROR - [ERR] GET /images/icons/paper.jpg
+Traceback (most recent call last):
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/run.py", line 265, in images_files
+    return send_from_directory(ROOT / "images", filename)
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/helpers.py", line 572, in send_from_directory
+    return werkzeug.utils.send_from_directory(  # type: ignore[return-value]
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/werkzeug/utils.py", line 575, in send_from_directory
+    raise NotFound()
+werkzeug.exceptions.NotFound: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+
+2025-12-09 17:39:17 - ERROR - [ERR] GET /images/icons/circle.jpg
+Traceback (most recent call last):
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/run.py", line 265, in images_files
+    return send_from_directory(ROOT / "images", filename)
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/helpers.py", line 572, in send_from_directory
+    return werkzeug.utils.send_from_directory(  # type: ignore[return-value]
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/werkzeug/utils.py", line 575, in send_from_directory
+    raise NotFound()
+werkzeug.exceptions.NotFound: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+
+2025-12-09 17:39:17 - ERROR - [ERR] GET /images/icons/square.jpg
+Traceback (most recent call last):
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/run.py", line 265, in images_files
+    return send_from_directory(ROOT / "images", filename)
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/helpers.py", line 572, in send_from_directory
+    return werkzeug.utils.send_from_directory(  # type: ignore[return-value]
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/werkzeug/utils.py", line 575, in send_from_directory
+    raise NotFound()
+werkzeug.exceptions.NotFound: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+
+2025-12-09 17:39:17 - ERROR - [ERR] GET /images/icons/paint.jpg
+Traceback (most recent call last):
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/run.py", line 265, in images_files
+    return send_from_directory(ROOT / "images", filename)
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/helpers.py", line 572, in send_from_directory
+    return werkzeug.utils.send_from_directory(  # type: ignore[return-value]
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/werkzeug/utils.py", line 575, in send_from_directory
+    raise NotFound()
+werkzeug.exceptions.NotFound: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+
+2025-12-09 17:39:17 - ERROR - [ERR] GET /images/icons/cross.jpg
+Traceback (most recent call last):
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/run.py", line 265, in images_files
+    return send_from_directory(ROOT / "images", filename)
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/helpers.py", line 572, in send_from_directory
+    return werkzeug.utils.send_from_directory(  # type: ignore[return-value]
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/werkzeug/utils.py", line 575, in send_from_directory
+    raise NotFound()
+werkzeug.exceptions.NotFound: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+
+2025-12-09 17:39:17 - ERROR - [ERR] GET /images/icons/line.jpg
+Traceback (most recent call last):
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/run.py", line 265, in images_files
+    return send_from_directory(ROOT / "images", filename)
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/helpers.py", line 572, in send_from_directory
+    return werkzeug.utils.send_from_directory(  # type: ignore[return-value]
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/werkzeug/utils.py", line 575, in send_from_directory
+    raise NotFound()
+werkzeug.exceptions.NotFound: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+
+2025-12-09 17:39:17 - ERROR - [ERR] GET /images/icons/connect.jpg
+Traceback (most recent call last):
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/run.py", line 265, in images_files
+    return send_from_directory(ROOT / "images", filename)
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/helpers.py", line 572, in send_from_directory
+    return werkzeug.utils.send_from_directory(  # type: ignore[return-value]
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/werkzeug/utils.py", line 575, in send_from_directory
+    raise NotFound()
+werkzeug.exceptions.NotFound: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+
+2025-12-09 17:40:13 - INFO - 腳本輸出 (任務 eed68530-41d8-47ee-8fe5-6a1068aa6535)：
 Model loaded successfully!
 === 初始化工作空間，清空所有資料夾 ===
 清空資料夾: /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t2/quadrilateral
@@ -662,35 +601,585 @@ Model loaded successfully!
 工作空間初始化完成！
 
 
-=== 處理 kid/default/ch2-t2.jpg ===
+=== 處理 kid/F111122222/ch2-t2.jpg ===
 
 A4區域已儲存至: /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t2/cropped_a4/ch2-t2_a4_cropped.jpg
-kid/default/ch2-t2.jpg pixel_per_cm = 8.621895790100098
+kid/F111122222/ch2-t2.jpg pixel_per_cm = 8.621895790100098
 
 ==裁切圖形==
 
-image 1/1 /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t2/cropped_a4/ch2-t2_a4_cropped.jpg: 480x640 1 cross, 1618.6ms
-Speed: 188.0ms preprocess, 1618.6ms inference, 12.2ms postprocess per image at shape (1, 3, 480, 640)
-  - 寫出彩色: /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t2/ready/ch2-t2_a4_cropped_0_Cross.jpg shape=(90, 88, 3)
-  - 寫出二值: /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t2/ready/ch2-t2_a4_cropped_0_Cross_binary.jpg shape=(90, 88)
-成功處理 Cross (信心度: 0.83), 索引: 0
+image 1/1 /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t2/cropped_a4/ch2-t2_a4_cropped.jpg: 480x640 (no detections), 3193.2ms
+Speed: 157.1ms preprocess, 3193.2ms inference, 8.3ms postprocess per image at shape (1, 3, 480, 640)
 
-總共成功處理 1 個圖形
+總共成功處理 0 個圖形
 
 ==分類圖形==
 
+score = 2
 
-[1m1/1[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 7s/step
-[1m1/1[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m7s[0m 7s/step
-/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t2/ready/ch2-t2_a4_cropped_0_Cross.jpg → quadrilateral (99.20%)
-score = 0
-
-2025-12-09 17:16:36 - ERROR - 腳本錯誤輸出 (任務 5c303720-d741-4d16-9184-8b8692bb2ed8)：
+2025-12-09 17:40:13 - ERROR - 腳本錯誤輸出 (任務 eed68530-41d8-47ee-8fe5-6a1068aa6535)：
 /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/keras/src/optimizers/base_optimizer.py:86: UserWarning: Argument `decay` is no longer supported and will be ignored.
   warnings.warn(
 WARNING:absl:Compiled the loaded model, but the compiled metrics have yet to be built. `model.compile_metrics` will be empty until you train or evaluate the model.
 WARNING:absl:Error in loading the saved optimizer state. As a result, your model is starting with a freshly initialized optimizer.
 
-2025-12-09 17:16:37 - WARN - [DB] insert_score: UID 不存在 -> default
-2025-12-09 17:16:37 - ERROR - 寫入 score_list 失敗：USER_NOT_FOUND
-2025-12-09 17:16:37 - INFO - 任務 5c303720-d741-4d16-9184-8b8692bb2ed8 完成：uid=default, task=Ch2-t2, score=0, test_date=None, test_time=None
+2025-12-09 17:40:14 - INFO - 腳本輸出 (任務 9545e415-fdd0-4833-a53b-714c88ee9da4)：
+Model loaded successfully!
+=== 初始化工作空間，清空所有資料夾 ===
+清空資料夾: /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t2/quadrilateral
+重新建立資料夾: /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t2/quadrilateral
+清空資料夾: /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t2/Other
+重新建立資料夾: /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t2/Other
+清空資料夾: /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t2/cropped_a4
+重新建立資料夾: /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t2/cropped_a4
+清空資料夾: /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t2/ready
+重新建立資料夾: /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t2/ready
+工作空間初始化完成！
+
+
+=== 處理 kid/F111122222/ch2-t2.jpg ===
+
+A4區域已儲存至: /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t2/cropped_a4/ch2-t2_a4_cropped.jpg
+kid/F111122222/ch2-t2.jpg pixel_per_cm = 8.621895790100098
+
+==裁切圖形==
+
+image 1/1 /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t2/cropped_a4/ch2-t2_a4_cropped.jpg: 480x640 (no detections), 2716.0ms
+Speed: 81.0ms preprocess, 2716.0ms inference, 5.0ms postprocess per image at shape (1, 3, 480, 640)
+
+總共成功處理 0 個圖形
+
+==分類圖形==
+
+score = 2
+
+2025-12-09 17:40:14 - ERROR - 腳本錯誤輸出 (任務 9545e415-fdd0-4833-a53b-714c88ee9da4)：
+/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/keras/src/optimizers/base_optimizer.py:86: UserWarning: Argument `decay` is no longer supported and will be ignored.
+  warnings.warn(
+WARNING:absl:Compiled the loaded model, but the compiled metrics have yet to be built. `model.compile_metrics` will be empty until you train or evaluate the model.
+WARNING:absl:Error in loading the saved optimizer state. As a result, your model is starting with a freshly initialized optimizer.
+
+2025-12-09 17:40:14 - INFO - [DB] ensure_task ok: Ch2-t2 -> draw_square
+2025-12-09 17:40:15 - INFO - [DB] insert_score ok: uid=F111122222, task_id=Ch2-t2, date=2025-12-09, time=17:40:14
+2025-12-09 17:40:15 - ERROR - 寫入 score_list 失敗：cannot unpack non-iterable datetime.date object
+2025-12-09 17:40:15 - INFO - 任務 eed68530-41d8-47ee-8fe5-6a1068aa6535 完成：uid=F111122222, task=Ch2-t2, score=2, test_date=None, test_time=None
+2025-12-09 17:40:15 - INFO - [DB] ensure_task ok: Ch2-t2 -> draw_square
+2025-12-09 17:40:16 - INFO - [DB] insert_score ok: uid=F111122222, task_id=Ch2-t2, date=2025-12-09, time=17:40:15
+2025-12-09 17:40:16 - ERROR - 寫入 score_list 失敗：cannot unpack non-iterable datetime.date object
+2025-12-09 17:40:16 - INFO - 任務 9545e415-fdd0-4833-a53b-714c88ee9da4 完成：uid=F111122222, task=Ch2-t2, score=2, test_date=None, test_time=None
+2025-12-09 17:40:59 - WARN - MSMF 無法開啟相機 0，嘗試預設後端。
+2025-12-09 17:41:00 - INFO - 相機實際設定：640x480 @ 30.0 FPS (用於靜態拍照)
+2025-12-09 17:41:00 - INFO - 裁切後尺寸：448x336 (保留中間80%)
+2025-12-09 17:41:13 - INFO - [相機] 相機已釋放
+2025-12-09 17:41:14 - WARN - MSMF 無法開啟相機 0，嘗試預設後端。
+2025-12-09 17:41:15 - INFO - 相機實際設定：640x480 @ 30.0 FPS (用於靜態拍照)
+2025-12-09 17:41:15 - INFO - 裁切後尺寸：448x336 (保留中間80%)
+2025-12-09 17:41:16 - INFO - [相機] 相機已釋放
+2025-12-09 17:41:16 - INFO - [相機] 拍照後已釋放相機資源
+2025-12-09 17:41:16 - INFO - 圖像存儲成功: /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/kid/F111122222/ch2-t3.jpg
+2025-12-09 17:41:16 - INFO - 開始背景任務 2c7ac9e2-3dd4-4de1-9961-754195715540: uid=F111122222, task=ch2-t3
+2025-12-09 17:41:16 - INFO - 執行命令：/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/bin/python /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t3/main.py F111122222 ch2-t3
+2025-12-09 17:41:16 - INFO - [REQ] POST /run-python
+2025-12-09 17:41:16 - INFO - 開始背景任務 22472910-96f2-44fe-b0a4-c7c8a68a0056: uid=F111122222, task=ch2-t3
+2025-12-09 17:41:16 - INFO - [RESP] POST /run-python -> 200
+2025-12-09 17:41:16 - INFO - 執行命令：/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/bin/python /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t3/main.py F111122222 ch2-t3
+2025-12-09 17:41:19 - ERROR - [ERR] GET /images/icons/maze.jpg
+Traceback (most recent call last):
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/run.py", line 265, in images_files
+    return send_from_directory(ROOT / "images", filename)
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/helpers.py", line 572, in send_from_directory
+    return werkzeug.utils.send_from_directory(  # type: ignore[return-value]
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/werkzeug/utils.py", line 575, in send_from_directory
+    raise NotFound()
+werkzeug.exceptions.NotFound: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+
+2025-12-09 17:41:19 - ERROR - [ERR] GET /images/icons/treasure.jpg
+Traceback (most recent call last):
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/run.py", line 265, in images_files
+    return send_from_directory(ROOT / "images", filename)
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/helpers.py", line 572, in send_from_directory
+    return werkzeug.utils.send_from_directory(  # type: ignore[return-value]
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/werkzeug/utils.py", line 575, in send_from_directory
+    raise NotFound()
+werkzeug.exceptions.NotFound: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+
+2025-12-09 17:41:19 - ERROR - [ERR] GET /images/icons/house.jpg
+Traceback (most recent call last):
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/run.py", line 265, in images_files
+    return send_from_directory(ROOT / "images", filename)
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/helpers.py", line 572, in send_from_directory
+    return werkzeug.utils.send_from_directory(  # type: ignore[return-value]
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/werkzeug/utils.py", line 575, in send_from_directory
+    raise NotFound()
+werkzeug.exceptions.NotFound: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+
+2025-12-09 17:41:19 - ERROR - [ERR] GET /images/icons/circle.jpg
+Traceback (most recent call last):
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/run.py", line 265, in images_files
+    return send_from_directory(ROOT / "images", filename)
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/helpers.py", line 572, in send_from_directory
+    return werkzeug.utils.send_from_directory(  # type: ignore[return-value]
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/werkzeug/utils.py", line 575, in send_from_directory
+    raise NotFound()
+werkzeug.exceptions.NotFound: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+
+2025-12-09 17:41:19 - ERROR - [ERR] GET /images/icons/paper.jpg
+Traceback (most recent call last):
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/run.py", line 265, in images_files
+    return send_from_directory(ROOT / "images", filename)
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/helpers.py", line 572, in send_from_directory
+    return werkzeug.utils.send_from_directory(  # type: ignore[return-value]
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/werkzeug/utils.py", line 575, in send_from_directory
+    raise NotFound()
+werkzeug.exceptions.NotFound: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+
+2025-12-09 17:41:19 - ERROR - [ERR] GET /images/icons/bridge.jpg
+Traceback (most recent call last):
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/run.py", line 265, in images_files
+    return send_from_directory(ROOT / "images", filename)
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/helpers.py", line 572, in send_from_directory
+    return werkzeug.utils.send_from_directory(  # type: ignore[return-value]
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/werkzeug/utils.py", line 575, in send_from_directory
+    raise NotFound()
+werkzeug.exceptions.NotFound: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+
+2025-12-09 17:41:19 - ERROR - [ERR] GET /images/icons/connect.jpg
+Traceback (most recent call last):
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/run.py", line 265, in images_files
+    return send_from_directory(ROOT / "images", filename)
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/helpers.py", line 572, in send_from_directory
+    return werkzeug.utils.send_from_directory(  # type: ignore[return-value]
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/werkzeug/utils.py", line 575, in send_from_directory
+    raise NotFound()
+werkzeug.exceptions.NotFound: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+
+2025-12-09 17:41:19 - ERROR - [ERR] GET /images/icons/paint.jpg
+Traceback (most recent call last):
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/run.py", line 265, in images_files
+    return send_from_directory(ROOT / "images", filename)
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/helpers.py", line 572, in send_from_directory
+    return werkzeug.utils.send_from_directory(  # type: ignore[return-value]
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/werkzeug/utils.py", line 575, in send_from_directory
+    raise NotFound()
+werkzeug.exceptions.NotFound: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+
+2025-12-09 17:41:19 - ERROR - [ERR] GET /images/icons/line.jpg
+Traceback (most recent call last):
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/run.py", line 265, in images_files
+    return send_from_directory(ROOT / "images", filename)
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/helpers.py", line 572, in send_from_directory
+    return werkzeug.utils.send_from_directory(  # type: ignore[return-value]
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/werkzeug/utils.py", line 575, in send_from_directory
+    raise NotFound()
+werkzeug.exceptions.NotFound: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+
+2025-12-09 17:41:19 - ERROR - [ERR] GET /images/icons/cross.jpg
+Traceback (most recent call last):
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/run.py", line 265, in images_files
+    return send_from_directory(ROOT / "images", filename)
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/helpers.py", line 572, in send_from_directory
+    return werkzeug.utils.send_from_directory(  # type: ignore[return-value]
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/werkzeug/utils.py", line 575, in send_from_directory
+    raise NotFound()
+werkzeug.exceptions.NotFound: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+
+2025-12-09 17:41:19 - ERROR - [ERR] GET /images/icons/square.jpg
+Traceback (most recent call last):
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/run.py", line 265, in images_files
+    return send_from_directory(ROOT / "images", filename)
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/helpers.py", line 572, in send_from_directory
+    return werkzeug.utils.send_from_directory(  # type: ignore[return-value]
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/werkzeug/utils.py", line 575, in send_from_directory
+    raise NotFound()
+werkzeug.exceptions.NotFound: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+
+2025-12-09 17:42:16 - INFO - 腳本輸出 (任務 22472910-96f2-44fe-b0a4-c7c8a68a0056)：
+Model loaded successfully!
+=== 初始化工作空間，清空所有資料夾 ===
+清空資料夾: /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t3/Cross
+重新建立資料夾: /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t3/Cross
+清空資料夾: /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t3/Other
+重新建立資料夾: /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t3/Other
+清空資料夾: /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t3/cropped_a4
+重新建立資料夾: /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t3/cropped_a4
+清空資料夾: /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t3/ready
+重新建立資料夾: /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t3/ready
+工作空間初始化完成！
+
+A4區域已儲存至: /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t3/cropped_a4/ch2-t3_a4_cropped.jpg
+kid/F111122222/ch2-t3.jpg pixel_per_cm = 47.4416628993705
+
+=== 處理 /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t3/cropped_a4/ch2-t3_a4_cropped.jpg ===
+
+
+==裁切圖形==
+
+image 1/1 /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t3/cropped_a4/ch2-t3_a4_cropped.jpg: 480x640 (no detections), 2917.6ms
+Speed: 204.3ms preprocess, 2917.6ms inference, 5.6ms postprocess per image at shape (1, 3, 480, 640)
+
+總共成功處理 0 個圖形
+
+==分類圖形==
+
+
+2025-12-09 17:42:16 - ERROR - 腳本錯誤輸出 (任務 22472910-96f2-44fe-b0a4-c7c8a68a0056)：
+/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/keras/src/optimizers/base_optimizer.py:86: UserWarning: Argument `decay` is no longer supported and will be ignored.
+  warnings.warn(
+WARNING:absl:Compiled the loaded model, but the compiled metrics have yet to be built. `model.compile_metrics` will be empty until you train or evaluate the model.
+WARNING:absl:Error in loading the saved optimizer state. As a result, your model is starting with a freshly initialized optimizer.
+Traceback (most recent call last):
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t3/main.py", line 285, in <module>
+    cv2.imwrite(result_path, result_img)
+cv2.error: OpenCV(4.12.0) /io/opencv/modules/imgcodecs/src/loadsave.cpp:1146: error: (-215:Assertion failed) !_img.empty() in function 'imwrite'
+
+
+2025-12-09 17:42:16 - INFO - 腳本輸出 (任務 2c7ac9e2-3dd4-4de1-9961-754195715540)：
+Model loaded successfully!
+=== 初始化工作空間，清空所有資料夾 ===
+清空資料夾: /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t3/Cross
+重新建立資料夾: /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t3/Cross
+清空資料夾: /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t3/Other
+重新建立資料夾: /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t3/Other
+清空資料夾: /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t3/cropped_a4
+重新建立資料夾: /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t3/cropped_a4
+清空資料夾: /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t3/ready
+重新建立資料夾: /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t3/ready
+工作空間初始化完成！
+
+A4區域已儲存至: /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t3/cropped_a4/ch2-t3_a4_cropped.jpg
+kid/F111122222/ch2-t3.jpg pixel_per_cm = 47.4416628993705
+
+=== 處理 /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t3/cropped_a4/ch2-t3_a4_cropped.jpg ===
+
+
+==裁切圖形==
+
+image 1/1 /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t3/cropped_a4/ch2-t3_a4_cropped.jpg: 480x640 (no detections), 2889.8ms
+Speed: 102.9ms preprocess, 2889.8ms inference, 16.6ms postprocess per image at shape (1, 3, 480, 640)
+
+總共成功處理 0 個圖形
+
+==分類圖形==
+
+
+2025-12-09 17:42:16 - ERROR - 腳本錯誤輸出 (任務 2c7ac9e2-3dd4-4de1-9961-754195715540)：
+/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/keras/src/optimizers/base_optimizer.py:86: UserWarning: Argument `decay` is no longer supported and will be ignored.
+  warnings.warn(
+WARNING:absl:Compiled the loaded model, but the compiled metrics have yet to be built. `model.compile_metrics` will be empty until you train or evaluate the model.
+WARNING:absl:Error in loading the saved optimizer state. As a result, your model is starting with a freshly initialized optimizer.
+Traceback (most recent call last):
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t3/main.py", line 285, in <module>
+    cv2.imwrite(result_path, result_img)
+cv2.error: OpenCV(4.12.0) /io/opencv/modules/imgcodecs/src/loadsave.cpp:1146: error: (-215:Assertion failed) !_img.empty() in function 'imwrite'
+
+
+2025-12-09 17:42:17 - INFO - [DB] ensure_task ok: Ch2-t3 -> draw_cross
+2025-12-09 17:42:18 - INFO - [DB] ensure_task ok: Ch2-t3 -> draw_cross
+2025-12-09 17:42:18 - INFO - [DB] insert_score ok: uid=F111122222, task_id=Ch2-t3, date=2025-12-09, time=17:42:17
+2025-12-09 17:42:18 - ERROR - 寫入 score_list 失敗：cannot unpack non-iterable datetime.date object
+2025-12-09 17:42:18 - INFO - 任務 22472910-96f2-44fe-b0a4-c7c8a68a0056 完成：uid=F111122222, task=Ch2-t3, score=1, test_date=None, test_time=None
+2025-12-09 17:42:18 - INFO - [DB] insert_score ok: uid=F111122222, task_id=Ch2-t3, date=2025-12-09, time=17:42:18
+2025-12-09 17:42:18 - ERROR - 寫入 score_list 失敗：cannot unpack non-iterable datetime.date object
+2025-12-09 17:42:18 - INFO - 任務 2c7ac9e2-3dd4-4de1-9961-754195715540 完成：uid=F111122222, task=Ch2-t3, score=1, test_date=None, test_time=None
+2025-12-09 17:43:51 - WARN - MSMF 無法開啟相機 0，嘗試預設後端。
+2025-12-09 17:43:52 - INFO - 相機實際設定：640x480 @ 30.0 FPS (用於靜態拍照)
+2025-12-09 17:43:52 - INFO - 裁切後尺寸：448x336 (保留中間80%)
+2025-12-09 17:44:05 - INFO - [相機] 相機已釋放
+2025-12-09 17:44:05 - WARN - MSMF 無法開啟相機 0，嘗試預設後端。
+2025-12-09 17:44:06 - INFO - 相機實際設定：640x480 @ 30.0 FPS (用於靜態拍照)
+2025-12-09 17:44:06 - INFO - 裁切後尺寸：448x336 (保留中間80%)
+2025-12-09 17:44:07 - INFO - [相機] 相機已釋放
+2025-12-09 17:44:07 - INFO - [相機] 拍照後已釋放相機資源
+2025-12-09 17:44:07 - INFO - 圖像存儲成功: /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/kid/F111122222/ch2-t3.jpg
+2025-12-09 17:44:07 - INFO - 開始背景任務 b2af356d-6a67-498c-9e99-6399ebf945a8: uid=F111122222, task=ch2-t3
+2025-12-09 17:44:07 - INFO - 執行命令：/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/bin/python /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t3/main.py F111122222 ch2-t3
+2025-12-09 17:44:08 - INFO - [REQ] POST /run-python
+2025-12-09 17:44:08 - INFO - 開始背景任務 4fe46eb3-7b98-43a5-8cd7-0982bf757446: uid=F111122222, task=ch2-t3
+2025-12-09 17:44:08 - INFO - 執行命令：/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/bin/python /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t3/main.py F111122222 ch2-t3
+2025-12-09 17:44:08 - INFO - [RESP] POST /run-python -> 200
+2025-12-09 17:44:10 - ERROR - [ERR] GET /images/icons/house.jpg
+Traceback (most recent call last):
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/run.py", line 265, in images_files
+    return send_from_directory(ROOT / "images", filename)
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/helpers.py", line 572, in send_from_directory
+    return werkzeug.utils.send_from_directory(  # type: ignore[return-value]
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/werkzeug/utils.py", line 575, in send_from_directory
+    raise NotFound()
+werkzeug.exceptions.NotFound: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+
+2025-12-09 17:44:11 - ERROR - [ERR] GET /images/icons/treasure.jpg
+Traceback (most recent call last):
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/run.py", line 265, in images_files
+    return send_from_directory(ROOT / "images", filename)
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/helpers.py", line 572, in send_from_directory
+    return werkzeug.utils.send_from_directory(  # type: ignore[return-value]
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/werkzeug/utils.py", line 575, in send_from_directory
+    raise NotFound()
+werkzeug.exceptions.NotFound: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+
+2025-12-09 17:44:11 - ERROR - [ERR] GET /images/icons/paper.jpg
+Traceback (most recent call last):
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/run.py", line 265, in images_files
+    return send_from_directory(ROOT / "images", filename)
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/helpers.py", line 572, in send_from_directory
+    return werkzeug.utils.send_from_directory(  # type: ignore[return-value]
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/werkzeug/utils.py", line 575, in send_from_directory
+    raise NotFound()
+werkzeug.exceptions.NotFound: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+
+2025-12-09 17:44:11 - ERROR - [ERR] GET /images/icons/circle.jpg
+Traceback (most recent call last):
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/run.py", line 265, in images_files
+    return send_from_directory(ROOT / "images", filename)
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/helpers.py", line 572, in send_from_directory
+    return werkzeug.utils.send_from_directory(  # type: ignore[return-value]
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/werkzeug/utils.py", line 575, in send_from_directory
+    raise NotFound()
+werkzeug.exceptions.NotFound: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+
+2025-12-09 17:44:11 - ERROR - [ERR] GET /images/icons/bridge.jpg
+Traceback (most recent call last):
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/run.py", line 265, in images_files
+    return send_from_directory(ROOT / "images", filename)
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/helpers.py", line 572, in send_from_directory
+    return werkzeug.utils.send_from_directory(  # type: ignore[return-value]
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/werkzeug/utils.py", line 575, in send_from_directory
+    raise NotFound()
+werkzeug.exceptions.NotFound: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+
+2025-12-09 17:44:11 - ERROR - [ERR] GET /images/icons/maze.jpg
+Traceback (most recent call last):
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/run.py", line 265, in images_files
+    return send_from_directory(ROOT / "images", filename)
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/helpers.py", line 572, in send_from_directory
+    return werkzeug.utils.send_from_directory(  # type: ignore[return-value]
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/werkzeug/utils.py", line 575, in send_from_directory
+    raise NotFound()
+werkzeug.exceptions.NotFound: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+
+2025-12-09 17:44:11 - ERROR - [ERR] GET /images/icons/line.jpg
+Traceback (most recent call last):
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/run.py", line 265, in images_files
+    return send_from_directory(ROOT / "images", filename)
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/helpers.py", line 572, in send_from_directory
+    return werkzeug.utils.send_from_directory(  # type: ignore[return-value]
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/werkzeug/utils.py", line 575, in send_from_directory
+    raise NotFound()
+werkzeug.exceptions.NotFound: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+
+2025-12-09 17:44:11 - ERROR - [ERR] GET /images/icons/paint.jpg
+Traceback (most recent call last):
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/run.py", line 265, in images_files
+    return send_from_directory(ROOT / "images", filename)
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/helpers.py", line 572, in send_from_directory
+    return werkzeug.utils.send_from_directory(  # type: ignore[return-value]
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/werkzeug/utils.py", line 575, in send_from_directory
+    raise NotFound()
+werkzeug.exceptions.NotFound: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+
+2025-12-09 17:44:11 - ERROR - [ERR] GET /images/icons/connect.jpg
+Traceback (most recent call last):
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/run.py", line 265, in images_files
+    return send_from_directory(ROOT / "images", filename)
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/helpers.py", line 572, in send_from_directory
+    return werkzeug.utils.send_from_directory(  # type: ignore[return-value]
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/werkzeug/utils.py", line 575, in send_from_directory
+    raise NotFound()
+werkzeug.exceptions.NotFound: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+
+2025-12-09 17:44:11 - ERROR - [ERR] GET /images/icons/square.jpg
+Traceback (most recent call last):
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/run.py", line 265, in images_files
+    return send_from_directory(ROOT / "images", filename)
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/helpers.py", line 572, in send_from_directory
+    return werkzeug.utils.send_from_directory(  # type: ignore[return-value]
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/werkzeug/utils.py", line 575, in send_from_directory
+    raise NotFound()
+werkzeug.exceptions.NotFound: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+
+2025-12-09 17:44:11 - ERROR - [ERR] GET /images/icons/cross.jpg
+Traceback (most recent call last):
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/run.py", line 265, in images_files
+    return send_from_directory(ROOT / "images", filename)
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/helpers.py", line 572, in send_from_directory
+    return werkzeug.utils.send_from_directory(  # type: ignore[return-value]
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/werkzeug/utils.py", line 575, in send_from_directory
+    raise NotFound()
+werkzeug.exceptions.NotFound: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+
+2025-12-09 17:45:06 - INFO - 腳本輸出 (任務 4fe46eb3-7b98-43a5-8cd7-0982bf757446)：
+Model loaded successfully!
+=== 初始化工作空間，清空所有資料夾 ===
+清空資料夾: /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t3/Cross
+重新建立資料夾: /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t3/Cross
+清空資料夾: /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t3/Other
+重新建立資料夾: /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t3/Other
+清空資料夾: /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t3/cropped_a4
+重新建立資料夾: /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t3/cropped_a4
+清空資料夾: /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t3/ready
+重新建立資料夾: /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t3/ready
+工作空間初始化完成！
+
+A4區域已儲存至: /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t3/cropped_a4/ch2-t3_a4_cropped.jpg
+kid/F111122222/ch2-t3.jpg pixel_per_cm = 47.4416628993705
+
+=== 處理 /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t3/cropped_a4/ch2-t3_a4_cropped.jpg ===
+
+
+==裁切圖形==
+
+image 1/1 /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t3/cropped_a4/ch2-t3_a4_cropped.jpg: 480x640 (no detections), 3090.1ms
+Speed: 126.5ms preprocess, 3090.1ms inference, 4.0ms postprocess per image at shape (1, 3, 480, 640)
+
+總共成功處理 0 個圖形
+
+==分類圖形==
+
+
+2025-12-09 17:45:06 - ERROR - 腳本錯誤輸出 (任務 4fe46eb3-7b98-43a5-8cd7-0982bf757446)：
+/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/keras/src/optimizers/base_optimizer.py:86: UserWarning: Argument `decay` is no longer supported and will be ignored.
+  warnings.warn(
+WARNING:absl:Compiled the loaded model, but the compiled metrics have yet to be built. `model.compile_metrics` will be empty until you train or evaluate the model.
+WARNING:absl:Error in loading the saved optimizer state. As a result, your model is starting with a freshly initialized optimizer.
+Traceback (most recent call last):
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t3/main.py", line 285, in <module>
+    cv2.imwrite(result_path, result_img)
+cv2.error: OpenCV(4.12.0) /io/opencv/modules/imgcodecs/src/loadsave.cpp:1146: error: (-215:Assertion failed) !_img.empty() in function 'imwrite'
+
+
+2025-12-09 17:45:07 - INFO - 腳本輸出 (任務 b2af356d-6a67-498c-9e99-6399ebf945a8)：
+Model loaded successfully!
+=== 初始化工作空間，清空所有資料夾 ===
+清空資料夾: /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t3/Cross
+重新建立資料夾: /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t3/Cross
+清空資料夾: /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t3/Other
+重新建立資料夾: /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t3/Other
+清空資料夾: /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t3/cropped_a4
+重新建立資料夾: /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t3/cropped_a4
+清空資料夾: /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t3/ready
+重新建立資料夾: /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t3/ready
+工作空間初始化完成！
+
+A4區域已儲存至: /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t3/cropped_a4/ch2-t3_a4_cropped.jpg
+kid/F111122222/ch2-t3.jpg pixel_per_cm = 47.4416628993705
+
+=== 處理 /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t3/cropped_a4/ch2-t3_a4_cropped.jpg ===
+
+
+==裁切圖形==
+
+image 1/1 /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t3/cropped_a4/ch2-t3_a4_cropped.jpg: 480x640 (no detections), 2622.2ms
+Speed: 129.5ms preprocess, 2622.2ms inference, 3.6ms postprocess per image at shape (1, 3, 480, 640)
+
+總共成功處理 0 個圖形
+
+==分類圖形==
+
+
+2025-12-09 17:45:07 - ERROR - 腳本錯誤輸出 (任務 b2af356d-6a67-498c-9e99-6399ebf945a8)：
+/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/keras/src/optimizers/base_optimizer.py:86: UserWarning: Argument `decay` is no longer supported and will be ignored.
+  warnings.warn(
+WARNING:absl:Compiled the loaded model, but the compiled metrics have yet to be built. `model.compile_metrics` will be empty until you train or evaluate the model.
+WARNING:absl:Error in loading the saved optimizer state. As a result, your model is starting with a freshly initialized optimizer.
+Traceback (most recent call last):
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t3/main.py", line 285, in <module>
+    cv2.imwrite(result_path, result_img)
+cv2.error: OpenCV(4.12.0) /io/opencv/modules/imgcodecs/src/loadsave.cpp:1146: error: (-215:Assertion failed) !_img.empty() in function 'imwrite'
+
+
+2025-12-09 17:45:08 - INFO - [DB] ensure_task ok: Ch2-t3 -> draw_cross
+2025-12-09 17:45:09 - INFO - [DB] insert_score ok: uid=F111122222, task_id=Ch2-t3, date=2025-12-09, time=17:45:08
+2025-12-09 17:45:09 - ERROR - 寫入 score_list 失敗：cannot unpack non-iterable datetime.date object
+2025-12-09 17:45:09 - INFO - 任務 4fe46eb3-7b98-43a5-8cd7-0982bf757446 完成：uid=F111122222, task=Ch2-t3, score=1, test_date=None, test_time=None
+2025-12-09 17:45:09 - INFO - [DB] ensure_task ok: Ch2-t3 -> draw_cross
+2025-12-09 17:45:09 - INFO - [DB] insert_score ok: uid=F111122222, task_id=Ch2-t3, date=2025-12-09, time=17:45:09
+2025-12-09 17:45:09 - ERROR - 寫入 score_list 失敗：cannot unpack non-iterable datetime.date object
+2025-12-09 17:45:09 - INFO - 任務 b2af356d-6a67-498c-9e99-6399ebf945a8 完成：uid=F111122222, task=Ch2-t3, score=1, test_date=None, test_time=None

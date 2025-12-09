@@ -221,7 +221,10 @@ def main(img_path):
         )
         print(f"{img_path} pixel_per_cm = {pixel_per_cm}")
     except ValueError as e:
+        img = cv2.imread(img_path)
         print(f"⚠️ 跳過 {img_path}：{e}")
+        return 0, img
+
 
     # 裁切圖形
     print("\n==裁切圖形==")

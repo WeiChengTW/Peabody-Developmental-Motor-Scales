@@ -782,89 +782,31 @@ def init_camera(camera_index=TOP):
     try:
         release_camera()
 
-        target_w, target_h = 1280, 720
-        target_fps = 30
+        # 靜態拍照模式，仍優先嘗試 MSMF
+        camera = cv2.VideoCapture(camera_index + cv2.CAP_MSMF)
 
-        # 1) 嘗試先用 v4l2-ctl 設定硬體格式（如果系統有 v4l2-ctl）
-        try:
-            cmd = [
-                "v4l2-ctl",
-                "--device=/dev/video{}".format(camera_index),
-                "--set-fmt-video=width={},height={},pixelformat=MJPG".format(target_w, target_h),
-            ]
-            subprocess.run(cmd, check=True, capture_output=True)
-            subprocess.run(["v4l2-ctl", "--device=/dev/video{}".format(camera_index), "--set-parm={}".format(target_fps)], check=False)
-            write_to_console(f"使用 v4l2-ctl 設定格式為 {target_w}x{target_h} MJPG", "INFO")
-        except Exception as e:
-            # 不能依賴 v4l2-ctl 就忽略，但記錄
-            write_to_console(f"v4l2-ctl 設定失敗或不存在: {e}", "WARN")
-
-        # 2) 優先嘗試直接用 V4L2 後端開相機
-        try:
-            camera = cv2.VideoCapture(camera_index, cv2.CAP_V4L2)
-        except Exception:
-            camera = None
-
-        # 3) 如果沒開成功，嘗試使用 GStreamer pipeline (libcamera / v4l2 都能派上用場，視系統而定)
-        if camera is None or not camera.isOpened():
-            write_to_console("V4L2 開啟失敗，嘗試使用 GStreamer pipeline 或預設後端...", "WARN")
-            # GStreamer pipeline 範例（如果 OpenCV 支援 CAP_GSTREAMER）
-            gst = (
-                f"v4l2src device=/dev/video{camera_index} ! "
-                f"image/jpeg, width={target_w}, height={target_h}, framerate={target_fps}/1 ! "
-                "jpegdec ! videoconvert ! appsink"
+        if not camera.isOpened():
+            write_to_console(
+                f"MSMF 無法開啟相機 {camera_index}，嘗試預設後端。", "WARN"
             )
-            try:
-                camera = cv2.VideoCapture(gst, cv2.CAP_GSTREAMER)
-            except Exception as e:
-                write_to_console(f"GStreamer 開啟嘗試失敗: {e}", "WARN")
-                camera = None
-
-        # 4) 如果還是沒開，回退到任何後端（CAP_ANY）
-        if camera is None or not camera.isOpened():
-            write_to_console("嘗試預設後端 (CAP_ANY)...", "WARN")
-            camera = cv2.VideoCapture(camera_index, cv2.CAP_ANY)
+            camera = cv2.VideoCapture(camera_index)
             if not camera.isOpened():
                 raise Exception(f"無法開啟指定的相機索引: {camera_index}")
 
-        # 5) 嘗試設定 FOURCC 與解析度（FOURCC 在設定解析度之前設定）
-        try:
-            camera.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('M','J','P','G'))
-        except Exception:
-            pass
-
-        # 實際設定解析度與 FPS
-        camera.set(cv2.CAP_PROP_FRAME_WIDTH, target_w)
-        camera.set(cv2.CAP_PROP_FRAME_HEIGHT, target_h)
-        camera.set(cv2.CAP_PROP_FPS, target_fps)
-
-        # 給 driver 一點時間應用設定
-        time.sleep(0.3)
+        # 設定解析度和 FPS (僅用於拍照取圖，不需要強制 1280x720)
+        # 這裡保留設定，以確保相機啟動後能正常取幀
+        camera.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
+        camera.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
+        camera.set(cv2.CAP_PROP_FPS, 30)
 
         actual_width = int(camera.get(cv2.CAP_PROP_FRAME_WIDTH))
         actual_height = int(camera.get(cv2.CAP_PROP_FRAME_HEIGHT))
         actual_fps = camera.get(cv2.CAP_PROP_FPS)
 
         write_to_console(
-            f"相機實際設定：{actual_width}x{actual_height} @ {actual_fps:.1f} FPS (目標: {target_w}x{target_h})",
+            f"相機實際設定：{actual_width}x{actual_height} @ {actual_fps:.1f} FPS (用於靜態拍照)",
             "INFO",
         )
-
-        # 若仍然 640x480，可再嘗試一次用 v4l2-ctl 強制設為 YUYV (退路)
-        if actual_width == 640 and actual_height == 480:
-            write_to_console("注意：相機仍回傳 640x480，嘗試改用 YUYV 或檢查相機是否只支援此解析度", "WARN")
-            # optional: 嘗試改 pixel format 為 YUYV
-            try:
-                subprocess.run(
-                    [
-                        "v4l2-ctl",
-                        "--device=/dev/video{}".format(camera_index),
-                        "--set-fmt-video=width={},height={},pixelformat=YUYV".format(target_w, target_h),
-                    ],
-                    check=False,
-                )
-            except Exception:
-                pass
 
         ret, frame = camera.read()
         if not ret:
@@ -874,13 +816,12 @@ def init_camera(camera_index=TOP):
         h, w = frame.shape[:2]
         crop_w = int(w * CROP_RATE)
         crop_h = int(h * CROP_RATE)
-        write_to_console(f"裁切後尺寸：{crop_w}x{crop_h} (保留中間{int(CROP_RATE*100)}%)", "INFO")
+        write_to_console(f"裁切後尺寸：{crop_w}x{crop_h} (保留中間80%)", "INFO")
 
         camera_active = True
         return True
     except Exception as e:
         print(f"相機初始化失敗: {e}")
-        write_to_console(f"相機初始化失敗: {e}", "ERROR")
         release_camera()
         return False
 
