@@ -144,7 +144,7 @@ async function openCamera() {
   try {
     updateStatus('正在開啟相機...', 'loading');
     let CAM_INDEX = TOP;
-    if(["ch1-t2", "ch1-t3"].includes(id)) CAM_INDEX = SIDE;
+    if(["ch1-t2", "ch1-t3", "ch1-t4"].includes(id)) CAM_INDEX = SIDE;
     
     const response = await fetch('/opencv-camera/start', {
       method: 'POST',
