@@ -11,7 +11,7 @@ CROP_RATIO = 0.85
 # 請確保模型路徑正確
 model = YOLO(r"ch1-t1/toybrick.pt")
 # model = YOLO(r"toybrick.pt")
-CONF = 0.5
+CONF = 0.35
 
 
 def return_score(score):
@@ -174,16 +174,16 @@ def score_from_image(img_path, conf=CONF):
 
     # 灰階 + 模糊
     gray = cv2.cvtColor(display_frame, cv2.COLOR_BGR2GRAY)
-    # blurred = cv2.GaussianBlur(gray, (3, 3), 0)
+    blurred = cv2.GaussianBlur(gray, (3, 3), 0)
 
     # 自適應二值化：將深色的繩子凸顯出來
     binary = cv2.adaptiveThreshold(
-        gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, 33, 10
+        blurred, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, 33, 10
     )
 
     # 閉運算去雜點
-    # kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5))
-    # binary = cv2.morphologyEx(binary, cv2.MORPH_CLOSE, kernel)
+    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5))
+    binary = cv2.morphologyEx(binary, cv2.MORPH_CLOSE, kernel)
 
     # YOLO 偵測方塊 & 取得 mask
     # 由於 YOLO 模型會自動縮放圖片，因此這裡傳入裁剪後的 display_frame 即可
