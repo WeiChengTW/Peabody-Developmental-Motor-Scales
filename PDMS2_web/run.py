@@ -25,7 +25,7 @@ from flask_cors import CORS
 
 # ====== 相機參數 =====
 TOP = 0
-SIDE = 1  # Ch5-t1 使用
+SIDE = 6 # Ch5-t1 使用
 CROP_RATE = 0.8  # 預設裁切比例
 # ====================
 
