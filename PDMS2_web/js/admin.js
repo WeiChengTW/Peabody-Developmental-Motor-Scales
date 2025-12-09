@@ -1,4 +1,4 @@
-// admin.js (已修復：重置篩選按鈕、管理使用者按鈕、新增紀錄按鈕)
+// admin.js (權限分離版：Level 2 個資 / Level 3 成績)
 (function () {
   const state = {
     userLevel: 0, 
@@ -27,7 +27,6 @@
   const $f_testDate = $dialog.querySelector('[data-field="test_date"]');
   const $scoreSection = document.getElementById('score-fields');
   
-  // 記錄目前編輯的 row_key (如果是新增則為 null)
   let editingRowKey = null;
 
   async function init() {
@@ -38,18 +37,32 @@
 
       const user = js.user;
       state.currentUid = user.account;
-      state.userLevel = user.level;
+      state.userLevel = parseInt(user.level) || 0;
       state.currentName = user.name || user.account;
 
-      const roleName = state.userLevel === 2 ? '管理員' : '家長';
+      let roleName = '家長';
+      if (state.userLevel === 2) roleName = '管理員';
+      if (state.userLevel >= 3) roleName = '超級管理員';
+
       const infoEl = document.getElementById('current-user-info');
       if(infoEl) infoEl.textContent = `目前登入: ${state.currentName} (${roleName})`;
 
-      if (state.userLevel === 2) document.body.classList.add('is-admin');
-      else document.body.classList.remove('is-admin');
+      // === 設定權限 Class ===
+      document.body.classList.remove('is-admin', 'is-super-admin');
+      
+      // Level 2 以上 (包含 Level 3) 視為 Admin
+      if (state.userLevel >= 2) {
+        document.body.classList.add('is-admin');
+      }
+      
+      // Level 3 以上視為 Super Admin
+      if (state.userLevel >= 3) {
+        document.body.classList.add('is-super-admin');
+      }
 
       await loadData();
-      if (state.userLevel === 2) await loadAllUsers();
+      // 只有管理員需要載入使用者清單
+      if (state.userLevel >= 2) await loadAllUsers();
       
       rebuildSelects();
       
@@ -120,23 +133,17 @@
       $selName.appendChild(def);
 
       const sourceList = (state.usersList.length > 0) ? state.usersList : [];
-      if (sourceList.length === 0) {
-          const uidMap = new Map();
-          state.rows.forEach(r => { if (!uidMap.has(r.uid)) uidMap.set(r.uid, r.name || r.uid); });
-          Array.from(uidMap.keys()).sort().forEach(uid => {
-             const opt = document.createElement('option');
-             opt.value = uid;
-             opt.textContent = uidMap.get(uid);
-             $selName.appendChild(opt);
-          });
-      } else {
-          sourceList.forEach(u => {
-             const opt = document.createElement('option');
-             opt.value = u.uid;
-             opt.textContent = u.name;
-             $selName.appendChild(opt);
-          });
-      }
+      // 簡單的 dedupe 邏輯
+      const uidMap = new Map();
+      sourceList.forEach(u => uidMap.set(u.uid, u.name));
+      state.rows.forEach(r => { if (!uidMap.has(r.uid)) uidMap.set(r.uid, r.name || r.uid); });
+
+      Array.from(uidMap.keys()).sort().forEach(uid => {
+          const opt = document.createElement('option');
+          opt.value = uid;
+          opt.textContent = uidMap.get(uid) || uid;
+          $selName.appendChild(opt);
+      });
     }
 
     $selLvl.innerHTML = '<option value="">（所有關卡）</option>';
@@ -197,13 +204,17 @@
           `;
       }
 
+      // ★★★ 只有 Level 3 (Super Admin) 才有刪除按鈕 ★★★
       let adminBtns = '';
-      if (state.userLevel === 2) {
+      if (state.userLevel >= 3) {
         adminBtns = `
           <td class="admin-col">
              <button class="btn btn-sm btn-delete" onclick="deleteScore('${r.row_key}')">刪除</button>
           </td>
         `;
+      } else if (state.userLevel === 2) {
+         // Level 2 保留空白格，維持排版
+         adminBtns = `<td class="admin-col"></td>`;
       } else {
          adminBtns = `<td class="admin-col"></td>`;
       }
@@ -223,14 +234,12 @@
     }).join('');
   }
 
-  // ★★★ 全域事件監聽 (解決按鈕失效問題) ★★★
+  // ★★★ 全域事件監聽 ★★★
   document.addEventListener('click', e => {
-      // 找到被點擊的按鈕 (處理 icon 點擊的情況)
       const target = e.target.closest('button');
       if (!target) return;
       const action = target.dataset.action;
 
-      // 1. 重置篩選
       if (action === 'reset') {
           if (state.userLevel === 1) {
               state.selLevel = '';
@@ -244,14 +253,15 @@
           render();
       }
       
-      // 2. 新增紀錄 (開啟 Dialog)
+      // 新增紀錄 (只有 Super Admin 能觸發，HTML 已隱藏，這裡做雙重防護)
       else if (action === 'new') {
-          editingRowKey = null; // 標記為新增
-          $dialog.querySelector('.dlg-title').textContent = "新增測試紀錄";
-          $scoreSection.style.display = 'block'; // 顯示分數欄位
+          if (state.userLevel < 3) { alert("權限不足"); return; }
           
-          // 清空欄位
-          $f_userId.value = state.selUserId || ''; // 如果有篩選，自動帶入
+          editingRowKey = null;
+          $dialog.querySelector('.dlg-title').textContent = "新增測試紀錄";
+          $scoreSection.style.display = 'block';
+          
+          $f_userId.value = state.selUserId || '';
           $f_name.value = '';
           $f_level.value = '';
           $f_score.value = 0;
@@ -261,22 +271,18 @@
           $dialog.showModal();
       }
 
-      // 3. 管理使用者 (新增/修改學生資料)
+      // 管理使用者 (Admin & Super Admin 皆可)
       else if (action === 'manage-users') {
-          // 這裡我們用一個簡單的 prompt 流程，或者也可以重用 dialog 但隱藏分數欄位
-          // 為了簡單直覺，這裡重用 dialog，但隱藏「分數」相關欄位，只留 UID/姓名/生日
-          
-          editingRowKey = 'USER_MODE'; // 特殊標記
+          if (state.userLevel < 2) return;
+
+          editingRowKey = 'USER_MODE';
           $dialog.querySelector('.dlg-title').textContent = "管理使用者 (新增/修改)";
-          $scoreSection.style.display = 'none'; // 隱藏分數、關卡等欄位，只留基本資料
+          $scoreSection.style.display = 'none';
           
           $f_userId.value = '';
           $f_name.value = '';
-          // 生日欄位借用 test_date 欄位，或者我們提示使用者在姓名欄備註？
-          // 更好的做法是：我們用 prompt 快速實作，避免修改 HTML 結構太複雜
-          $dialog.close(); // 關閉 dialog 避免干擾
+          $dialog.close();
           
-          // 使用簡單的輸入流程
           const uid = prompt("請輸入使用者的 UID (必填):", "");
           if (!uid) return;
           const name = prompt("請輸入使用者姓名:", "");
@@ -287,40 +293,27 @@
           }
       }
 
-      // 4. Dialog 內的儲存按鈕
       else if (action === 'save') {
-          e.preventDefault(); // 阻止 form submit
-          
-          // 收集資料
+          e.preventDefault();
           const uid = $f_userId.value.trim();
           const name = $f_name.value.trim();
-          
           if (!uid) { alert("UID 為必填"); return; }
           
           if (editingRowKey === null) {
-              // === 儲存新成績 ===
               const level = $f_level.value.trim();
               const score = $f_score.value;
               const date = $f_testDate.value;
               
               if (!level) { alert("關卡代號為必填"); return; }
-              
               saveScore(uid, name, level, score, date);
           }
       }
   });
 
-  // Dialog 取消按鈕 (預設 behavior="cancel" 會自動關閉，但為了保險可以加)
-  $dialog.addEventListener('close', () => {
-      // 重置 dialog 狀態
-  });
+  $dialog.addEventListener('close', () => {});
+  $f_score.addEventListener('input', e => { $f_scoreText.textContent = e.target.value; });
 
-  // 分數滑桿連動
-  $f_score.addEventListener('input', e => {
-      $f_scoreText.textContent = e.target.value;
-  });
-
-  // --- API 呼叫 ---
+  // --- API ---
 
   async function saveUser(uid, name, birthday) {
       try {
@@ -332,24 +325,22 @@
           const js = await r.json();
           if (js.ok) {
               alert("使用者儲存成功！");
-              await loadAllUsers(); // 重新載入名單
-              rebuildSelects();     // 更新下拉選單
+              await loadAllUsers();
+              rebuildSelects();
           } else {
               alert("失敗: " + js.msg);
           }
-      } catch (e) {
-          alert("連線錯誤");
-      }
+      } catch (e) { alert("連線錯誤"); }
   }
 
   async function saveScore(uid, name, task_id, score, test_date) {
       try {
-          // 如果有填姓名，順便更新使用者資料
+          // 如果有填姓名，Level 3 也可以順便更新個資
           if (name) {
               await fetch('/api/user/upsert', {
                   method: 'POST',
                   headers: {'Content-Type': 'application/json'},
-                  body: JSON.stringify({ uid, name, birthday: null }) // 不更新生日
+                  body: JSON.stringify({ uid, name, birthday: null })
               });
           }
 
@@ -363,18 +354,14 @@
           if (js.ok) {
               alert("紀錄新增成功！");
               $dialog.close();
-              await loadData(); // 重整表格
+              await loadData();
               render();
           } else {
               alert("失敗: " + js.msg);
           }
-      } catch (e) {
-          console.error(e);
-          alert("儲存失敗");
-      }
+      } catch (e) { console.error(e); alert("儲存失敗"); }
   }
 
-  // 篩選與排序監聽
   $selName.addEventListener('change', e => { state.selUserId = e.target.value; render(); });
   $selLvl.addEventListener('change', e => { state.selLevel = e.target.value; render(); });
   
@@ -392,6 +379,7 @@
   });
 
   window.deleteScore = async function(rowKey) {
+      if(state.userLevel < 3) { alert("權限不足：只有超級管理員可以刪除"); return; }
       if(!confirm('確定要刪除這筆紀錄嗎？此動作無法復原。')) return;
       try {
           const r = await fetch(`/scores?row_key=${encodeURIComponent(rowKey)}`, { method: 'DELETE' });

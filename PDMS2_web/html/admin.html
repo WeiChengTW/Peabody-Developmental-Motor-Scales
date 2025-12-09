@@ -36,9 +36,18 @@
     }
     .thumb:hover { transform: scale(1.1); border-color: #999; }
     
-    /* 權限控制樣式 */
-    [data-auth="admin-only"] { display: none !important; }
+    /* === 權限控制樣式 (修改部分) === */
+    /* 預設隱藏管理者按鈕 */
+    [data-auth="admin-only"], 
+    [data-auth="super-admin-only"] { display: none !important; }
+
+    /* Level 2 & 3: 顯示一般管理功能 (如: 管理使用者) */
     body.is-admin [data-auth="admin-only"] { display: inline-flex !important; }
+    body.is-admin th[data-auth="admin-only"] { display: table-cell !important; }
+
+    /* Level 3 Only: 顯示超級管理功能 (如: 新增成績、刪除成績) */
+    body.is-super-admin [data-auth="super-admin-only"] { display: inline-flex !important; }
+    body.is-super-admin th[data-auth="super-admin-only"] { display: table-cell !important; }
   </style>
 </head>
 <body>
@@ -72,7 +81,7 @@
           </div>
           <div class="tool-right">
             <button class="btn" data-action="manage-users" data-auth="admin-only">管理使用者</button>
-            <button class="btn primary" data-action="new" data-auth="admin-only">＋ 新增紀錄</button>
+            <button class="btn primary" data-action="new" data-auth="super-admin-only">＋ 新增紀錄</button>
           </div>
         </div>
       </div>
@@ -102,7 +111,7 @@
                 <th><button data-sort="test_date">測試日期 ↕</button></th>
                 <th><button data-sort="time">測試時間 ↕</button></th>
                 <th>結果畫面</th>
-                <th data-auth="admin-only" style="width:100px">操作</th>
+                <th data-auth="super-admin-only" style="width:100px">操作</th>
               </tr>
             </thead>
             <tbody id="tbody">
@@ -161,6 +170,6 @@
     </div>
   </div>
 
-  <script src="../js/admin.js?v=3"></script>
+  <script src="../js/admin.js?v=4"></script>
 </body>
 </html>

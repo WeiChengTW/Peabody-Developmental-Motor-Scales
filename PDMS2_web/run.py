@@ -1,4 +1,4 @@
-# run.py
+# run.py (已修正：相機開啟問題 + 資料表名稱錯誤)
 # -*- coding: utf-8 -*-
 import os
 import sys
@@ -26,7 +26,7 @@ from flask_cors import CORS
 # ====== 相機參數 =====
 TOP = 0
 SIDE = 1  # Ch5-t1 使用
-CROP_RATE = 0.8  # 預設裁切比例 (補上此變數以防報錯)
+CROP_RATE = 0.8  # 預設裁切比例
 # ====================
 
 # =========================
@@ -62,12 +62,12 @@ def db_exec(sql, params=None, fetch="none"):
         if conn:
             conn.close()
 
-# 任務對照
+# ★★★★★ 修正 1：Ch1-t4 對應 build_wall ★★★★★
 TASK_MAP = {
     "Ch1-t1": "string_blocks",
     "Ch1-t2": "pyramid",
     "Ch1-t3": "stair",
-    "Ch1-t4": "wall",
+    "Ch1-t4": "build_wall",  # 已修正為正確表名
     "Ch2-t1": "draw_circle",
     "Ch2-t2": "draw_square",
     "Ch2-t3": "draw_cross",
@@ -582,30 +582,49 @@ def release_camera():
     camera_active = False
     time.sleep(0.3)
 
+# ★★★★★ 修正 2：相機初始化改用 DSHOW + 自動切換 ★★★★★
 def init_camera(camera_index=TOP):
     global camera, camera_active
     try:
         release_camera()
-        camera = cv2.VideoCapture(camera_index + cv2.CAP_MSMF)
+        
+        # 優先嘗試 cv2.CAP_DSHOW (Windows 推薦)
+        print(f"[相機] 嘗試開啟相機 Index: {camera_index} (DSHOW)...")
+        camera = cv2.VideoCapture(camera_index, cv2.CAP_DSHOW)
+        
+        # 如果打不開，嘗試不指定後端 (自動)
         if not camera.isOpened():
+            print(f"[相機] DSHOW 失敗，嘗試自動後端開啟 Index: {camera_index}...")
             camera = cv2.VideoCapture(camera_index)
-            if not camera.isOpened():
-                raise Exception("無法開啟相機")
+        
+        # 如果還是打不開，且原本不是 0，嘗試強制切回 0 (預設)
+        if not camera.isOpened() and camera_index != 0:
+            print("[相機] 指定鏡頭失敗，嘗試切換回預設鏡頭 (Index 0)...")
+            camera = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+
+        if not camera.isOpened():
+            raise Exception(f"無法開啟任何相機 (Index: {camera_index})")
         
         camera.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
         camera.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
         camera.set(cv2.CAP_PROP_FPS, 30)
         
+        # 讀取測試
         ret, frame = camera.read()
         if not ret:
-            raise Exception("無法讀取畫面")
+            # 有時候剛開啟第一幀會是黑的，再試一次
+            time.sleep(0.5)
+            ret, frame = camera.read()
+            if not ret:
+                raise Exception("相機已開啟但無法讀取畫面")
         
         h, w = frame.shape[:2]
         crop_w = int(w * CROP_RATE)
         crop_h = int(h * CROP_RATE)
-        write_to_console(f"相機開啟成功，裁切尺寸：{crop_w}x{crop_h}", "INFO")
+        write_to_console(f"相機開啟成功，來源: {camera_index}，原始尺寸: {w}x{h}，裁切後: {crop_w}x{crop_h}", "INFO")
         camera_active = True
         return True
+
     except Exception as e:
         write_to_console(f"相機初始化失敗: {e}", "ERROR")
         release_camera()

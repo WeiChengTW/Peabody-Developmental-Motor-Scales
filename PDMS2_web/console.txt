@@ -1,9 +1,155 @@
-2025-12-07 01:00:59 - INFO - === 遠端 PyMySQL 模式 ===
-2025-12-07 01:00:59 - INFO - Flask 應用程式啟動
-2025-12-07 01:00:59 - INFO - 準備啟動 Flask 應用程式，HOST=127.0.0.1, PORT=8000
-2025-12-07 01:00:59 - INFO - 已設定瀏覽器自動開啟
-2025-12-07 01:00:59 - INFO - Flask 應用程式開始運行
-2025-12-07 01:01:24 - INFO - [REQ] POST /create-uid-folder
-2025-12-07 01:01:25 - INFO - [DB] ensure_user ok: uid=A12345
-2025-12-07 01:01:25 - INFO - [RESP] POST /create-uid-folder -> 200
-2025-12-07 01:02:46 - INFO - Flask 應用程式已關閉
+2025-12-09 11:55:29 - INFO - === 遠端 PyMySQL 模式 ===
+2025-12-09 11:55:29 - INFO - Flask 應用程式啟動
+2025-12-09 11:55:29 - INFO - 準備啟動 Flask 應用程式，HOST=127.0.0.1, PORT=8000
+2025-12-09 11:55:29 - INFO - 已設定瀏覽器自動開啟
+2025-12-09 11:55:29 - INFO - Flask 應用程式開始運行
+2025-12-09 12:01:10 - INFO - [REQ] POST /create-uid-folder
+2025-12-09 12:01:11 - INFO - [DB] ensure_user ok: uid=B131512345
+2025-12-09 12:01:11 - INFO - [FS] 建立資料夾：D:\Peabody-Developmental-Motor-Scales - copy\PDMS2_web\kid\B131512345
+2025-12-09 12:01:11 - INFO - [RESP] POST /create-uid-folder -> 200
+2025-12-09 12:01:21 - ERROR - [ERR] GET /images/connect.png
+Traceback (most recent call last):
+  File "C:\Users\呂昊宸\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\呂昊宸\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "d:\Peabody-Developmental-Motor-Scales - copy\PDMS2_web\run.py", line 246, in images_files
+    return send_from_directory(ROOT / "images", filename)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\呂昊宸\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\helpers.py", line 565, in send_from_directory
+    return werkzeug.utils.send_from_directory(  # type: ignore[return-value]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\呂昊宸\AppData\Local\Programs\Python\Python312\Lib\site-packages\werkzeug\utils.py", line 575, in send_from_directory
+    raise NotFound()
+werkzeug.exceptions.NotFound: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+
+2025-12-09 12:01:23 - INFO - 相機開啟成功，來源: 0，原始尺寸: 1280x720，裁切後: 1024x576
+2025-12-09 12:01:28 - INFO - [相機] 相機已釋放
+2025-12-09 12:01:31 - INFO - 相機開啟成功，來源: 0，原始尺寸: 1280x720，裁切後: 1024x576
+2025-12-09 12:01:31 - INFO - 圖像存儲成功: D:\Peabody-Developmental-Motor-Scales - copy\PDMS2_web\kid\B131512345\ch2-t6.jpg
+2025-12-09 12:01:31 - INFO - [REQ] POST /run-python
+2025-12-09 12:01:31 - INFO - 開始背景任務 90ea3c34-adab-411e-bc3c-fefbd852d8c1: uid=B131512345, task=ch2-t6
+2025-12-09 12:01:31 - INFO - [RESP] POST /run-python -> 200
+2025-12-09 12:01:31 - INFO - 執行命令：C:\Users\呂昊宸\AppData\Local\Programs\Python\Python312\python.exe D:\Peabody-Developmental-Motor-Scales - copy\PDMS2_web\ch2-t6\main.py B131512345 ch2-t6
+2025-12-09 12:01:32 - INFO - 腳本輸出 (任務 90ea3c34-adab-411e-bc3c-fefbd852d8c1)：
+裁紙失敗：沒找到紙張邊緣
+
+2025-12-09 12:01:33 - INFO - [DB] ensure_user ok: uid=B131512345
+2025-12-09 12:01:34 - INFO - [DB] ensure_task ok: Ch2-t6 -> connect_dots
+2025-12-09 12:01:35 - INFO - [DB] insert_score ok: uid=B131512345, task_id=Ch2-t6, date=2025-12-09, time=12:01:34
+2025-12-09 12:01:36 - INFO - 任務 90ea3c34-adab-411e-bc3c-fefbd852d8c1 完成：score=0
+2025-12-09 12:04:42 - INFO - [REQ] POST /create-uid-folder
+2025-12-09 12:04:43 - INFO - [DB] ensure_user ok: uid=B131512345
+2025-12-09 12:04:43 - INFO - [RESP] POST /create-uid-folder -> 200
+2025-12-09 12:04:55 - ERROR - [ERR] GET /images/connect.png
+Traceback (most recent call last):
+  File "C:\Users\呂昊宸\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\呂昊宸\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "d:\Peabody-Developmental-Motor-Scales - copy\PDMS2_web\run.py", line 246, in images_files
+    return send_from_directory(ROOT / "images", filename)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\呂昊宸\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\helpers.py", line 565, in send_from_directory
+    return werkzeug.utils.send_from_directory(  # type: ignore[return-value]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\呂昊宸\AppData\Local\Programs\Python\Python312\Lib\site-packages\werkzeug\utils.py", line 575, in send_from_directory
+    raise NotFound()
+werkzeug.exceptions.NotFound: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+
+2025-12-09 12:04:55 - INFO - [相機] 相機已釋放
+2025-12-09 12:04:57 - INFO - 相機開啟成功，來源: 0，原始尺寸: 1280x720，裁切後: 1024x576
+2025-12-09 12:05:18 - INFO - [相機] 相機已釋放
+2025-12-09 12:05:20 - INFO - 相機開啟成功，來源: 0，原始尺寸: 1280x720，裁切後: 1024x576
+2025-12-09 12:05:21 - INFO - 圖像存儲成功: D:\Peabody-Developmental-Motor-Scales - copy\PDMS2_web\kid\B131512345\ch2-t6.jpg
+2025-12-09 12:05:21 - INFO - [REQ] POST /run-python
+2025-12-09 12:05:21 - INFO - 開始背景任務 6cdf34aa-3c43-46f5-9213-f107dbfd9538: uid=B131512345, task=ch2-t6
+2025-12-09 12:05:21 - INFO - [RESP] POST /run-python -> 200
+2025-12-09 12:05:21 - INFO - 執行命令：C:\Users\呂昊宸\AppData\Local\Programs\Python\Python312\python.exe D:\Peabody-Developmental-Motor-Scales - copy\PDMS2_web\ch2-t6\main.py B131512345 ch2-t6
+2025-12-09 12:05:21 - INFO - 腳本輸出 (任務 6cdf34aa-3c43-46f5-9213-f107dbfd9538)：
+[-] Processing: D:\Peabody-Developmental-Motor-Scales - copy\PDMS2_web\kid\B131512345\ch2-t6.jpg
+[Success] 結果圖已儲存: D:\Peabody-Developmental-Motor-Scales - copy\PDMS2_web\kid\B131512345\ch2-t6_result.jpg
+
+2025-12-09 12:05:23 - INFO - [DB] ensure_user ok: uid=B131512345
+2025-12-09 12:05:24 - INFO - [DB] ensure_task ok: Ch2-t6 -> connect_dots
+2025-12-09 12:05:25 - INFO - [DB] insert_score ok: uid=B131512345, task_id=Ch2-t6, date=2025-12-09, time=12:05:24
+2025-12-09 12:05:25 - INFO - 任務 6cdf34aa-3c43-46f5-9213-f107dbfd9538 完成：score=0
+2025-12-09 12:17:44 - INFO - [相機] 相機已釋放
+2025-12-09 12:17:46 - INFO - 相機開啟成功，來源: 0，原始尺寸: 1280x720，裁切後: 1024x576
+2025-12-09 12:17:50 - INFO - [相機] 相機已釋放
+2025-12-09 12:17:57 - INFO - [REQ] POST /create-uid-folder
+2025-12-09 12:17:58 - INFO - [DB] ensure_user ok: uid=B131512345
+2025-12-09 12:17:58 - INFO - [RESP] POST /create-uid-folder -> 200
+2025-12-09 12:18:04 - INFO - 相機開啟成功，來源: 0，原始尺寸: 1280x720，裁切後: 1024x576
+2025-12-09 12:19:02 - INFO - [相機] 相機已釋放
+2025-12-09 12:19:05 - INFO - 相機開啟成功，來源: 0，原始尺寸: 1280x720，裁切後: 1024x576
+2025-12-09 12:19:05 - INFO - 圖像存儲成功: D:\Peabody-Developmental-Motor-Scales - copy\PDMS2_web\kid\B131512345\ch2-t4.jpg
+2025-12-09 12:19:05 - INFO - [REQ] POST /run-python
+2025-12-09 12:19:05 - INFO - [RESP] POST /run-python -> 200
+2025-12-09 12:19:05 - INFO - 開始背景任務 a3dc8171-a333-4da4-a308-f69e5b2236e9: uid=B131512345, task=ch2-t4
+2025-12-09 12:19:05 - INFO - 執行命令：C:\Users\呂昊宸\AppData\Local\Programs\Python\Python312\python.exe D:\Peabody-Developmental-Motor-Scales - copy\PDMS2_web\ch2-t4\main.py B131512345 ch2-t4
+2025-12-09 12:19:06 - INFO - 腳本輸出 (任務 a3dc8171-a333-4da4-a308-f69e5b2236e9)：
+最遠點: 無（未找到 trace 像素）
+偏離次數（任何偏離）：0 次
+嚴重偏離（> 1.2 cm）：0 次
+最大偏差: 0.000 cm
+得分: 2 分（偏離次數=0）
+✅ 已輸出結果圖：result\result_overlay.jpg
+完成結果圖： kid\B131512345\ch2-t4_result.jpg
+得分： 2
+
+2025-12-09 12:19:06 - INFO - [DB] ensure_user ok: uid=B131512345
+2025-12-09 12:19:07 - INFO - [DB] ensure_task ok: Ch2-t4 -> draw_line
+2025-12-09 12:19:08 - INFO - [DB] insert_score ok: uid=B131512345, task_id=Ch2-t4, date=2025-12-09, time=12:19:07
+2025-12-09 12:19:08 - INFO - 任務 a3dc8171-a333-4da4-a308-f69e5b2236e9 完成：score=2
+2025-12-09 12:19:17 - INFO - [相機] 相機已釋放
+2025-12-09 12:19:19 - INFO - 相機開啟成功，來源: 0，原始尺寸: 1280x720，裁切後: 1024x576
+2025-12-09 12:19:21 - INFO - [REQ] POST /create-uid-folder
+2025-12-09 12:19:21 - INFO - [DB] ensure_user ok: uid=B131512345
+2025-12-09 12:19:21 - INFO - [RESP] POST /create-uid-folder -> 200
+2025-12-09 12:19:27 - INFO - [相機] 相機已釋放
+2025-12-09 12:19:29 - INFO - 相機開啟成功，來源: 0，原始尺寸: 1280x720，裁切後: 1024x576
+2025-12-09 12:19:34 - INFO - [相機] 相機已釋放
+2025-12-09 12:19:36 - INFO - 相機開啟成功，來源: 0，原始尺寸: 1280x720，裁切後: 1024x576
+2025-12-09 12:19:37 - INFO - 圖像存儲成功: D:\Peabody-Developmental-Motor-Scales - copy\PDMS2_web\kid\B131512345\ch3-t2.jpg
+2025-12-09 12:19:37 - INFO - [REQ] POST /run-python
+2025-12-09 12:19:37 - INFO - 開始背景任務 85e1dc09-b5a9-4e62-b599-1ebb8ddd3041: uid=B131512345, task=ch3-t2
+2025-12-09 12:19:37 - INFO - [RESP] POST /run-python -> 200
+2025-12-09 12:19:37 - INFO - 執行命令：C:\Users\呂昊宸\AppData\Local\Programs\Python\Python312\python.exe D:\Peabody-Developmental-Motor-Scales - copy\PDMS2_web\ch3-t2\main.py B131512345 ch3-t2
+2025-12-09 12:19:37 - INFO - 腳本輸出 (任務 85e1dc09-b5a9-4e62-b599-1ebb8ddd3041)：
+
+正在處理圖片: kid\B131512345\ch3-t2.jpg
+====提取紙張區域====
+未檢測到明顯的紙張區域
+無法提取紙張區域
+
+2025-12-09 12:19:38 - INFO - [DB] ensure_user ok: uid=B131512345
+2025-12-09 12:19:39 - INFO - [DB] ensure_task ok: Ch3-t2 -> cut_square
+2025-12-09 12:19:40 - INFO - [DB] insert_score ok: uid=B131512345, task_id=Ch3-t2, date=2025-12-09, time=12:19:39
+2025-12-09 12:19:40 - INFO - 任務 85e1dc09-b5a9-4e62-b599-1ebb8ddd3041 完成：score=0
+2025-12-09 12:22:06 - INFO - [相機] 相機已釋放
+2025-12-09 12:22:09 - INFO - 相機開啟成功，來源: 0，原始尺寸: 1280x720，裁切後: 1024x576
+2025-12-09 12:22:09 - INFO - [REQ] POST /create-uid-folder
+2025-12-09 12:22:09 - INFO - [DB] ensure_user ok: uid=B131512345
+2025-12-09 12:22:09 - INFO - [RESP] POST /create-uid-folder -> 200
+2025-12-09 12:22:15 - INFO - [相機] 相機已釋放
+2025-12-09 12:22:17 - INFO - 相機開啟成功，來源: 0，原始尺寸: 1280x720，裁切後: 1024x576
+2025-12-09 12:22:29 - INFO - [相機] 相機已釋放
+2025-12-09 12:22:32 - INFO - 相機開啟成功，來源: 0，原始尺寸: 1280x720，裁切後: 1024x576
+2025-12-09 12:22:33 - INFO - 圖像存儲成功: D:\Peabody-Developmental-Motor-Scales - copy\PDMS2_web\kid\B131512345\ch4-t1.jpg
+2025-12-09 12:22:33 - INFO - [REQ] POST /run-python
+2025-12-09 12:22:33 - INFO - 開始背景任務 27b3afde-de1f-494f-8af9-8889cef491de: uid=B131512345, task=ch4-t1
+2025-12-09 12:22:33 - INFO - [RESP] POST /run-python -> 200
+2025-12-09 12:22:33 - INFO - 執行命令：C:\Users\呂昊宸\AppData\Local\Programs\Python\Python312\python.exe D:\Peabody-Developmental-Motor-Scales - copy\PDMS2_web\ch4-t1\main.py B131512345 ch4-t1
+2025-12-09 12:22:33 - INFO - 腳本輸出 (任務 27b3afde-de1f-494f-8af9-8889cef491de)：
+score : 0
+
+2025-12-09 12:22:34 - INFO - [DB] ensure_user ok: uid=B131512345
+2025-12-09 12:22:34 - INFO - [DB] ensure_task ok: Ch4-t1 -> one_fold
+2025-12-09 12:22:35 - INFO - [DB] insert_score ok: uid=B131512345, task_id=Ch4-t1, date=2025-12-09, time=12:22:34
+2025-12-09 12:22:36 - INFO - 任務 27b3afde-de1f-494f-8af9-8889cef491de 完成：score=0
+2025-12-09 14:18:37 - INFO - Flask 應用程式已關閉

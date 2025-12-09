@@ -1,4 +1,4 @@
-# run_admin.py (已修復：解決分數 NULL、幽靈圖片、下拉選單姓名顯示)
+# run_admin.py (權限分離修正版)
 # -*- coding: utf-8 -*-
 import os
 import sys
@@ -42,7 +42,6 @@ def db_exec(sql, params=None, fetch="none"):
     finally:
         if conn: conn.close()
 
-# 任務對照表
 TASK_MAP = {
     "Ch1-t1": "string_blocks",
     "Ch1-t2": "pyramid",
@@ -63,8 +62,19 @@ TASK_MAP = {
     "Ch5-t1": "collect_raisins",
 }
 
+MULTI_ANGLE_TASKS = ["Ch1-t2", "Ch1-t3", "Ch1-t4"]
+
+def normalize_task_id(tid: str) -> str:
+    if tid in TASK_MAP: return tid
+    tid_lower = tid.lower()
+    for k in TASK_MAP.keys():
+        if k.lower() == tid_lower:
+            return k
+    return tid
+
 def task_id_to_table(task_id: str) -> str:
-    if task_id in TASK_MAP: return TASK_MAP[task_id]
+    clean_id = normalize_task_id(task_id)
+    if clean_id in TASK_MAP: return TASK_MAP[clean_id]
     raise ValueError(f"未知的 task_id: {task_id}")
 
 def ensure_user(uid: str):
@@ -72,9 +82,10 @@ def ensure_user(uid: str):
     except: pass 
 
 def ensure_task(task_id: str):
-    if task_id not in TASK_MAP: raise ValueError(f"未知的 task_id：{task_id}")
-    task_name = TASK_MAP[task_id]
-    try: db_exec("INSERT INTO task_list(task_id, task_name) VALUES (%s,%s) ON DUPLICATE KEY UPDATE task_name=VALUES(task_name)", (task_id, task_name))
+    clean_id = normalize_task_id(task_id)
+    if clean_id not in TASK_MAP: raise ValueError(f"未知的 task_id：{task_id}")
+    task_name = TASK_MAP[clean_id]
+    try: db_exec("INSERT INTO task_list(task_id, task_name) VALUES (%s,%s) ON DUPLICATE KEY UPDATE task_name=VALUES(task_name)", (clean_id, task_name))
     except: pass
 
 def make_row_key(uid, task_id, test_date_str: str, time_str: str = ""):
@@ -92,7 +103,7 @@ def _rows_date_to_str(rows):
     return out
 
 # =========================
-# 2) Flask 設定 (Port 8001)
+# 2) Flask 設定
 # =========================
 os.environ["PYTHONIOENCODING"] = "utf-8"
 PORT = 8001
@@ -147,7 +158,65 @@ def get_session_uid_shim():
 def view_compare():
     uid = request.args.get("uid", "")
     task_id = request.args.get("task_id", "")
+    img_path = request.args.get("img", "") 
+
     if not uid or not task_id: return "Missing uid or task_id", 400
+    task_id = normalize_task_id(task_id)
+    is_multi = task_id in MULTI_ANGLE_TASKS
+    
+    content_html = ""
+    if is_multi:
+        side_orig = f"/kid/{uid}/{task_id}-side.jpg"
+        side_res  = f"/kid/{uid}/{task_id}-side_result.jpg"
+        top_orig  = f"/kid/{uid}/{task_id}-top.jpg"
+        top_res   = f"/kid/{uid}/{task_id}-top_result.jpg"
+
+        content_html = f"""
+        <div class="section-title">側面視角 (Side View)</div>
+        <div class="row">
+            <div class="box">
+                <h3>原始照片</h3>
+                <img src="{side_orig}" onerror="this.onerror=null;this.src='/images/no_image.png';">
+            </div>
+            <div class="box">
+                <h3>分析結果</h3>
+                <img src="{side_res}" onerror="this.onerror=null;this.src='/images/no_image.png';">
+            </div>
+        </div>
+        <div class="section-title" style="margin-top: 40px; border-top: 2px dashed #ddd; padding-top:20px;">頂部視角 (Top View)</div>
+        <div class="row">
+            <div class="box">
+                <h3>原始照片</h3>
+                <img src="{top_orig}" onerror="this.onerror=null;this.src='/images/no_image.png';">
+            </div>
+            <div class="box">
+                <h3>分析結果</h3>
+                <img src="{top_res}" onerror="this.onerror=null;this.src='/images/no_image.png';">
+            </div>
+        </div>
+        """
+    else:
+        original_src = img_path if img_path else f"/kid/{uid}/{task_id}.jpg"
+        result_src = f"/kid/{uid}/{task_id}_result.jpg"
+        if "_result" in original_src: 
+            result_src = original_src
+            original_src = original_src.replace("_result.jpg", ".jpg")
+        elif ".jpg" in original_src:
+            result_src = original_src.replace(".jpg", "_result.jpg")
+
+        content_html = f"""
+        <div class="row">
+            <div class="box">
+                <h3>原始照片 (Original)</h3>
+                <img src="{original_src}" onerror="this.onerror=null;this.src='/images/no_image.png';">
+            </div>
+            <div class="box">
+                <h3>分析結果 (Result)</h3>
+                <img src="{result_src}" onerror="this.onerror=null;this.src='/images/no_image.png';">
+            </div>
+        </div>
+        """
+
     html = f"""
     <!DOCTYPE html>
     <html lang="zh-TW">
@@ -156,29 +225,27 @@ def view_compare():
         <title>作答結果比對 - {uid} - {task_id}</title>
         <style>
             body {{ font-family: "Microsoft JhengHei", sans-serif; text-align: center; padding: 20px; background: #f0f2f5; }}
-            h2 {{ color: #333; margin-bottom: 30px; }}
-            .container {{ display: flex; justify-content: center; gap: 30px; flex-wrap: wrap; }}
+            h2 {{ color: #333; margin-bottom: 10px; }}
+            .sub-info {{ color: #666; margin-bottom: 30px; font-size: 0.9em; }}
+            .row {{ display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; margin-bottom: 20px; }}
             .box {{ 
-                background: white; padding: 15px; border-radius: 12px; 
-                box-shadow: 0 4px 6px rgba(0,0,0,0.1); 
-                max-width: 45%; min-width: 300px;
+                background: white; padding: 10px; border-radius: 8px; 
+                box-shadow: 0 2px 5px rgba(0,0,0,0.1); 
+                width: 45%; min-width: 300px;
             }}
-            .box h3 {{ margin-top: 0; color: #555; border-bottom: 2px solid #eee; padding-bottom: 10px; }}
-            img {{ max-width: 100%; height: auto; border-radius: 4px; border: 1px solid #ddd; }}
+            .box h3 {{ margin: 0 0 10px 0; color: #555; font-size: 16px; border-bottom: 1px solid #eee; padding-bottom: 8px; }}
+            img {{ max-width: 100%; height: auto; border-radius: 4px; border: 1px solid #eee; }}
+            .section-title {{ 
+                font-size: 18px; font-weight: bold; color: #2c3e50; 
+                margin: 10px 0; display: inline-block; background: #e0f2fe; 
+                padding: 5px 15px; border-radius: 20px; 
+            }}
         </style>
     </head>
     <body>
         <h2>使用者: {uid} / 關卡: {task_id}</h2>
-        <div class="container">
-            <div class="box">
-                <h3>原始照片 (Original)</h3>
-                <img src="/kid/{uid}/{task_id}.jpg" onerror="this.onerror=null;this.src='/images/no_image.png';">
-            </div>
-            <div class="box">
-                <h3>分析結果 (Result)</h3>
-                <img src="/kid/{uid}/{task_id}_result.jpg" onerror="this.onerror=null;this.src='/images/no_image.png';">
-            </div>
-        </div>
+        <div class="sub-info">檢視模式: {"多視角" if is_multi else "單一視角"}</div>
+        {content_html}
     </body>
     </html>
     """
@@ -198,6 +265,7 @@ def api_login():
     try:
         row = db_exec("SELECT account, password, email, level FROM admin_users WHERE account=%s AND password=%s", (account, password), fetch="one")
         if row:
+            # 這裡 DB 的 level 如果是 3，就會存入 session
             session["user"] = {"account": row["account"], "level": int(row.get("level") or 2), "name": row.get("email"), "target_uid": None}
             return jsonify({"ok": True, "user": session["user"]})
     except Exception as e: print(f"[Admin Login Check] {e}")
@@ -228,7 +296,10 @@ def api_logout():
 @app.get("/users")
 def list_users():
     try:
-        # ★ 修正：這裡也加上姓名格式化，確保一致性
+        user = session.get("user") or {}
+        # Level 2 和 3 都可以看
+        if int(user.get("level") or 0) < 2: return jsonify({"ok": False, "msg": "權限不足"}), 403
+
         sql = """
             SELECT uid, 
                    CASE 
@@ -252,7 +323,6 @@ def list_tasks():
     except Exception as e:
         return jsonify({"ok": False, "err": str(e)}), 500
 
-# ★★★★★ 關鍵修正：解決分數 NULL、圖片亂顯示、姓名格式 ★★★★★
 @app.post("/api/search-scores")
 def search_scores_api():
     try:
@@ -264,6 +334,7 @@ def search_scores_api():
         req_uid = data.get("uid", "").strip()
         req_task_id = data.get("task_id", "").strip()
 
+        if req_task_id: req_task_id = normalize_task_id(req_task_id)
         search_uid = target_uid if target_uid else req_uid
 
         all_rows_raw = []
@@ -271,8 +342,6 @@ def search_scores_api():
 
         for tid in tasks_to_search:
             table_name = TASK_MAP[tid]
-            
-            # ★ 重大修改：直接查詢「子資料表 (如 draw_circle)」，確保抓到正確分數
             sql = f"""
                 SELECT d.uid, 
                        CASE 
@@ -286,7 +355,6 @@ def search_scores_api():
                 WHERE 1=1
             """
             params = []
-
             if search_uid:
                 sql += " AND d.uid = %s"
                 params.append(search_uid)
@@ -310,15 +378,30 @@ def search_scores_api():
             r["task_name"] = task_names.get(tid, tid)
             r["row_key"] = make_row_key(uid, tid, td, tm)
             
-            # ★ 修正圖片邏輯：如果資料庫是 NULL，就真的是 NULL，不要亂補
-            if r.get('result_img_path'):
-                r['compare_url'] = f"/view-compare?uid={uid}&task_id={tid}"
+            base_filename = f"kid/{uid}/{tid}"
+            candidates = []
+            db_path = r.get('result_img_path')
+            if db_path: candidates.append(db_path)
+            if tid in MULTI_ANGLE_TASKS:
+                candidates.append(f"{base_filename}-side.jpg")
+                candidates.append(f"{base_filename}-top.jpg")
+            candidates.append(f"{base_filename}.jpg")
+            candidates.append(f"{base_filename}_result.jpg")
+            
+            real_path = None
+            for p in candidates:
+                if (ROOT / p).exists():
+                    real_path = p
+                    break
+            
+            if real_path:
+                r['result_img_path'] = real_path
+                r['compare_url'] = f"/view-compare?uid={uid}&task_id={tid}&img=/{real_path}"
             else:
-                r['compare_url'] = None 
-                r['result_img_path'] = None # 強制設為 None 供前端判斷
+                r['result_img_path'] = None
+                r['compare_url'] = None
 
         rows.sort(key=lambda r: (r.get("test_date") or "", r.get("time") or ""), reverse=True)
-
         return jsonify({"success": True, "data": rows})
 
     except Exception as e:
@@ -329,10 +412,12 @@ def search_scores_api():
 def list_scores():
     return search_scores_api()
 
+# === Level 2 & 3: 新增/修改使用者個資 ===
 @app.post("/api/user/upsert")
 def upsert_user_only():
     try:
         user = session.get("user") or {}
+        # Level 2 (一般管理) 和 Level 3 (超級管理) 都可以
         if int(user.get("level") or 0) < 2: return jsonify({"ok": False, "msg": "權限不足"}), 403
         data = request.get_json() or {}
         uid = (data.get("uid") or "").strip()
@@ -343,11 +428,15 @@ def upsert_user_only():
         return jsonify({"ok": True, "msg": "儲存成功"})
     except Exception as e: return jsonify({"ok": False, "msg": str(e)}), 500
 
+# === Level 3 Only: 新增/修改關卡分數 ===
 @app.post("/scores/upsert")
 def upsert_score():
     try:
         user = session.get("user") or {}
-        if int(user.get("level") or 0) < 2: return jsonify({"ok": False, "msg": "權限不足"}), 403
+        # 嚴格限制：只有 Level 3 可以
+        if int(user.get("level") or 0) < 3: 
+            return jsonify({"ok": False, "msg": "權限不足：只有超級管理者可修改分數"}), 403
+        
         data = request.get_json() or {}
         uid = (data.get("uid") or "").strip()
         task_id = (data.get("task_id") or "").strip()
@@ -356,12 +445,15 @@ def upsert_score():
         row_key_old = (data.get("row_key_old") or "").strip()
 
         if not uid or not task_id: return jsonify({"ok": False, "msg": "uid / task_id 不可為空"}), 400
+        task_id = normalize_task_id(task_id)
+
         if test_date_str:
             try: test_date = datetime.strptime(test_date_str, "%Y-%m-%d").date()
             except: return jsonify({"ok": False, "msg": "日期格式錯誤"}), 400
         else: test_date = date.today()
         test_date_str = test_date.isoformat()
         
+        current_time = datetime.now().strftime("%H:%M:%S")
         ensure_user(uid)
         ensure_task(task_id)
 
@@ -373,17 +465,30 @@ def upsert_score():
                 if o_tbl: db_exec(f"DELETE FROM `{o_tbl}` WHERE uid=%s AND test_date=%s AND time=%s", (o_uid, o_date, o_time))
             except: pass
 
-        db_exec("INSERT INTO score_list(uid, task_id, test_date) VALUES (%s, %s, %s) ON DUPLICATE KEY UPDATE test_date=VALUES(test_date)", (uid, task_id, test_date))
+        db_exec(
+            "INSERT INTO score_list(uid, task_id, test_date, time) VALUES (%s, %s, %s, %s) "
+            "ON DUPLICATE KEY UPDATE test_date=VALUES(test_date), time=VALUES(time)",
+            (uid, task_id, test_date, current_time)
+        )
+        
         table_name = task_id_to_table(task_id)
-        db_exec(f"INSERT INTO `{table_name}`(uid, test_date, score) VALUES (%s, %s, %s) ON DUPLICATE KEY UPDATE score=VALUES(score)", (uid, test_date, score))
+        db_exec(
+            f"INSERT INTO `{table_name}`(uid, test_date, time, score) VALUES (%s, %s, %s, %s) "
+            "ON DUPLICATE KEY UPDATE score=VALUES(score), time=VALUES(time)",
+            (uid, test_date, current_time, score)
+        )
         return jsonify({"ok": True})
     except Exception as e: return jsonify({"ok": False, "msg": str(e)}), 500
 
+# === Level 3 Only: 刪除關卡分數 ===
 @app.delete("/scores")
 def delete_score():
     try:
         user = session.get("user") or {}
-        if int(user.get("level") or 0) < 2: return jsonify({"ok": False, "msg": "權限不足"}), 403
+        # 嚴格限制：只有 Level 3 可以
+        if int(user.get("level") or 0) < 3: 
+            return jsonify({"ok": False, "msg": "權限不足：只有超級管理者可刪除分數"}), 403
+            
         row_key = (request.args.get("row_key") or "").strip()
         if not row_key: return jsonify({"ok": False, "msg": "缺少 row_key"}), 400
         try: uid, task_id, test_date, time_str = row_key.split("|", 3)

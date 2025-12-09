@@ -1,4 +1,4 @@
-/* admin.css - 已修正第 7 欄對齊問題 */
+/* admin.css - 已加入權限控制邏輯 */
 
 /* ====== Candy / Kid-Friendly Theme ====== */
 :root{
@@ -151,13 +151,12 @@ th:nth-child(n+2), td:nth-child(n+2) { text-align: center; }
 th:nth-child(n+2) > button { text-align: center; }
 
 /* 3. 第7欄 (結果畫面) 微調：往右移 */
-/* 這裡使用 padding-left 把內容往右推，看起來就會對齊了 */
 th:nth-child(7), td:nth-child(7) {
     text-align: left;    /* 為了讓 padding 有效推擠，先靠左 */
     padding-left: 45px;  /* ★ 修改這裡：數字越大越往右移 */
 }
 th:nth-child(7) {
-    padding-left: 16px;  /* 表頭保持原樣，不要跟著跑掉，維持預設 padding */
+    padding-left: 16px;  /* 表頭保持原樣 */
     text-align: center;  /* 表頭維持置中 */
 }
 
@@ -210,3 +209,34 @@ td .btn {
 /* 刪除鍵：紅色 */
 .btn-delete { background: linear-gradient(135deg, #f87171, #ef4444); color: white; }
 .btn-delete:hover { background: linear-gradient(135deg, #ef4444, #dc2626); transform: translateY(-2px); }
+
+
+/* =========================================
+   ★ 新增：權限控制樣式 (Permission Styles) ★
+   配合 admin.js 中的 body.classList 切換
+   ========================================= */
+
+/* 1. 預設：隱藏所有受權限保護的按鈕或欄位 (display: none !important) */
+[data-auth="admin-only"], 
+[data-auth="super-admin-only"] { 
+    display: none !important; 
+}
+
+/* 2. 一般管理者 (Level 2 以上)：顯示「管理使用者」等功能 */
+body.is-admin [data-auth="admin-only"] { 
+    display: inline-flex !important; 
+}
+/* 針對表格欄位 (th, td) 的特殊顯示方式 */
+body.is-admin th[data-auth="admin-only"],
+body.is-admin td[data-auth="admin-only"] { 
+    display: table-cell !important; 
+}
+
+/* 3. 超級管理者 (Level 3)：顯示「新增紀錄/刪除」等高階功能 */
+body.is-super-admin [data-auth="super-admin-only"] { 
+    display: inline-flex !important; 
+}
+body.is-super-admin th[data-auth="super-admin-only"],
+body.is-super-admin td[data-auth="super-admin-only"] { 
+    display: table-cell !important; 
+}
