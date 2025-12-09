@@ -183,8 +183,9 @@ def insert_score(
         "INFO",
     )
     return test_date
+
 # =========================
-# 2) 基礎環境/日誌/靜態路由 (不變)
+# 2) 基礎環境/日誌/靜態路由
 # =========================
 os.environ["PYTHONIOENCODING"] = "utf-8"
 os.environ["PYTHONUTF8"] = "1"
@@ -193,16 +194,17 @@ PORT = 8000
 HOST = "127.0.0.1"
 ROOT = Path(__file__).parent.resolve()
 
-app = Flask(__name__, static_folder=None)
+app = Flask(
+    __name__,
+    static_folder=str(ROOT / "static"),
+    static_url_path="/static",
+)
 app.secret_key = secrets.token_hex(16)
 CORS(app)
 
-
 def setup_console_logging():
     console_path = Path(__file__).parent / "console.txt"
-    fmt = logging.Formatter(
-        "%(asctime)s - %(levelname)s - %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
-    )
+    fmt = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s", datefmt="%Y-%m-%d %H:%M:%S")
     fh = logging.FileHandler(console_path, mode="a", encoding="utf-8")
     fh.setFormatter(fmt)
     logging.getLogger("werkzeug").setLevel(logging.ERROR)
@@ -212,17 +214,14 @@ def setup_console_logging():
     lg.propagate = False
     return lg
 
-
 def write_to_console(message, level="INFO"):
-    # 確保 console.txt 路徑正確
     console_path = ROOT / "console.txt"
     ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     try:
         with open(console_path, "a", encoding="utf-8") as f:
             f.write(f"{ts} - {level} - {message}\n")
     except Exception as e:
-        print(f"寫入 console.txt 失敗: {e}")  # 如果連 log 都寫不了，印在主控台
-
+        print(f"寫入 console.txt 失敗: {e}")
 
 def clear_console_log():
     console_path = ROOT / "console.txt"
@@ -232,7 +231,6 @@ def clear_console_log():
     except Exception:
         pass
 
-
 clear_console_log()
 logger = setup_console_logging()
 app.logger.disabled = True
@@ -241,53 +239,47 @@ write_to_console("=== 遠端 PyMySQL 模式 ===", "INFO")
 write_to_console("Flask 應用程式啟動", "INFO")
 processing_tasks = {}
 
-
 @app.route("/")
 def home():
     return send_from_directory(ROOT / "html", "start.html")
 
-
-# ... (其他靜態路由不變) ...
 @app.route("/index")
 @app.route("/index.html")
 def index_shortcut():
     return send_from_directory(ROOT / "html", "index.html")
 
-
 @app.route("/html/<path:filename>")
 def html_files(filename):
     return send_from_directory(ROOT / "html", filename)
-
 
 @app.route("/css/<path:filename>")
 def css_files(filename):
     return send_from_directory(ROOT / "css", filename)
 
-
 @app.route("/js/<path:filename>")
 def js_files(filename):
     return send_from_directory(ROOT / "js", filename)
-
 
 @app.route("/images/<path:filename>")
 def images_files(filename):
     return send_from_directory(ROOT / "images", filename)
 
+@app.route("/kid/<path:filename>")
+def kid_files(filename):
+    # 讓網頁可以讀取 kid 資料夾內的照片
+    return send_from_directory(ROOT / "kid", filename)
 
 @app.route("/video/<path:filename>")
 def video_files(filename):
     return send_from_directory(ROOT / "video", filename)
 
-
 @app.route("/favicon.ico")
 def favicon():
     return ("", 204)
 
-
 @app.route("/.well-known/appspecific/com.chrome.devtools.json")
 def chrome_devtools():
     return ("", 204)
-
 
 @app.get("/logs/tail")
 def logs_tail():
@@ -302,45 +294,26 @@ def logs_tail():
     except Exception as e:
         return jsonify({"ok": False, "err": str(e)}), 500
 
-
 @app.before_request
 def _log_request():
-    # 不記錄的路徑
-    if request.path.startswith(
-        ("/css/", "/js/", "/images/", "/video/", "/favicon.ico", "/opencv-camera/")
-    ):
+    if request.path.startswith(("/css/", "/js/", "/images/", "/video/", "/favicon.ico", "/opencv-camera/")):
         return
-
     try:
-        # 只記錄重要的API請求
-        if request.path.startswith(
-            ("/run-python", "/create-uid-folder", "/test-score")
-        ):
+        if request.path.startswith(("/run-python", "/create-uid-folder", "/test-score")):
             write_to_console(f"[REQ] {request.method} {request.path}")
     except Exception as e:
         write_to_console(f"[REQ] log failed: {e}", "ERROR")
 
-
 @app.after_request
 def _log_response(resp):
-    # 不記錄的路徑
-    if request.path.startswith(
-        ("/css/", "/js/", "/images/", "/video/", "/favicon.ico", "/opencv-camera/")
-    ):
+    if request.path.startswith(("/css/", "/js/", "/images/", "/video/", "/favicon.ico", "/opencv-camera/")):
         return resp
-
     try:
-        # 只記錄錯誤回應和重要的API回應
-        if resp.status_code >= 400 or request.path.startswith(
-            ("/run-python", "/create-uid-folder", "/test-score")
-        ):
-            write_to_console(
-                f"[RESP] {request.method} {request.path} -> {resp.status_code}"
-            )
+        if resp.status_code >= 400 or request.path.startswith(("/run-python", "/create-uid-folder", "/test-score")):
+            write_to_console(f"[RESP] {request.method} {request.path} -> {resp.status_code}")
     except Exception as e:
         write_to_console(f"[RESP] log failed: {e}", "ERROR")
     return resp
-
 
 @app.errorhandler(Exception)
 def _handle_err(e):
@@ -348,12 +321,9 @@ def _handle_err(e):
     write_to_console(f"[ERR] {request.method} {request.path}\n{tb}", "ERROR")
     return jsonify({"success": False, "error": str(e)}), 500
 
-
 def _open_browser():
     webbrowser.open(f"http://{HOST}:{PORT}/")
 
-
-# ... (Session 路由不變) ...
 # =========================
 # 3) Session：UID
 # =========================
@@ -366,6 +336,16 @@ def set_session_uid():
             return jsonify({"success": False, "error": "UID 不能為空"}), 400
         if any(c in uid for c in ["/", "\\", ":", "*", "?", '"', "<", ">", "|"]):
             return jsonify({"success": False, "error": "UID 包含無效字符"}), 400
+
+        # ⭐ 新增：只能用資料庫裡已存在的 UID
+        if not user_exists(uid):
+            write_to_console(f"set_session_uid: UID 不存在 -> {uid}", "WARN")
+            return jsonify({
+                "success": False,
+                "error": "此使用者不存在，請請管理者建立帳號",
+                "code": "USER_NOT_FOUND",
+            }), 404
+
         session["uid"] = uid
         write_to_console(f"成功設置 UID：{uid}", "INFO")
         return jsonify({"success": True, "uid": uid})
@@ -373,35 +353,41 @@ def set_session_uid():
         write_to_console(f"設置 UID 時發生錯誤：{e}", "ERROR")
         return jsonify({"success": False, "error": str(e)}), 500
 
-
-@app.get("/session/get-uid")
+@app.route("/session/get-uid", methods=['GET'])
 def get_session_uid():
     uid = session.get("uid")
-    return (
-        jsonify({"success": True, "uid": uid})
-        if uid
-        else (jsonify({"success": False, "message": "未找到 UID"}), 404)
-    )
-
+    return jsonify({"success": True, "uid": uid})
 
 @app.post("/create-uid-folder")
 def create_uid_folder():
+    write_to_console("[REQ] 進入 create_uid_folder", "INFO")
     data = request.get_json(silent=True) or {}
     uid = (data.get("uid") or "").strip()
     if not uid:
         write_to_console("create_uid_folder: UID 不能為空", "ERROR")
         return jsonify({"success": False, "error": "UID 不能為空"}), 400
+
     bad = ["/", "\\", ":", "*", "?", '"', "<", ">", "|"]
     if any(c in uid for c in bad):
         write_to_console(f"create_uid_folder: UID 非法 -> {uid}", "ERROR")
         return jsonify({"success": False, "error": "UID 包含無效字符"}), 400
-    ensure_user(uid)
+
+    # ⭐ 不再自動新增，只允許已存在的 UID
+    if not user_exists(uid):
+        write_to_console(f"create_uid_folder: UID 不存在 -> {uid}", "WARN")
+        return jsonify({
+            "success": False,
+            "error": "此使用者不存在，請請管理者建立帳號",
+            "code": "USER_NOT_FOUND",
+        }), 404
+
     kid_dir = ROOT / "kid" / uid
     if not kid_dir.exists():
         kid_dir.mkdir(parents=True, exist_ok=True)
         write_to_console(f"[FS] 建立資料夾：{kid_dir}", "INFO")
+
     session["uid"] = uid
-    return jsonify({"success": True, "uid": uid, "message": "使用者建立完成"})
+    return jsonify({"success": True, "uid": uid, "message": "UID 已載入"})
 
 
 @app.post("/session/clear-uid")
@@ -410,47 +396,49 @@ def clear_session_uid():
         del session["uid"]
     return jsonify({"success": True, "message": "UID 已清除"})
 
-
 @app.route("/test-score", methods=["POST"])
 def test_score():
     try:
-        data = request.get_json()
-        uid = data["uid"]
-        task_id = data["task_id"]
+        data = request.get_json() or {}
+        uid = (data.get("uid") or "").strip()
+        task_id = (data.get("task_id") or "").strip()
 
-        # 測試用分數
-        score = 3
+        if not uid or not task_id:
+            return jsonify({"success": False, "error": "uid 與 task_id 不可為空"}), 400
 
-        # 會同時幫你寫入 score_list，並回傳日期 + 時間
-        test_date, test_time = insert_score(uid=uid, task_id=task_id)
+        score = 3  # 你目前先寫死 3 分
 
-        # 再把同一個日期 + 時間寫進任務子表
+        try:
+            # 這裡可能會因為 UID 不存在而丟 ValueError("USER_NOT_FOUND")
+            test_date = insert_score(uid=uid, task_id=task_id)
+        except ValueError as e:
+            if str(e) == "USER_NOT_FOUND":
+                return jsonify({
+                    "success": False,
+                    "error": "此使用者不存在，請管理者建立帳號",
+                    "code": "USER_NOT_FOUND",
+                }), 404
+            # 其他 ValueError 再往上丟，交給外層 except
+            raise
+
         insert_task_payload(
             task_id=task_id,
             uid=uid,
             test_date=test_date,
-            test_time=test_time,     # 🔸 新增這個
             score=score,
             result_img_path="",
             data1=None,
         )
-
-        return jsonify(
-            {
-                "success": True,
-                "uid": uid,
-                "task_id": task_id,
-                "test_date": test_date.isoformat(),
-                "time": test_time.strftime("%H:%M:%S"),
-                "score": score,
-            }
-        )
-
+        return jsonify({
+            "success": True,
+            "uid": uid,
+            "task_id": task_id,
+            "test_date": test_date.isoformat(),
+            "score": score,
+        })
     except Exception as e:
         write_to_console(f"/test-score 錯誤: {e}", "ERROR")
         return jsonify({"success": False, "error": str(e)}), 500
-
-
 
 # =========================
 # 4) 背景執行 main.py
