@@ -1,6 +1,129 @@
-2025-12-09 16:47:42 - INFO - === 遠端 PyMySQL 模式 ===
-2025-12-09 16:47:42 - INFO - Flask 應用程式啟動
-2025-12-09 16:47:42 - INFO - 準備啟動 Flask 應用程式，HOST=127.0.0.1, PORT=8000
-2025-12-09 16:47:42 - INFO - 已設定瀏覽器自動開啟
-2025-12-09 16:47:42 - INFO - Flask 應用程式開始運行
-2025-12-09 16:48:18 - INFO - Flask 應用程式已關閉
+2025-12-09 20:00:43 - INFO - === 遠端 PyMySQL 模式 ===
+2025-12-09 20:00:43 - INFO - Flask 應用程式啟動
+2025-12-09 20:00:43 - INFO - 準備啟動 Flask 應用程式，HOST=127.0.0.1, PORT=8000
+2025-12-09 20:00:43 - INFO - 已設定瀏覽器自動開啟
+2025-12-09 20:00:43 - INFO - Flask 應用程式開始運行
+2025-12-09 20:00:46 - INFO - 嘗試開啟相機 0 (自動模式)...
+2025-12-09 20:00:46 - INFO - 相機已啟動: 1920x1080
+2025-12-09 20:01:01 - INFO - [相機] 相機已釋放
+2025-12-09 20:01:01 - INFO - 嘗試開啟相機 0 (自動模式)...
+2025-12-09 20:01:01 - INFO - 相機已啟動: 1920x1080
+2025-12-09 20:01:02 - INFO - [相機] 拍照完成 (保持相機開啟中)
+2025-12-09 20:01:02 - INFO - 圖像存儲成功: /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/kid/default/ch2-t5.jpg
+2025-12-09 20:01:02 - INFO - 開始背景任務 404f4dd8-5171-48a5-9024-9207003e7a56: uid=default, task=ch2-t5
+2025-12-09 20:01:02 - INFO - 執行命令：/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/bin/python /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t5/main.py default ch2-t5
+2025-12-09 20:01:03 - INFO - [REQ] POST /run-python
+2025-12-09 20:01:03 - INFO - [RESP] POST /run-python -> 200
+2025-12-09 20:01:03 - INFO - 開始背景任務 b3cdadaa-7032-4ea8-80c7-1c1d9d55c16f: uid=default, task=ch2-t5
+2025-12-09 20:01:03 - INFO - 執行命令：/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/bin/python /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t5/main.py default ch2-t5
+2025-12-09 20:01:03 - ERROR - 腳本錯誤輸出 (任務 404f4dd8-5171-48a5-9024-9207003e7a56)：
+Traceback (most recent call last):
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t5/main.py", line 33, in <module>
+    warped = get_pixel_per_cm_from_a4(image_path, show_debug=False)
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t5/cut_paper.py", line 30, in get_pixel_per_cm_from_a4
+    raise ValueError("無法偵測 A4 紙四邊形輪廓")
+ValueError: 無法偵測 A4 紙四邊形輪廓
+
+2025-12-09 20:01:03 - ERROR - 腳本錯誤輸出 (任務 b3cdadaa-7032-4ea8-80c7-1c1d9d55c16f)：
+Traceback (most recent call last):
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t5/main.py", line 33, in <module>
+    warped = get_pixel_per_cm_from_a4(image_path, show_debug=False)
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch2-t5/cut_paper.py", line 30, in get_pixel_per_cm_from_a4
+    raise ValueError("無法偵測 A4 紙四邊形輪廓")
+ValueError: 無法偵測 A4 紙四邊形輪廓
+
+2025-12-09 20:01:04 - WARN - [DB] insert_score: UID 不存在 -> default
+2025-12-09 20:01:04 - ERROR - 寫入 score_list 失敗：USER_NOT_FOUND
+2025-12-09 20:01:04 - INFO - 任務 404f4dd8-5171-48a5-9024-9207003e7a56 完成：uid=default, task=Ch2-t5, score=1, test_date=None, test_time=None
+2025-12-09 20:01:04 - WARN - [DB] insert_score: UID 不存在 -> default
+2025-12-09 20:01:04 - ERROR - 寫入 score_list 失敗：USER_NOT_FOUND
+2025-12-09 20:01:04 - INFO - 任務 b3cdadaa-7032-4ea8-80c7-1c1d9d55c16f 完成：uid=default, task=Ch2-t5, score=1, test_date=None, test_time=None
+2025-12-09 20:01:05 - INFO - 嘗試開啟相機 0 (自動模式)...
+2025-12-09 20:01:06 - INFO - 相機已啟動: 1920x1080
+2025-12-09 20:01:10 - ERROR - [ERR] GET /video/ch1-t4.mp4
+Traceback (most recent call last):
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/./run.py", line 264, in video_files
+    return send_from_directory(ROOT / "video", filename)
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/helpers.py", line 572, in send_from_directory
+    return werkzeug.utils.send_from_directory(  # type: ignore[return-value]
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/werkzeug/utils.py", line 575, in send_from_directory
+    raise NotFound()
+werkzeug.exceptions.NotFound: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+
+2025-12-09 20:01:12 - ERROR - [ERR] GET /images/wall.jpg
+Traceback (most recent call last):
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/./run.py", line 255, in images_files
+    return send_from_directory(ROOT / "images", filename)
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/flask/helpers.py", line 572, in send_from_directory
+    return werkzeug.utils.send_from_directory(  # type: ignore[return-value]
+  File "/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/lib/python3.9/site-packages/werkzeug/utils.py", line 575, in send_from_directory
+    raise NotFound()
+werkzeug.exceptions.NotFound: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+
+2025-12-09 20:01:12 - INFO - 嘗試開啟相機 6 (自動模式)...
+2025-12-09 20:01:13 - INFO - 相機已啟動: 1920x1080
+2025-12-09 20:01:18 - INFO - [相機] 相機已釋放
+2025-12-09 20:01:19 - INFO - 嘗試開啟相機 6 (自動模式)...
+2025-12-09 20:01:20 - INFO - 相機已啟動: 1920x1080
+2025-12-09 20:01:22 - INFO - [相機] 拍照完成 (保持相機開啟中)
+2025-12-09 20:01:22 - INFO - 圖像存儲成功: /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/kid/default/ch1-t4-side.jpg
+2025-12-09 20:01:22 - INFO - 開始背景任務 0078f9a2-5141-4c7a-853f-ac63eaa537d0: uid=default, task=ch1-t4
+2025-12-09 20:01:22 - INFO - 執行命令：/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/bin/python /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch1-t4/main.py default ch1-t4
+2025-12-09 20:01:22 - INFO - 嘗試開啟相機 0 (自動模式)...
+2025-12-09 20:01:22 - INFO - 相機已啟動: 1920x1080
+2025-12-09 20:01:24 - INFO - [相機] 拍照完成 (保持相機開啟中)
+2025-12-09 20:01:24 - INFO - 圖像存儲成功: /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/kid/default/ch1-t4-top.jpg
+2025-12-09 20:01:24 - INFO - 開始背景任務 6d9a01d6-7795-4337-8507-986cae875405: uid=default, task=ch1-t4
+2025-12-09 20:01:24 - INFO - 執行命令：/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/bin/python /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch1-t4/main.py default ch1-t4
+2025-12-09 20:01:24 - INFO - [REQ] POST /run-python
+2025-12-09 20:01:24 - INFO - [RESP] POST /run-python -> 200
+2025-12-09 20:01:24 - INFO - 開始背景任務 8b66dd2b-dfea-468d-b010-7c5849782725: uid=default, task=ch1-t4
+2025-12-09 20:01:24 - INFO - 執行命令：/home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/39py/bin/python /home/uuriglass/Desktop/PDMS/Peabody-Developmental-Motor-Scales/PDMS2_web/ch1-t4/main.py default ch1-t4
+2025-12-09 20:01:33 - INFO - 腳本輸出 (任務 0078f9a2-5141-4c7a-853f-ac63eaa537d0)：
+側視圖 (kid/default/ch1-t4-side.jpg) 得分: 0
+側視圖結果已儲存至: kid/default/ch1-t4-side_result.jpg
+俯視圖 (kid/default/ch1-t4-top.jpg) 檢測結果: Offset ! | ?
+俯視圖得分: 0
+俯視圖結果已儲存至: kid/default/ch1-t4-top_result.jpg
+
+總結：有一項分析得分為 0，最終得分為 0。
+
+2025-12-09 20:01:34 - WARN - [DB] insert_score: UID 不存在 -> default
+2025-12-09 20:01:34 - ERROR - 寫入 score_list 失敗：USER_NOT_FOUND
+2025-12-09 20:01:34 - INFO - 任務 0078f9a2-5141-4c7a-853f-ac63eaa537d0 完成：uid=default, task=Ch1-t4, score=0, test_date=None, test_time=None
+2025-12-09 20:01:36 - INFO - 腳本輸出 (任務 8b66dd2b-dfea-468d-b010-7c5849782725)：
+側視圖 (kid/default/ch1-t4-side.jpg) 得分: 0
+側視圖結果已儲存至: kid/default/ch1-t4-side_result.jpg
+俯視圖 (kid/default/ch1-t4-top.jpg) 檢測結果: Offset ! | ?
+俯視圖得分: 0
+俯視圖結果已儲存至: kid/default/ch1-t4-top_result.jpg
+
+總結：有一項分析得分為 0，最終得分為 0。
+
+2025-12-09 20:01:36 - INFO - 腳本輸出 (任務 6d9a01d6-7795-4337-8507-986cae875405)：
+側視圖 (kid/default/ch1-t4-side.jpg) 得分: 0
+側視圖結果已儲存至: kid/default/ch1-t4-side_result.jpg
+俯視圖 (kid/default/ch1-t4-top.jpg) 檢測結果: Offset ! | ?
+俯視圖得分: 0
+俯視圖結果已儲存至: kid/default/ch1-t4-top_result.jpg
+
+總結：有一項分析得分為 0，最終得分為 0。
+
+2025-12-09 20:01:37 - WARN - [DB] insert_score: UID 不存在 -> default
+2025-12-09 20:01:37 - ERROR - 寫入 score_list 失敗：USER_NOT_FOUND
+2025-12-09 20:01:37 - INFO - 任務 8b66dd2b-dfea-468d-b010-7c5849782725 完成：uid=default, task=Ch1-t4, score=0, test_date=None, test_time=None
+2025-12-09 20:01:37 - WARN - [DB] insert_score: UID 不存在 -> default
+2025-12-09 20:01:37 - ERROR - 寫入 score_list 失敗：USER_NOT_FOUND
+2025-12-09 20:01:37 - INFO - 任務 6d9a01d6-7795-4337-8507-986cae875405 完成：uid=default, task=Ch1-t4, score=0, test_date=None, test_time=None
+2025-12-09 20:01:53 - INFO - 嘗試開啟相機 0 (自動模式)...
+2025-12-09 20:01:53 - INFO - 相機已啟動: 1920x1080
+2025-12-09 20:01:56 - INFO - [相機] 相機已釋放
+2025-12-09 20:01:57 - INFO - Flask 應用程式已關閉

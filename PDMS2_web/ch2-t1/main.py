@@ -221,7 +221,10 @@ def main(img_path):
         )
         print(f"{img_path} pixel_per_cm = {pixel_per_cm}")
     except ValueError as e:
+        img = cv2.imread(img_path)
         print(f"⚠️ 跳過 {img_path}：{e}")
+        return 0, img
+
 
     # 裁切圖形
     print("\n==裁切圖形==")
@@ -255,9 +258,11 @@ def main(img_path):
                     (0, 0, 255),
                     2,
                 )
-                save_path = other_dir / os.path.basename(url)
+                save_path = os.path.join(other_dir, os.path.basename(url))
                 cv2.imwrite(save_path, img)  # 直接存檔，不用手動關視窗
                 print(f"{url} 已存入 Other 資料夾並加上標記")
+                return 0, img
+
 
     # 計算端點距離 & 複製到對應資料夾
     print("\n==計算端點距離==\n")
@@ -286,6 +291,7 @@ def main(img_path):
             # cv2.imshow('Other', img)
             print(f"{url} is {result[url]}!")
             return 0, img
+
     return 0, None
 
 
@@ -297,8 +303,10 @@ if __name__ == "__main__":
         # image_path = rf"kid\{uid}\{img_id}.jpg"
         image_path = os.path.join('kid',uid, f"{img_id}.jpg")
     # image_path = rf"ch2-t1.jpg"
+
     score, result_img = main(image_path)
     result_path = os.path.join('kid',uid,f"{img_id}_result.jpg")
+    print(f"result_path : {result_path}\n")
     cv2.imwrite(result_path, result_img)
 
     print(score)
