@@ -127,11 +127,12 @@ def analyze_image_top(frame, model):
 
     summary = f"{status_offset} | {status_rotate}"
 
-    if is_offset_ng or is_rotate_ng:
+    if status_rotate == "?":
+        GET_POINT = 0
+        color = (0, 0, 0)
+    elif is_offset_ng or is_rotate_ng:
         GET_POINT = 1
         color = (0, 0, 255)
-    else:
-        color = (0, 0, 0)
 
     cv2.putText(cropped, summary, (230, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, color, 3)
 

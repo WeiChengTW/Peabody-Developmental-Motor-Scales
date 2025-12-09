@@ -1,28 +1,37 @@
-# run.py (已合併 Ch5-t1 彈出視窗 + PyMySQL, 移除內建錄影)
+# run.py (已修正：相機開啟問題 + 資料表名稱錯誤)
 # -*- coding: utf-8 -*-
-from pathlib import Path
-from flask import Flask, send_from_directory, request, jsonify, session
-import webbrowser, threading
-from threading import Thread
-import subprocess, sys, logging, json, secrets, uuid, os, base64, re
-from datetime import datetime, date, time as dtime
-import cv2, numpy as np
-from PIL import Image
-from flask_cors import CORS
-import traceback
-from typing import Optional
+import os
+import sys
+import json
 import time
+import uuid
+import base64
+import secrets
+import logging
+import traceback
+import subprocess
+import threading
+import webbrowser
+from pathlib import Path
+from datetime import datetime, date
+from typing import Optional
+from threading import Thread
 
-# ======相機參數 (使用 runFortest.py 的值) =====
+import cv2
+import numpy as np
+import pymysql
+from flask import Flask, send_from_directory, request, jsonify, session
+from flask_cors import CORS
+
+# ====== 相機參數 =====
 TOP = 0
-SIDE = 6  # <-- Ch5-t1 會使用這個索引
-# ============================================
+SIDE = 6 # Ch5-t1 使用
+CROP_RATE = 0.8  # 預設裁切比例
+# ====================
 
 # =========================
 # 1) 資料庫設定（PyMySQL 模式）
 # =========================
-import pymysql
-
 DB = dict(
     host="13.238.239.23",
     port=3306,
@@ -34,11 +43,11 @@ DB = dict(
     autocommit=True,
 )
 
-
 def db_exec(sql, params=None, fetch="none"):
     """簡易 DB 執行器 (PyMySQL)"""
-    conn = pymysql.connect(**DB)
+    conn = None
     try:
+        conn = pymysql.connect(**DB)
         with conn.cursor() as cur:
             cur.execute(sql, params or ())
             if fetch == "one":
@@ -47,21 +56,18 @@ def db_exec(sql, params=None, fetch="none"):
                 return cur.fetchall()
             return None
     except Exception as e:
-        # 增加錯誤日誌
-        write_to_console(
-            f"[DB] PyMySQL 執行失敗: {sql}\nParams: {params}\nError: {e}", "ERROR"
-        )
-        raise  # 重新拋出錯誤，讓 Flask 的 error handler 處理
+        write_to_console(f"[DB] PyMySQL 執行失敗: {sql}\nParams: {params}\nError: {e}", "ERROR")
+        raise
     finally:
-        conn.close()
+        if conn:
+            conn.close()
 
-
-# 任務對照
+# ★★★★★ 修正 1：Ch1-t4 對應 build_wall ★★★★★
 TASK_MAP = {
     "Ch1-t1": "string_blocks",
     "Ch1-t2": "pyramid",
     "Ch1-t3": "stair",
-    "Ch1-t4": "build_wall",
+    "Ch1-t4": "build_wall",  # 已修正為正確表名
     "Ch2-t1": "draw_circle",
     "Ch2-t2": "draw_square",
     "Ch2-t3": "draw_cross",
@@ -77,61 +83,57 @@ TASK_MAP = {
     "Ch5-t1": "collect_raisins",
 }
 
-
-def ensure_user(uid: str, name: Optional[str] = None, birthday: Optional[str] = None):
-    """如果 user_list 沒有該 uid，就建立；有則略過/可補 name/birthday (PyMySQL)"""
-    try:
-        db_exec(
-            "INSERT INTO user_list(uid, name, birthday) VALUES (%s,%s,%s) "
-            "ON DUPLICATE KEY UPDATE name=COALESCE(VALUES(name),name), birthday=COALESCE(VALUES(birthday),birthday)",
-            (uid, name, birthday),
-        )
-        write_to_console(f"[DB] ensure_user ok: uid={uid}", "INFO")
-    except Exception as e:
-        # 錯誤已在 db_exec 中記錄，此處只需 raise
-        raise
-
-
-def get_conn():
-    """相容舊的 get_conn() 呼叫 (PyMySQL)"""
-    return pymysql.connect(**DB)
-
+# def ensure_user(uid: str, name: Optional[str] = None, birthday: Optional[str] = None):
+#     try:
+#         db_exec(
+#             "INSERT INTO user_list(uid, name, birthday) VALUES (%s,%s,%s) "
+#             "ON DUPLICATE KEY UPDATE name=COALESCE(VALUES(name),name), birthday=COALESCE(VALUES(birthday),birthday)",
+#             (uid, name, birthday),
+#         )
+#         write_to_console(f"[DB] ensure_user ok: uid={uid}", "INFO")
+#     except Exception as e:
+#         raise
+def user_exists(uid: str) -> bool:
+    """回傳這個 uid 是否存在於 user_list"""
+    row = db_exec(
+        "SELECT 1 FROM user_list WHERE uid=%s",
+        (uid,),
+        fetch="one",   # 如果你的 db_exec 寫法不一樣，這裡用你原本查一筆資料的方式
+    )
+    return row is not None
 
 def task_id_to_table(task_id: str) -> str:
     if task_id in TASK_MAP:
         return TASK_MAP[task_id]
     raise ValueError(f"未知的 task_id: {task_id}")
 
-
 def insert_task_payload(
     task_id: str,
     uid: str,
     test_date: date,
-    test_time: dtime,      # time 欄位
-    score: int,            # ⬅ 新增這個參數
+    score: int,
     result_img_path: str,
     data1: Optional[str] = None,
 ) -> None:
-
     table = task_id_to_table(task_id)
+    # 獲取當前時間
+    current_time = datetime.now().strftime("%H:%M:%S")
+
     sql = f"""
-        INSERT INTO `{table}` (`uid`, `test_date`, `time`, `score`, `result_img_path`, `data1`)
+        INSERT INTO `{table}` (uid, test_date, time, score, result_img_path, data1)
         VALUES (%s, %s, %s, %s, %s, %s)
         ON DUPLICATE KEY UPDATE
-            `score`           = VALUES(`score`),
-            `result_img_path` = VALUES(`result_img_path`),
-            `data1`           = VALUES(`data1`)
+            score           = VALUES(score),
+            result_img_path = VALUES(result_img_path),
+            data1           = VALUES(data1),
+            time            = VALUES(time)
     """
     try:
-        db_exec(sql, (uid, test_date, test_time, score, result_img_path, data1))
+        db_exec(sql, (uid, test_date, current_time, score, result_img_path, data1))
     except Exception:
-        # 保留原始 traceback 往外丟
         raise
 
-
-
 def ensure_task(task_id: str):
-    """如果 task_list 沒有該 task_id，就依 TASK_MAP 補上 (PyMySQL)"""
     if task_id not in TASK_MAP:
         raise ValueError(f"未知的 task_id：{task_id}")
     task_name = TASK_MAP[task_id]
@@ -143,60 +145,28 @@ def ensure_task(task_id: str):
         )
         write_to_console(f"[DB] ensure_task ok: {task_id} -> {task_name}", "INFO")
     except Exception as e:
-
         raise
 
 
-# ... (_read_score_from_result_json 和 _parse_score_from_stdout 不變) ...
-def _read_score_from_result_json(root: Path, uid: str, img_id: str):
-    p = root / "result.json"
-    if not p.exists():
-        return None
-    try:
-        with open(p, "r", encoding="utf-8") as f:
-            data = json.load(f)
-        if uid in data and img_id in data[uid]:
-            return int(data[uid][img_id])
-        return None
-    except Exception:
-        return None
-
-
-def _parse_score_from_stdout(stdout: str):
-    if not stdout:
-        return None
-    m = re.search(r"score\s*[:=]\s*(\d+)", stdout, re.IGNORECASE)
-    if m:
-        try:
-            return int(m.group(1))
-        except Exception:
-            return None
-    return None
-
-
-from datetime import datetime, date, time as dtime
-from typing import Optional
 
 def insert_score(
     uid: str,
     task_id: str,
     test_date: Optional[date] = None,
-    test_time: Optional[dtime] = None,   
-) -> tuple[date, dtime]:
+) -> date:
 
-    ensure_user(uid)
+    if not user_exists(uid):
+        write_to_console(f"[DB] insert_score: UID 不存在 -> {uid}", "WARN")
+        # 丟一個明確的錯誤，讓呼叫的人去決定要怎麼回應前端
+        raise ValueError("USER_NOT_FOUND")
+
+    # task 邏輯照舊（如果你希望只有管理者能新增 task，也可以之後再改 ensure_task）
     ensure_task(task_id)
 
-    # 處理 test_date
     if test_date is None:
-        now = datetime.now()
-        test_date = now.date()
-    else:
-        now = datetime.now()
+        test_date = date.today()
 
-    # 處理 test_time
-    if test_time is None:
-        test_time = now.time().replace(microsecond=0)
+    current_time = datetime.now().strftime("%H:%M:%S")
 
     db_exec(
         """
@@ -206,20 +176,16 @@ def insert_score(
             test_date = VALUES(test_date),
             time = VALUES(time)
         """,
-        (uid, task_id, test_date, test_time),
+        (uid, task_id, test_date, current_time),
     )
-
     write_to_console(
-        f"[DB] insert_score ok: uid={uid}, task_id={task_id}, test_date={test_date.isoformat()}, test_time={test_time}",
+        f"[DB] insert_score ok: uid={uid}, task_id={task_id}, date={test_date}, time={current_time}",
         "INFO",
     )
-
-    return test_date, test_time
-
-
+    return test_date
 
 # =========================
-# 2) 基礎環境/日誌/靜態路由 (不變)
+# 2) 基礎環境/日誌/靜態路由
 # =========================
 os.environ["PYTHONIOENCODING"] = "utf-8"
 os.environ["PYTHONUTF8"] = "1"
@@ -228,16 +194,17 @@ PORT = 8000
 HOST = "127.0.0.1"
 ROOT = Path(__file__).parent.resolve()
 
-app = Flask(__name__, static_folder=None)
+app = Flask(
+    __name__,
+    static_folder=str(ROOT / "static"),
+    static_url_path="/static",
+)
 app.secret_key = secrets.token_hex(16)
 CORS(app)
 
-
 def setup_console_logging():
     console_path = Path(__file__).parent / "console.txt"
-    fmt = logging.Formatter(
-        "%(asctime)s - %(levelname)s - %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
-    )
+    fmt = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s", datefmt="%Y-%m-%d %H:%M:%S")
     fh = logging.FileHandler(console_path, mode="a", encoding="utf-8")
     fh.setFormatter(fmt)
     logging.getLogger("werkzeug").setLevel(logging.ERROR)
@@ -247,17 +214,14 @@ def setup_console_logging():
     lg.propagate = False
     return lg
 
-
 def write_to_console(message, level="INFO"):
-    # 確保 console.txt 路徑正確
     console_path = ROOT / "console.txt"
     ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     try:
         with open(console_path, "a", encoding="utf-8") as f:
             f.write(f"{ts} - {level} - {message}\n")
     except Exception as e:
-        print(f"寫入 console.txt 失敗: {e}")  # 如果連 log 都寫不了，印在主控台
-
+        print(f"寫入 console.txt 失敗: {e}")
 
 def clear_console_log():
     console_path = ROOT / "console.txt"
@@ -267,7 +231,6 @@ def clear_console_log():
     except Exception:
         pass
 
-
 clear_console_log()
 logger = setup_console_logging()
 app.logger.disabled = True
@@ -276,53 +239,47 @@ write_to_console("=== 遠端 PyMySQL 模式 ===", "INFO")
 write_to_console("Flask 應用程式啟動", "INFO")
 processing_tasks = {}
 
-
 @app.route("/")
 def home():
     return send_from_directory(ROOT / "html", "start.html")
 
-
-# ... (其他靜態路由不變) ...
 @app.route("/index")
 @app.route("/index.html")
 def index_shortcut():
     return send_from_directory(ROOT / "html", "index.html")
 
-
 @app.route("/html/<path:filename>")
 def html_files(filename):
     return send_from_directory(ROOT / "html", filename)
-
 
 @app.route("/css/<path:filename>")
 def css_files(filename):
     return send_from_directory(ROOT / "css", filename)
 
-
 @app.route("/js/<path:filename>")
 def js_files(filename):
     return send_from_directory(ROOT / "js", filename)
-
 
 @app.route("/images/<path:filename>")
 def images_files(filename):
     return send_from_directory(ROOT / "images", filename)
 
+@app.route("/kid/<path:filename>")
+def kid_files(filename):
+    # 讓網頁可以讀取 kid 資料夾內的照片
+    return send_from_directory(ROOT / "kid", filename)
 
 @app.route("/video/<path:filename>")
 def video_files(filename):
     return send_from_directory(ROOT / "video", filename)
 
-
 @app.route("/favicon.ico")
 def favicon():
     return ("", 204)
 
-
 @app.route("/.well-known/appspecific/com.chrome.devtools.json")
 def chrome_devtools():
     return ("", 204)
-
 
 @app.get("/logs/tail")
 def logs_tail():
@@ -337,45 +294,26 @@ def logs_tail():
     except Exception as e:
         return jsonify({"ok": False, "err": str(e)}), 500
 
-
 @app.before_request
 def _log_request():
-    # 不記錄的路徑
-    if request.path.startswith(
-        ("/css/", "/js/", "/images/", "/video/", "/favicon.ico", "/opencv-camera/")
-    ):
+    if request.path.startswith(("/css/", "/js/", "/images/", "/video/", "/favicon.ico", "/opencv-camera/")):
         return
-
     try:
-        # 只記錄重要的API請求
-        if request.path.startswith(
-            ("/run-python", "/create-uid-folder", "/test-score")
-        ):
+        if request.path.startswith(("/run-python", "/create-uid-folder", "/test-score")):
             write_to_console(f"[REQ] {request.method} {request.path}")
     except Exception as e:
         write_to_console(f"[REQ] log failed: {e}", "ERROR")
 
-
 @app.after_request
 def _log_response(resp):
-    # 不記錄的路徑
-    if request.path.startswith(
-        ("/css/", "/js/", "/images/", "/video/", "/favicon.ico", "/opencv-camera/")
-    ):
+    if request.path.startswith(("/css/", "/js/", "/images/", "/video/", "/favicon.ico", "/opencv-camera/")):
         return resp
-
     try:
-        # 只記錄錯誤回應和重要的API回應
-        if resp.status_code >= 400 or request.path.startswith(
-            ("/run-python", "/create-uid-folder", "/test-score")
-        ):
-            write_to_console(
-                f"[RESP] {request.method} {request.path} -> {resp.status_code}"
-            )
+        if resp.status_code >= 400 or request.path.startswith(("/run-python", "/create-uid-folder", "/test-score")):
+            write_to_console(f"[RESP] {request.method} {request.path} -> {resp.status_code}")
     except Exception as e:
         write_to_console(f"[RESP] log failed: {e}", "ERROR")
     return resp
-
 
 @app.errorhandler(Exception)
 def _handle_err(e):
@@ -383,12 +321,9 @@ def _handle_err(e):
     write_to_console(f"[ERR] {request.method} {request.path}\n{tb}", "ERROR")
     return jsonify({"success": False, "error": str(e)}), 500
 
-
 def _open_browser():
     webbrowser.open(f"http://{HOST}:{PORT}/")
 
-
-# ... (Session 路由不變) ...
 # =========================
 # 3) Session：UID
 # =========================
@@ -401,6 +336,16 @@ def set_session_uid():
             return jsonify({"success": False, "error": "UID 不能為空"}), 400
         if any(c in uid for c in ["/", "\\", ":", "*", "?", '"', "<", ">", "|"]):
             return jsonify({"success": False, "error": "UID 包含無效字符"}), 400
+
+        # ⭐ 新增：只能用資料庫裡已存在的 UID
+        if not user_exists(uid):
+            write_to_console(f"set_session_uid: UID 不存在 -> {uid}", "WARN")
+            return jsonify({
+                "success": False,
+                "error": "此使用者不存在，請請管理者建立帳號",
+                "code": "USER_NOT_FOUND",
+            }), 404
+
         session["uid"] = uid
         write_to_console(f"成功設置 UID：{uid}", "INFO")
         return jsonify({"success": True, "uid": uid})
@@ -408,35 +353,41 @@ def set_session_uid():
         write_to_console(f"設置 UID 時發生錯誤：{e}", "ERROR")
         return jsonify({"success": False, "error": str(e)}), 500
 
-
-@app.get("/session/get-uid")
+@app.route("/session/get-uid", methods=['GET'])
 def get_session_uid():
     uid = session.get("uid")
-    return (
-        jsonify({"success": True, "uid": uid})
-        if uid
-        else (jsonify({"success": False, "message": "未找到 UID"}), 404)
-    )
-
+    return jsonify({"success": True, "uid": uid})
 
 @app.post("/create-uid-folder")
 def create_uid_folder():
+    write_to_console("[REQ] 進入 create_uid_folder", "INFO")
     data = request.get_json(silent=True) or {}
     uid = (data.get("uid") or "").strip()
     if not uid:
         write_to_console("create_uid_folder: UID 不能為空", "ERROR")
         return jsonify({"success": False, "error": "UID 不能為空"}), 400
+
     bad = ["/", "\\", ":", "*", "?", '"', "<", ">", "|"]
     if any(c in uid for c in bad):
         write_to_console(f"create_uid_folder: UID 非法 -> {uid}", "ERROR")
         return jsonify({"success": False, "error": "UID 包含無效字符"}), 400
-    ensure_user(uid)
+
+    # ⭐ 不再自動新增，只允許已存在的 UID
+    if not user_exists(uid):
+        write_to_console(f"create_uid_folder: UID 不存在 -> {uid}", "WARN")
+        return jsonify({
+            "success": False,
+            "error": "此使用者不存在，請請管理者建立帳號",
+            "code": "USER_NOT_FOUND",
+        }), 404
+
     kid_dir = ROOT / "kid" / uid
     if not kid_dir.exists():
         kid_dir.mkdir(parents=True, exist_ok=True)
         write_to_console(f"[FS] 建立資料夾：{kid_dir}", "INFO")
+
     session["uid"] = uid
-    return jsonify({"success": True, "uid": uid, "message": "使用者建立完成"})
+    return jsonify({"success": True, "uid": uid, "message": "UID 已載入"})
 
 
 @app.post("/session/clear-uid")
@@ -445,47 +396,49 @@ def clear_session_uid():
         del session["uid"]
     return jsonify({"success": True, "message": "UID 已清除"})
 
-
 @app.route("/test-score", methods=["POST"])
 def test_score():
     try:
-        data = request.get_json()
-        uid = data["uid"]
-        task_id = data["task_id"]
+        data = request.get_json() or {}
+        uid = (data.get("uid") or "").strip()
+        task_id = (data.get("task_id") or "").strip()
 
-        # 測試用分數
-        score = 3
+        if not uid or not task_id:
+            return jsonify({"success": False, "error": "uid 與 task_id 不可為空"}), 400
 
-        # 會同時幫你寫入 score_list，並回傳日期 + 時間
-        test_date, test_time = insert_score(uid=uid, task_id=task_id)
+        score = 3  # 你目前先寫死 3 分
 
-        # 再把同一個日期 + 時間寫進任務子表
+        try:
+            # 這裡可能會因為 UID 不存在而丟 ValueError("USER_NOT_FOUND")
+            test_date = insert_score(uid=uid, task_id=task_id)
+        except ValueError as e:
+            if str(e) == "USER_NOT_FOUND":
+                return jsonify({
+                    "success": False,
+                    "error": "此使用者不存在，請管理者建立帳號",
+                    "code": "USER_NOT_FOUND",
+                }), 404
+            # 其他 ValueError 再往上丟，交給外層 except
+            raise
+
         insert_task_payload(
             task_id=task_id,
             uid=uid,
             test_date=test_date,
-            test_time=test_time,     # 🔸 新增這個
             score=score,
             result_img_path="",
             data1=None,
         )
-
-        return jsonify(
-            {
-                "success": True,
-                "uid": uid,
-                "task_id": task_id,
-                "test_date": test_date.isoformat(),
-                "time": test_time.strftime("%H:%M:%S"),
-                "score": score,
-            }
-        )
-
+        return jsonify({
+            "success": True,
+            "uid": uid,
+            "task_id": task_id,
+            "test_date": test_date.isoformat(),
+            "score": score,
+        })
     except Exception as e:
         write_to_console(f"/test-score 錯誤: {e}", "ERROR")
         return jsonify({"success": False, "error": str(e)}), 500
-
-
 
 # =========================
 # 4) 背景執行 main.py

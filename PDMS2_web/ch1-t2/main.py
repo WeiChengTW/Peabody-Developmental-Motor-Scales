@@ -161,11 +161,14 @@ def analyze_image_top(frame, model, initial_get_point=2):
 
     summary = f"{status_offset} | {status_rotate}"
 
-    if is_offset_ng or is_rotate_ng:
+    if status_rotate == "?":
+        GET_POINT = 0
+        color = (0, 0, 0)
+    elif is_offset_ng or is_rotate_ng:
         GET_POINT = 1
         color = (0, 0, 255)
-    else:
-        color = (0, 0, 0)
+    
+        
 
     cv2.putText(cropped, summary, (230, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, color, 3)
 
@@ -315,9 +318,8 @@ def analyze_image_side(IMG_PATH, model):
             (np.mean([b[2] - b[0] for b in boxes]) // 2) if len(boxes) > 0 else 0
         )
         pyramid_checker = PyramidCheck()
-        is_pyramid, pyramid_msg = pyramid_checker.check_pyramid(layers, block_width, IS_GAP)
-        if not is_pyramid:
-            SCORE = 0
+        is_pyramid, pyramid_msg, SCORE = pyramid_checker.check_pyramid(layers, block_width, IS_GAP)
+        
         
         # 顯示金字塔檢測結果
         cv2.putText(annotated_frame, f"Pyramid: {pyramid_msg}", (10, 30), 
@@ -363,7 +365,7 @@ if __name__ == "__main__":
         print(f"側視圖 ({SIDE_IMG_PATH}) 得分: {score_side}")
         
         # ✅ 儲存側視圖結果
-        side_result_path = os.path.join('kid',uid, f"{img_id}-side_result.jpg.jpg")
+        side_result_path = os.path.join('kid',uid, f"{img_id}-side_result.jpg")
         cv2.imwrite(side_result_path, annotated_side)
         print(f"側視圖結果已儲存至: {side_result_path}")
         
@@ -388,7 +390,7 @@ if __name__ == "__main__":
 
         # ✅ 儲存俯視圖結果
         # top_result_path = rf"kid\{uid}\{img_id}-top_result.jpg"
-        top_result_path = os.path.join('kid',uid, f"{img_id}-top_result.jpg.jpg")
+        top_result_path = os.path.join('kid',uid, f"{img_id}-top_result.jpg")
         cv2.imwrite(top_result_path, analyzed_frame)
         print(f"俯視圖結果已儲存至: {top_result_path}")
 
