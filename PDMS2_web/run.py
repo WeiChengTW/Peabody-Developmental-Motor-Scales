@@ -33,11 +33,11 @@ CROP_RATE = 0.8  # 預設裁切比例
 # 1) 資料庫設定（PyMySQL 模式）
 # =========================
 DB = dict(
-    host="13.238.239.23",
+    host="100.117.109.112",
     port=3306,
-    user="project",
-    password="project",
-    database="pdms2",
+    user="yplab",
+    password="brain0918",
+    database="testPDMS",
     charset="utf8mb4",
     cursorclass=pymysql.cursors.DictCursor,
     autocommit=True,
@@ -62,12 +62,12 @@ def db_exec(sql, params=None, fetch="none"):
         if conn:
             conn.close()
 
-# ★★★★★ 修正 1：Ch1-t4 對應 build_wall ★★★★★
+
 TASK_MAP = {
     "Ch1-t1": "string_blocks",
     "Ch1-t2": "pyramid",
     "Ch1-t3": "stair",
-    "Ch1-t4": "build_wall",  # 已修正為正確表名
+    "Ch1-t4": "build_wall",  
     "Ch2-t1": "draw_circle",
     "Ch2-t2": "draw_square",
     "Ch2-t3": "draw_cross",
