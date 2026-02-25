@@ -109,7 +109,7 @@ TASK_MAP = {
 
 # == 確認UID存在於DB== #
 def user_exists(uid: str) -> bool:
-    """回傳這個 uid 是否存在於 user_list"""
+    # == 回傳這個 uid 是否存在於 user_list == #
     row = db_exec(
         "SELECT 1 FROM user_list WHERE uid=%s",
         (uid,),
@@ -184,7 +184,7 @@ def set_session_uid():
         if any(c in uid for c in ["/", "\\", ":", "*", "?", '"', "<", ">", "|"]):
             return jsonify({"success": False, "error": "UID 包含無效字符"}), 400
 
-        # ⭐ 新增：只能用資料庫裡已存在的 UID
+        #  只能用資料庫裡已存在的 UID
         if not user_exists(uid):
             write_to_console(f"set_session_uid: UID 不存在 -> {uid}", "WARN")
             return jsonify({
@@ -207,21 +207,21 @@ def get_session_uid():
 
 @app.post("/create-uid-folder")
 def create_uid_folder():
-    write_to_console("[REQ] 進入 create_uid_folder", "INFO")
     data = request.get_json(silent=True) or {}
     uid = (data.get("uid") or "").strip()
+    write_to_console(f"建立UID為{uid}的資料夾", "INFO")
     if not uid:
         write_to_console("create_uid_folder: UID 不能為空", "ERROR")
         return jsonify({"success": False, "error": "UID 不能為空"}), 400
 
     bad = ["/", "\\", ":", "*", "?", '"', "<", ">", "|"]
     if any(c in uid for c in bad):
-        write_to_console(f"create_uid_folder: UID 非法 -> {uid}", "ERROR")
+        write_to_console(f"{uid}不存在於資料庫", "ERROR")
         return jsonify({"success": False, "error": "UID 包含無效字符"}), 400
 
     # == 只允許現有的UID == #
     if not user_exists(uid):
-        write_to_console(f"create_uid_folder: UID 不存在 -> {uid}", "WARN")
+        write_to_console(f"{uid}不存在於資料庫", "WARN")
         return jsonify({
             "success": False,
             "error": "此使用者不存在，請請管理者建立帳號",
@@ -231,7 +231,7 @@ def create_uid_folder():
     kid_dir = ROOT / "kid" / uid
     if not kid_dir.exists():
         kid_dir.mkdir(parents=True, exist_ok=True)
-        write_to_console(f"[FS] 建立資料夾：{kid_dir}", "INFO")
+        write_to_console(f"建立資料夾：{kid_dir}", "INFO")
 
     session["uid"] = uid
     return jsonify({"success": True, "uid": uid, "message": "UID 已載入"})
@@ -399,7 +399,7 @@ def run_python_script():
         data = request.get_json() or {}
         img_id = (data.get("id") or "").strip()
         uid = (data.get("uid") or "").strip() or session.get("uid")
-        
+
         if not img_id or not uid:
             return jsonify({"success": False, "error": "缺少參數"}), 400
 
@@ -418,7 +418,7 @@ def run_python_script():
     except Exception as e:
         write_to_console(f"/run-python 錯誤: {e}", "ERROR")
         return jsonify({"success": False, "error": str(e)}), 500
-    
+
 # == 儲存Stair Type == #
 @app.post("/save-stair-type")
 def save_stair_type():
@@ -435,7 +435,7 @@ def save_stair_type():
 @app.errorhandler(Exception)
 def _handle_err(e):
     tb = traceback.format_exc()
-    write_to_console(f"[ERR] {request.method} {request.path}\n{tb}", "ERROR")
+    # write_to_console(f"[ERR] {request.method} {request.path}\n{tb}", "ERROR")
     return jsonify({"success": False, "error": str(e)}), 500
 
 def _open_browser():
