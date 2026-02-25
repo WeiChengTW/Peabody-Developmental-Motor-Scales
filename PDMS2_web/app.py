@@ -132,7 +132,6 @@ app.secret_key = secrets.token_hex(16)
 CORS(app)
 
 clear_console_log()
-logger = setup_console_logging()
 app.logger.disabled = True
 logging.getLogger("flask.app").disabled = True
 write_to_console("== Flask Starting ! == ", "INFO")
@@ -262,16 +261,15 @@ def insert_score(
 
     db_exec(
         """
-        INSERT INTO score_list (uid, task_id, test_date, time)
-        VALUES (%s, %s, %s, %s)
+        INSERT INTO score_list (uid, task_id, test_date)
+        VALUES (%s, %s, %s)
         ON DUPLICATE KEY UPDATE
-            test_date = VALUES(test_date),
-            time = VALUES(time)
+            test_date = VALUES(test_date)
         """,
-        (uid, task_id, test_date, current_time),
+        (uid, task_id, test_date),
     )
     write_to_console(
-        f"[DB] insert_score ok: uid={uid}, task_id={task_id}, date={test_date}, time={current_time}",
+        f"[DB] insert_score ok: uid={uid}, task_id={task_id}, date={test_date}",
         "INFO",
     )
     return test_date
@@ -337,16 +335,17 @@ def run_analysis_in_background(task_id, uid, img_id, script_path, stair_type=Non
         base_cmd = [sys.executable, str(script_path)]
 
         # == 定義照片的實際存放路徑 == # 
-        photo_path = ROOT / "kid" / uid / f"{img_id}.jpg" 
+        # photo_path = ROOT / "kid" / uid / f"{img_id}.jpg" 
         
         # 檢查照片是否存在，如果不存在就報錯
-        if not photo_path.exists():
-            raise FileNotFoundError(f"找不到照片檔案: {photo_path}")
+        # if not photo_path.exists():
+        #     raise FileNotFoundError(f"找不到照片檔案: {photo_path}")
         
-        cmd = base_cmd + [uid, str(photo_path)]
+        # cmd = base_cmd + [uid, str(photo_path)]
+        cmd = base_cmd + [uid, img_id]
         if stair_type:
             cmd.append(stair_type)
-
+        # print(cmd)
         write_to_console(f"執行命令：{' '.join(cmd)}", "INFO")
         env = os.environ.copy()
         env["PYTHONIOENCODING"] = "utf-8"
@@ -399,7 +398,7 @@ def run_python_script():
         data = request.get_json() or {}
         img_id = (data.get("id") or "").strip()
         uid = (data.get("uid") or "").strip() or session.get("uid")
-
+        
         if not img_id or not uid:
             return jsonify({"success": False, "error": "缺少參數"}), 400
 
@@ -410,6 +409,8 @@ def run_python_script():
         task_id = str(uuid.uuid4())
         stair_type = session.get("stair_type")
 
+
+        # print(f"UID : {uid}\nimg_id : {img_id}\ntask_id : {task_id}")
         t = Thread(target=run_analysis_in_background, args=(task_id, uid, img_id, script_path, stair_type))
         t.daemon = True
         t.start()
@@ -444,6 +445,7 @@ def _open_browser():
 # == if __name__ == "__main__" == #
 if __name__ == "__main__":
     try:
+        logging.getLogger('werkzeug').disabled = True
         write_to_console(f"準備啟動 Flask 應用程式，HOST={HOST}, PORT={PORT}", "INFO")
         threading.Timer(0.5, _open_browser).start()
         write_to_console("已設定瀏覽器自動開啟", "INFO")

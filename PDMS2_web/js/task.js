@@ -460,7 +460,7 @@ function render(){
         return;
     }
 
-    // 1. 存入進度 (維持原樣)
+    // 存入進度 (維持原樣)
     const st = JSON.parse(localStorage.getItem(KEY) || "{}");
     const [chNum, tNum] = id.replace("ch", "").split("-t").map(Number);
     if (!st.done) st.done = {};
