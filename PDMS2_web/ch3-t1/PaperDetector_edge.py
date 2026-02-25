@@ -23,7 +23,7 @@ class PaperDetector_edges:
         blurred = cv2.GaussianBlur(gray, ( 1, 1), 0)
 
         # Canny邊緣檢測
-        # edges = cv2.Canny(blurred, 10, 80, apertureSize=3)
+        edges = cv2.Canny(blurred, 10, 80, apertureSize=3)
         # cv2.imwrite("canny.jpg",edges)
         # 形態學操作來連接斷開的邊緣
         kernel = np.ones((3, 3), np.uint8)

@@ -174,11 +174,11 @@ def score_from_image(img_path, conf=CONF):
 
     # 灰階 + 模糊
     gray = cv2.cvtColor(display_frame, cv2.COLOR_BGR2GRAY)
-    # blurred = cv2.GaussianBlur(gray, (3, 3), 0)
+    blurred = cv2.GaussianBlur(gray, (11, 11), 0)
 
     # 自適應二值化：將深色的繩子凸顯出來
     binary = cv2.adaptiveThreshold(
-        gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, 33, 10
+        blurred, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, 33, 10
     )
 
     # 閉運算去雜點

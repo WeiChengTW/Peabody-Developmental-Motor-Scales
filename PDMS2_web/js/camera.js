@@ -1,8 +1,8 @@
 // camera.js (修正跳轉邏輯：存檔後直接回主頁)
 
 const KEY = "kid-quest-progress-v1";
-const TOP = 0; 
-const SIDE = 6; 
+const TOP = 1; 
+const SIDE = 2; 
 const waittime = 3;
 
 // 遊戲狀態輪詢變數

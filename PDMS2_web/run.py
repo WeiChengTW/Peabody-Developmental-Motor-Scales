@@ -24,8 +24,8 @@ from flask import Flask, send_from_directory, request, jsonify, session
 from flask_cors import CORS
 
 # ====== 相機參數 =====
-TOP = 0
-SIDE = 6 # Ch5-t1 使用
+TOP = 1
+SIDE = 2 # Ch5-t1 使用
 CROP_RATE = 0.8  # 預設裁切比例 (注意下方有再次定義為 0.7)
 # ====================
 
