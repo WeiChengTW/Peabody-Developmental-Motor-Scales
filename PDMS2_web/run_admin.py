@@ -1,4 +1,4 @@
-# run_admin.py (權限分離修正版)
+# run_admin.py (權限分離 + 修正日期時間來源版)
 # -*- coding: utf-8 -*-
 import os
 import sys
@@ -342,21 +342,26 @@ def search_scores_api():
 
         for tid in tasks_to_search:
             table_name = TASK_MAP[tid]
+            # 修正：主表改為 score_list (s)，Join 具體的資料表 (d)
+            # s.test_date, s.time -> 從 score_list 抓取時間
             sql = f"""
-                SELECT d.uid, 
+                SELECT s.uid, 
                        CASE 
-                         WHEN u.name IS NOT NULL AND CHAR_LENGTH(u.name) > 0 THEN CONCAT(u.name, ' (', d.uid, ')')
-                         ELSE d.uid 
+                         WHEN u.name IS NOT NULL AND CHAR_LENGTH(u.name) > 0 THEN CONCAT(u.name, ' (', s.uid, ')')
+                         ELSE s.uid 
                        END as name,
-                       '{tid}' as task_id, 
-                       d.score, d.result_img_path, d.test_date, d.time
-                FROM `{table_name}` AS d
-                JOIN user_list AS u ON u.uid = d.uid
-                WHERE 1=1
+                       s.task_id, 
+                       d.score, d.result_img_path, 
+                       s.test_date, s.time
+                FROM score_list AS s
+                JOIN user_list AS u ON u.uid = s.uid
+                JOIN `{table_name}` AS d 
+                    ON d.uid = s.uid AND d.test_date = s.test_date AND d.time = s.time
+                WHERE s.task_id = %s
             """
-            params = []
+            params = [tid]
             if search_uid:
-                sql += " AND d.uid = %s"
+                sql += " AND s.uid = %s"
                 params.append(search_uid)
 
             rows = db_exec(sql, tuple(params), fetch="all") or []
