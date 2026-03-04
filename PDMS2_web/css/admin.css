@@ -188,6 +188,7 @@ dialog::backdrop { background-color: rgba(92, 78, 78, 0.4); backdrop-filter: blu
 /* 分數拉條美化 */
 input[type=range] {
   -webkit-appearance: none;
+  appearance: none;
   width: 100%;
   background: transparent;
   border: none;
