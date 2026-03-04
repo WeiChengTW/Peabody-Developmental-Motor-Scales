@@ -215,7 +215,7 @@ class SquareGapAnalyzer:
         vis = img.copy()
         H, W = vis.shape[:2]
         L = max(H, W)
-        fs = float(np.clip(L * self.PANEL_FS_COEF, 0.25, 1.0))
+        fs = float(np.clip(L * self.PANEL_FS_COEF, 0.25, 1.0)) * 1.5
         th = max(1, int(1 + fs * 1.2))
         step = int(18 + fs * 26)
         y = int(12 + fs * 22)

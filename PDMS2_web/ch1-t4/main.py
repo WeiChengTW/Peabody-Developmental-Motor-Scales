@@ -10,7 +10,7 @@ def return_score(score):
 # === 俯視圖 (TOP View) 分析函數
 # ====================================================================
 
-CONF_TOP = 0.8
+CONF_TOP = 0.6
 CROP_RATIO = 0.5
 GAP_RATIO = 1.2
 def analyze_image_top(frame, model):
@@ -132,8 +132,13 @@ def analyze_image_top(frame, model):
     else:
         color = (0, 0, 0)
 
-    cv2.putText(cropped, summary, (230, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, color, 3)
+    cv2.putText(cropped, summary, (230, 50), cv2.FONT_HERSHEY_SIMPLEX, 0.8, color, 3)
 
+    # ========== 顯示得分 ==========
+    score_text = f"Score: {GET_POINT}/2"
+    cv2.putText(cropped, score_text, (10, cropped.shape[0] - 20), 
+               cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0, 255, 255), 2)
+    
     return cropped, summary, GET_POINT
 
 
@@ -141,7 +146,7 @@ def analyze_image_top(frame, model):
 # === 側視圖 (SIDE View) 分析函數 - 簡化版
 # ====================================================================
 
-CONF_SIDE = 0.8
+CONF_SIDE = 0.6
 
 def analyze_image_side(IMG_PATH, model):
     """
@@ -159,6 +164,7 @@ def analyze_image_side(IMG_PATH, model):
     if frame is None:
         raise ValueError(f"讀不到圖片：{IMG_PATH}")
 
+    frame = cv2.convertScaleAbs(frame, alpha=1.4, beta=10)
     annotated_frame = frame.copy()
     results = model.predict(source=frame, conf=CONF_SIDE, verbose=False, show=False)
     r0 = results[0]
@@ -340,6 +346,10 @@ if __name__ == "__main__":
         cv2.imwrite(side_result_path, annotated_side)
         print(f"側視圖結果已儲存至: {side_result_path}")
         
+        # 顯示側視圖結果
+        # cv2.namedWindow('Side View Analysis', cv2.WINDOW_NORMAL)
+        # cv2.imshow('Side View Analysis', annotated_side)
+
     except ValueError as e:
         print(f"側視圖分析失敗: {e}")
     except Exception as e:
@@ -352,18 +362,27 @@ if __name__ == "__main__":
         if frame_top is None:
             raise ValueError("讀取俯視圖失敗")
 
-        analyzed_frame, summary, score_top = analyze_image_top(frame_top, yolo_model)
+        analyzed_top, summary, score_top = analyze_image_top(frame_top, yolo_model)
         print(f"俯視圖 ({TOP_IMG_PATH}) 檢測結果: {summary}")
         print(f"俯視圖得分: {score_top}")
+        # 顯示俯視圖結果
+        # cv2.namedWindow('Top View Analysis', cv2.WINDOW_NORMAL)
+        # cv2.imshow('Top View Analysis', analyzed_top)
 
         top_result_path = rf"kid\{uid}\{img_id}-top_result.jpg"
-        cv2.imwrite(top_result_path, analyzed_frame)
+        cv2.imwrite(top_result_path, analyzed_top)
         print(f"俯視圖結果已儲存至: {top_result_path}")
 
     except ValueError as e:
         print(f"俯視圖分析失敗: {e}")
     except Exception as e:
         print(f"俯視圖分析時發生錯誤: {e}")
+
+    # --- 等待按鍵並關閉 ---
+    # print("\n[提示] 按下任意鍵以關閉預覽視窗並輸出分數...")
+    # cv2.waitKey(0)  # 這行會讓視窗卡住，直到你按鍵
+    # cv2.destroyAllWindows()
+
 
     # --- 3. 輸出最低得分 ---
     if score_side == 0 or score_top == 0:

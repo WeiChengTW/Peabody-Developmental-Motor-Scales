@@ -1,364 +1,116 @@
-2026-02-25 15:38:16 - INFO - == Flask Starting ! == 
-2026-02-25 15:38:16 - INFO - 準備啟動 Flask 應用程式，HOST=127.0.0.1, PORT=8000
-2026-02-25 15:38:16 - INFO - 已設定瀏覽器自動開啟
-2026-02-25 15:38:16 - INFO - Flask 應用程式開始運行
-2026-02-25 15:38:23 - INFO - 建立UID為test1的資料夾
-2026-02-25 15:38:27 - INFO - 開始背景任務 06fe6057-98e5-4a4c-982a-b0d3288a6bfd: uid=test1, task=ch1-t2
-2026-02-25 15:38:27 - INFO - 執行命令：C:\Users\hiimd\miniconda3\envs\cnn39\python.exe C:\Users\hiimd\Desktop\vscode\Peabody-Developmental-Motor-Scales\PDMS2_web\ch1-t2\main.py test1 ch1-t2
-2026-02-25 15:38:30 - INFO - 腳本輸出 (任務 06fe6057-98e5-4a4c-982a-b0d3288a6bfd)：
-SIDE_IMG_PATH:kid\test1\ch1-t2-side.jpg
-TOP_IMG_PATH:kid\test1\ch1-t2-top.jpg
-偵測到空隙: 3 組
-分成 4 層
-側視圖 (kid\test1\ch1-t2-side.jpg) 得分: 0
-側視圖結果已儲存至: kid\test1\ch1-t2-side_result.jpg
-俯視圖 (kid\test1\ch1-t2-top.jpg) 檢測結果: No Offset | No Rotate
-俯視圖得分: 2
-俯視圖結果已儲存至: kid\test1\ch1-t2-top_result.jpg
+2026-03-04 14:19:02 - INFO - == Flask Starting ! == 
+2026-03-04 14:19:02 - INFO - 準備啟動 Flask 應用程式，HOST=127.0.0.1, PORT=8000
+2026-03-04 14:19:02 - INFO - 已設定瀏覽器自動開啟
+2026-03-04 14:19:02 - INFO - Flask 應用程式開始運行
+2026-03-04 14:19:08 - INFO - 建立UID為test2的資料夾
+2026-03-04 14:19:08 - INFO - 建立UID為test2的資料夾
+2026-03-04 14:19:15 - INFO - 開始背景任務 19d0f2f8-c38d-484a-ba4c-87da46036162: uid=test2, task=ch4-t1
+2026-03-04 14:19:15 - INFO - 執行命令：C:\Users\hiimd\miniconda3\envs\cnn39\python.exe C:\Users\hiimd\Desktop\vscode\Peabody-Developmental-Motor-Scales\PDMS2_web\ch4-t1\main.py test2 ch4-t1
+2026-03-04 14:20:12 - INFO - 腳本輸出 (任務 19d0f2f8-c38d-484a-ba4c-87da46036162)：
+Score: 0
 
-總結：有一項分析得分為 0，最終得分為 0。
+[提示] 檢視圖片後，按任意鍵關閉視窗並結束程式...
 
-2026-02-25 15:38:30 - INFO - [DB] insert_score ok: uid=test1, task_id=Ch1-t2, date=2026-02-25
-2026-02-25 15:38:30 - INFO - 任務 06fe6057-98e5-4a4c-982a-b0d3288a6bfd 完成：score=0
-2026-02-25 15:39:06 - INFO - 開始背景任務 e3f32d60-7497-4923-b279-ce22f2aff318: uid=test1, task=ch1-t3
-2026-02-25 15:39:06 - INFO - 執行命令：C:\Users\hiimd\miniconda3\envs\cnn39\python.exe C:\Users\hiimd\Desktop\vscode\Peabody-Developmental-Motor-Scales\PDMS2_web\ch1-t3\main.py test1 ch1-t3 L
-2026-02-25 15:39:09 - INFO - 腳本輸出 (任務 e3f32d60-7497-4923-b279-ce22f2aff318)：
-偵測到空隙: 2 組
-分成 3 層
-3
-側視圖 (kid\test1\ch1-t3-side.jpg) 得分: 0
-側視圖結果已儲存至: kid\test1\ch1-t3-side_result.jpg
-俯視圖 (kid\test1\ch1-t3-top.jpg) 檢測結果: Offset ! | Rotate !
-俯視圖得分: 1
-俯視圖結果已儲存至: kid\test1\ch1-t3-top_result.jpg
+2026-03-04 14:20:12 - INFO - [DB] insert_score ok: uid=test2, task_id=Ch4-t1, date=2026-03-04
+2026-03-04 14:20:12 - INFO - 任務 19d0f2f8-c38d-484a-ba4c-87da46036162 完成：score=0
+2026-03-04 14:20:33 - INFO - 開始背景任務 4ca92a5c-014b-47bc-8142-274310ce1e79: uid=test2, task=ch4-t1
+2026-03-04 14:20:33 - INFO - 執行命令：C:\Users\hiimd\miniconda3\envs\cnn39\python.exe C:\Users\hiimd\Desktop\vscode\Peabody-Developmental-Motor-Scales\PDMS2_web\ch4-t1\main.py test2 ch4-t1
+2026-03-04 14:21:50 - INFO - 腳本輸出 (任務 4ca92a5c-014b-47bc-8142-274310ce1e79)：
+Score: 0
 
-總結：有一項分析得分為 0，最終得分為 0。
+[提示] 檢視圖片後，按任意鍵關閉視窗並結束程式...
 
-2026-02-25 15:39:09 - INFO - [DB] insert_score ok: uid=test1, task_id=Ch1-t3, date=2026-02-25
-2026-02-25 15:39:09 - INFO - 任務 e3f32d60-7497-4923-b279-ce22f2aff318 完成：score=0
-2026-02-25 15:39:37 - INFO - 開始背景任務 9e2093f8-55b1-49f9-8257-dc5811ff532e: uid=test1, task=ch1-t4
-2026-02-25 15:39:37 - INFO - 執行命令：C:\Users\hiimd\miniconda3\envs\cnn39\python.exe C:\Users\hiimd\Desktop\vscode\Peabody-Developmental-Motor-Scales\PDMS2_web\ch1-t4\main.py test1 ch1-t4 L
-2026-02-25 15:39:40 - INFO - 腳本輸出 (任務 9e2093f8-55b1-49f9-8257-dc5811ff532e)：
-側視圖 (kid\test1\ch1-t4-side.jpg) 得分: 0
-側視圖結果已儲存至: kid\test1\ch1-t4-side_result.jpg
-俯視圖 (kid\test1\ch1-t4-top.jpg) 檢測結果: Offset ! | No Rotate
-俯視圖得分: 1
-俯視圖結果已儲存至: kid\test1\ch1-t4-top_result.jpg
+2026-03-04 14:21:50 - INFO - [DB] insert_score ok: uid=test2, task_id=Ch4-t1, date=2026-03-04
+2026-03-04 14:21:50 - INFO - 任務 4ca92a5c-014b-47bc-8142-274310ce1e79 完成：score=0
+2026-03-04 14:21:54 - INFO - 開始背景任務 4197ee28-deee-4d4b-9b29-d4ecd9755943: uid=test2, task=ch4-t1
+2026-03-04 14:21:54 - INFO - 執行命令：C:\Users\hiimd\miniconda3\envs\cnn39\python.exe C:\Users\hiimd\Desktop\vscode\Peabody-Developmental-Motor-Scales\PDMS2_web\ch4-t1\main.py test2 ch4-t1
+2026-03-04 14:22:00 - INFO - 腳本輸出 (任務 4197ee28-deee-4d4b-9b29-d4ecd9755943)：
+Score: 0
 
-總結：有一項分析得分為 0，最終得分為 0。
+[提示] 檢視圖片後，按任意鍵關閉視窗並結束程式...
 
-2026-02-25 15:39:40 - INFO - [DB] insert_score ok: uid=test1, task_id=Ch1-t4, date=2026-02-25
-2026-02-25 15:39:40 - INFO - 任務 9e2093f8-55b1-49f9-8257-dc5811ff532e 完成：score=0
-2026-02-25 15:39:43 - INFO - 開始背景任務 5662554a-a8c2-40c2-884e-c61e7e8be0f3: uid=test1, task=ch2-t1
-2026-02-25 15:39:43 - INFO - 執行命令：C:\Users\hiimd\miniconda3\envs\cnn39\python.exe C:\Users\hiimd\Desktop\vscode\Peabody-Developmental-Motor-Scales\PDMS2_web\ch2-t1\main.py test1 ch2-t1 L
-2026-02-25 15:39:54 - INFO - 腳本輸出 (任務 5662554a-a8c2-40c2-884e-c61e7e8be0f3)：
-Model loaded successfully!
-=== 初始化工作空間，清空所有資料夾 ===
-清空資料夾: C:\Users\hiimd\Desktop\vscode\Peabody-Developmental-Motor-Scales\PDMS2_web\ch2-t1\circle_or_oval
-重新建立資料夾: C:\Users\hiimd\Desktop\vscode\Peabody-Developmental-Motor-Scales\PDMS2_web\ch2-t1\circle_or_oval
-清空資料夾: C:\Users\hiimd\Desktop\vscode\Peabody-Developmental-Motor-Scales\PDMS2_web\ch2-t1\Other
-重新建立資料夾: C:\Users\hiimd\Desktop\vscode\Peabody-Developmental-Motor-Scales\PDMS2_web\ch2-t1\Other
-重新建立資料夾: C:\Users\hiimd\Desktop\vscode\Peabody-Developmental-Motor-Scales\PDMS2_web\ch2-t1\cropped_a4
-重新建立資料夾: C:\Users\hiimd\Desktop\vscode\Peabody-Developmental-Motor-Scales\PDMS2_web\ch2-t1\ready
-工作空間初始化完成！
+2026-03-04 14:22:00 - INFO - [DB] insert_score ok: uid=test2, task_id=Ch4-t1, date=2026-03-04
+2026-03-04 14:22:00 - INFO - 任務 4197ee28-deee-4d4b-9b29-d4ecd9755943 完成：score=0
+2026-03-04 14:22:37 - INFO - 開始背景任務 f0526295-7470-4b25-805b-63e25a889463: uid=test2, task=ch4-t1
+2026-03-04 14:22:37 - INFO - 執行命令：C:\Users\hiimd\miniconda3\envs\cnn39\python.exe C:\Users\hiimd\Desktop\vscode\Peabody-Developmental-Motor-Scales\PDMS2_web\ch4-t1\main.py test2 ch4-t1
+2026-03-04 14:22:40 - INFO - 腳本輸出 (任務 f0526295-7470-4b25-805b-63e25a889463)：
+Score: 0
 
+[提示] 檢視圖片後，按任意鍵關閉視窗並結束程式...
 
-=== 處理 kid\test1\ch2-t1.jpg ===
+2026-03-04 14:22:40 - INFO - [DB] insert_score ok: uid=test2, task_id=Ch4-t1, date=2026-03-04
+2026-03-04 14:22:40 - INFO - 任務 f0526295-7470-4b25-805b-63e25a889463 完成：score=0
+2026-03-04 14:22:41 - INFO - 開始背景任務 944a752e-4275-4474-81ac-aa4fda5b4ff1: uid=test2, task=ch4-t1
+2026-03-04 14:22:41 - INFO - 執行命令：C:\Users\hiimd\miniconda3\envs\cnn39\python.exe C:\Users\hiimd\Desktop\vscode\Peabody-Developmental-Motor-Scales\PDMS2_web\ch4-t1\main.py test2 ch4-t1
+2026-03-04 14:22:58 - INFO - 腳本輸出 (任務 944a752e-4275-4474-81ac-aa4fda5b4ff1)：
+Score: 0
 
-A4區域已儲存至: C:\Users\hiimd\Desktop\vscode\Peabody-Developmental-Motor-Scales\PDMS2_web\ch2-t1\cropped_a4\ch2-t1_a4_cropped.jpg
-儲存像素比例資料至: C:\Users\hiimd\Desktop\vscode\Peabody-Developmental-Motor-Scales\PDMS2_web\px2cm.json
-kid\test1\ch2-t1.jpg pixel_per_cm = 17.07100486755371
+[提示] 檢視圖片後，按任意鍵關閉視窗並結束程式...
 
-==裁切圖形==
+2026-03-04 14:23:00 - INFO - [DB] insert_score ok: uid=test2, task_id=Ch4-t1, date=2026-03-04
+2026-03-04 14:23:00 - INFO - 任務 944a752e-4275-4474-81ac-aa4fda5b4ff1 完成：score=0
+2026-03-04 14:23:02 - INFO - 開始背景任務 5992a035-ac6e-4a26-9ccb-c3b179fde5dc: uid=test2, task=ch4-t1
+2026-03-04 14:23:02 - INFO - 執行命令：C:\Users\hiimd\miniconda3\envs\cnn39\python.exe C:\Users\hiimd\Desktop\vscode\Peabody-Developmental-Motor-Scales\PDMS2_web\ch4-t1\main.py test2 ch4-t1
+2026-03-04 14:23:05 - INFO - 腳本輸出 (任務 5992a035-ac6e-4a26-9ccb-c3b179fde5dc)：
+Score: 0
 
-image 1/1 C:\Users\hiimd\Desktop\vscode\Peabody-Developmental-Motor-Scales\PDMS2_web\kid\test1\ch2-t1.jpg: 384x640 1 circle, 1 diamond, 1 triangle, 115.3ms
-Speed: 2.1ms preprocess, 115.3ms inference, 1.1ms postprocess per image at shape (1, 3, 384, 640)
-  - 寫出彩色: C:\Users\hiimd\Desktop\vscode\Peabody-Developmental-Motor-Scales\PDMS2_web\ch2-t1\ready\ch2-t1_0_Diamond.jpg shape=(224, 224, 3)
-  - 寫出二值: C:\Users\hiimd\Desktop\vscode\Peabody-Developmental-Motor-Scales\PDMS2_web\ch2-t1\ready\ch2-t1_0_Diamond_binary.jpg shape=(224, 224, 1)
-成功處理 Diamond (信心度: 0.71), 索引: 0
-  - 寫出彩色: C:\Users\hiimd\Desktop\vscode\Peabody-Developmental-Motor-Scales\PDMS2_web\ch2-t1\ready\ch2-t1_1_Triangle.jpg shape=(224, 224, 3)
-  - 寫出二值: C:\Users\hiimd\Desktop\vscode\Peabody-Developmental-Motor-Scales\PDMS2_web\ch2-t1\ready\ch2-t1_1_Triangle_binary.jpg shape=(224, 224, 1)
-成功處理 Triangle (信心度: 0.62), 索引: 1
-  - 寫出彩色: C:\Users\hiimd\Desktop\vscode\Peabody-Developmental-Motor-Scales\PDMS2_web\ch2-t1\ready\ch2-t1_2_Circle.jpg shape=(224, 224, 3)
-  - 寫出二值: C:\Users\hiimd\Desktop\vscode\Peabody-Developmental-Motor-Scales\PDMS2_web\ch2-t1\ready\ch2-t1_2_Circle_binary.jpg shape=(224, 224, 1)
-成功處理 Circle (信心度: 0.56), 索引: 2
+[提示] 檢視圖片後，按任意鍵關閉視窗並結束程式...
 
-總共成功處理 3 個圖形
+2026-03-04 14:23:05 - INFO - [DB] insert_score ok: uid=test2, task_id=Ch4-t1, date=2026-03-04
+2026-03-04 14:23:05 - INFO - 任務 5992a035-ac6e-4a26-9ccb-c3b179fde5dc 完成：score=0
+2026-03-04 14:23:10 - INFO - 開始背景任務 1ea921f1-44ec-48e6-a133-02b449a9aee6: uid=test2, task=ch4-t1
+2026-03-04 14:23:10 - INFO - 執行命令：C:\Users\hiimd\miniconda3\envs\cnn39\python.exe C:\Users\hiimd\Desktop\vscode\Peabody-Developmental-Motor-Scales\PDMS2_web\ch4-t1\main.py test2 ch4-t1
+2026-03-04 14:23:12 - INFO - 腳本輸出 (任務 1ea921f1-44ec-48e6-a133-02b449a9aee6)：
+Score: 0
 
-==分類圖形==
+[提示] 檢視圖片後，按任意鍵關閉視窗並結束程式...
 
+2026-03-04 14:23:12 - INFO - [DB] insert_score ok: uid=test2, task_id=Ch4-t1, date=2026-03-04
+2026-03-04 14:23:12 - INFO - 任務 1ea921f1-44ec-48e6-a133-02b449a9aee6 完成：score=0
+2026-03-04 14:24:08 - INFO - 開始背景任務 535dc009-7148-4f32-9f1c-bde7e77915bc: uid=test2, task=ch4-t1
+2026-03-04 14:24:08 - INFO - 執行命令：C:\Users\hiimd\miniconda3\envs\cnn39\python.exe C:\Users\hiimd\Desktop\vscode\Peabody-Developmental-Motor-Scales\PDMS2_web\ch4-t1\main.py test2 ch4-t1
+2026-03-04 14:24:16 - INFO - 腳本輸出 (任務 535dc009-7148-4f32-9f1c-bde7e77915bc)：
+Score: 0
 
-[1m1/1[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 958ms/step
-[1m1/1[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m1s[0m 968ms/step
-C:\Users\hiimd\Desktop\vscode\Peabody-Developmental-Motor-Scales\PDMS2_web\ch2-t1\ready\ch2-t1_0_Diamond.jpg → circle_or_oval (99.90%)
+[提示] 檢視圖片後，按任意鍵關閉視窗並結束程式...
 
-[1m1/1[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 92ms/step
-[1m1/1[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 101ms/step
-C:\Users\hiimd\Desktop\vscode\Peabody-Developmental-Motor-Scales\PDMS2_web\ch2-t1\ready\ch2-t1_1_Triangle.jpg → circle_or_oval (99.93%)
-
-[1m1/1[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 83ms/step
-[1m1/1[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 107ms/step
-C:\Users\hiimd\Desktop\vscode\Peabody-Developmental-Motor-Scales\PDMS2_web\ch2-t1\ready\ch2-t1_2_Circle.jpg → circle_or_oval (99.90%)
-
-==計算端點距離==
-
-C:\Users\hiimd\Desktop\vscode\Peabody-Developmental-Motor-Scales\PDMS2_web\ch2-t1\ready\ch2-t1_0_Diamond.jpg : Perfect!
-2
-
-2026-02-25 15:39:54 - ERROR - 腳本錯誤輸出 (任務 5662554a-a8c2-40c2-884e-c61e7e8be0f3)：
-C:\Users\hiimd\miniconda3\envs\cnn39\lib\site-packages\keras\src\optimizers\base_optimizer.py:86: UserWarning: Argument `decay` is no longer supported and will be ignored.
-  warnings.warn(
-WARNING:absl:Compiled the loaded model, but the compiled metrics have yet to be built. `model.compile_metrics` will be empty until you train or evaluate the model.
-WARNING:absl:Error in loading the saved optimizer state. As a result, your model is starting with a freshly initialized optimizer.
-
-2026-02-25 15:39:54 - INFO - [DB] insert_score ok: uid=test1, task_id=Ch2-t1, date=2026-02-25
-2026-02-25 15:39:54 - INFO - 任務 5662554a-a8c2-40c2-884e-c61e7e8be0f3 完成：score=2
-2026-02-25 15:42:56 - INFO - 開始背景任務 91808cac-279d-4965-881f-1ac7a4ae18e6: uid=test1, task=ch2-t2
-2026-02-25 15:42:56 - INFO - 執行命令：C:\Users\hiimd\miniconda3\envs\cnn39\python.exe C:\Users\hiimd\Desktop\vscode\Peabody-Developmental-Motor-Scales\PDMS2_web\ch2-t2\main.py test1 ch2-t2 L
-2026-02-25 15:43:04 - INFO - 腳本輸出 (任務 91808cac-279d-4965-881f-1ac7a4ae18e6)：
-Model loaded successfully!
-=== 初始化工作空間，清空所有資料夾 ===
-清空資料夾: C:\Users\hiimd\Desktop\vscode\Peabody-Developmental-Motor-Scales\PDMS2_web\ch2-t2\quadrilateral
-重新建立資料夾: C:\Users\hiimd\Desktop\vscode\Peabody-Developmental-Motor-Scales\PDMS2_web\ch2-t2\quadrilateral
-清空資料夾: C:\Users\hiimd\Desktop\vscode\Peabody-Developmental-Motor-Scales\PDMS2_web\ch2-t2\Other
-重新建立資料夾: C:\Users\hiimd\Desktop\vscode\Peabody-Developmental-Motor-Scales\PDMS2_web\ch2-t2\Other
-清空資料夾: C:\Users\hiimd\Desktop\vscode\Peabody-Developmental-Motor-Scales\PDMS2_web\ch2-t2\cropped_a4
-重新建立資料夾: C:\Users\hiimd\Desktop\vscode\Peabody-Developmental-Motor-Scales\PDMS2_web\ch2-t2\cropped_a4
-清空資料夾: C:\Users\hiimd\Desktop\vscode\Peabody-Developmental-Motor-Scales\PDMS2_web\ch2-t2\ready
-重新建立資料夾: C:\Users\hiimd\Desktop\vscode\Peabody-Developmental-Motor-Scales\PDMS2_web\ch2-t2\ready
-工作空間初始化完成！
-
-
-=== 處理 kid\test1\ch2-t2.jpg ===
-
-A4區域已儲存至: C:\Users\hiimd\Desktop\vscode\Peabody-Developmental-Motor-Scales\PDMS2_web\ch2-t2\cropped_a4\ch2-t2_a4_cropped.jpg
-kid\test1\ch2-t2.jpg pixel_per_cm = 17.07100486755371
-
-==裁切圖形==
-
-image 1/1 C:\Users\hiimd\Desktop\vscode\Peabody-Developmental-Motor-Scales\PDMS2_web\kid\test1\ch2-t2.jpg: 384x640 1 rectangle, 95.7ms
-Speed: 2.0ms preprocess, 95.7ms inference, 1.2ms postprocess per image at shape (1, 3, 384, 640)
-  - 寫出彩色: C:\Users\hiimd\Desktop\vscode\Peabody-Developmental-Motor-Scales\PDMS2_web\ch2-t2\ready\ch2-t2_0_Square.jpg shape=(224, 224, 3)
-  - 寫出二值: C:\Users\hiimd\Desktop\vscode\Peabody-Developmental-Motor-Scales\PDMS2_web\ch2-t2\ready\ch2-t2_0_Square_binary.jpg shape=(224, 224, 1)
-成功處理 Square (信心度: 0.98), 索引: 0
-
-總共成功處理 1 個圖形
-
-==分類圖形==
-
-
-[1m1/1[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 953ms/step
-[1m1/1[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m1s[0m 964ms/step
-C:\Users\hiimd\Desktop\vscode\Peabody-Developmental-Motor-Scales\PDMS2_web\ch2-t2\ready\ch2-t2_0_Square.jpg → quadrilateral (54.18%)
-score = 2
-
-2026-02-25 15:43:04 - ERROR - 腳本錯誤輸出 (任務 91808cac-279d-4965-881f-1ac7a4ae18e6)：
-C:\Users\hiimd\miniconda3\envs\cnn39\lib\site-packages\keras\src\optimizers\base_optimizer.py:86: UserWarning: Argument `decay` is no longer supported and will be ignored.
-  warnings.warn(
-WARNING:absl:Compiled the loaded model, but the compiled metrics have yet to be built. `model.compile_metrics` will be empty until you train or evaluate the model.
-WARNING:absl:Error in loading the saved optimizer state. As a result, your model is starting with a freshly initialized optimizer.
-
-2026-02-25 15:43:04 - INFO - [DB] insert_score ok: uid=test1, task_id=Ch2-t2, date=2026-02-25
-2026-02-25 15:43:04 - INFO - 任務 91808cac-279d-4965-881f-1ac7a4ae18e6 完成：score=2
-2026-02-25 15:43:29 - INFO - 開始背景任務 d1e6370b-f9e4-4e88-8536-331768e4207c: uid=test1, task=ch2-t3
-2026-02-25 15:43:29 - INFO - 執行命令：C:\Users\hiimd\miniconda3\envs\cnn39\python.exe C:\Users\hiimd\Desktop\vscode\Peabody-Developmental-Motor-Scales\PDMS2_web\ch2-t3\main.py test1 ch2-t3 L
-2026-02-25 15:43:37 - INFO - 腳本輸出 (任務 d1e6370b-f9e4-4e88-8536-331768e4207c)：
-Model loaded successfully!
-=== 初始化工作空間，清空所有資料夾 ===
-清空資料夾: C:\Users\hiimd\Desktop\vscode\Peabody-Developmental-Motor-Scales\PDMS2_web\ch2-t3\Cross
-重新建立資料夾: C:\Users\hiimd\Desktop\vscode\Peabody-Developmental-Motor-Scales\PDMS2_web\ch2-t3\Cross
-清空資料夾: C:\Users\hiimd\Desktop\vscode\Peabody-Developmental-Motor-Scales\PDMS2_web\ch2-t3\Other
-重新建立資料夾: C:\Users\hiimd\Desktop\vscode\Peabody-Developmental-Motor-Scales\PDMS2_web\ch2-t3\Other
-重新建立資料夾: C:\Users\hiimd\Desktop\vscode\Peabody-Developmental-Motor-Scales\PDMS2_web\ch2-t3\cropped_a4
-重新建立資料夾: C:\Users\hiimd\Desktop\vscode\Peabody-Developmental-Motor-Scales\PDMS2_web\ch2-t3\ready
-工作空間初始化完成！
-
-A4區域已儲存至: C:\Users\hiimd\Desktop\vscode\Peabody-Developmental-Motor-Scales\PDMS2_web\ch2-t3\cropped_a4\ch2-t3_a4_cropped.jpg
-kid\test1\ch2-t3.jpg pixel_per_cm = 47.4416628993705
-
-=== 處理 kid\test1\ch2-t3.jpg ===
-
-
-==裁切圖形==
-
-image 1/1 C:\Users\hiimd\Desktop\vscode\Peabody-Developmental-Motor-Scales\PDMS2_web\kid\test1\ch2-t3.jpg: 384x640 1 triangle, 96.0ms
-Speed: 208.5ms preprocess, 96.0ms inference, 1.9ms postprocess per image at shape (1, 3, 384, 640)
-  - 寫出彩色: C:\Users\hiimd\Desktop\vscode\Peabody-Developmental-Motor-Scales\PDMS2_web\ch2-t3\ready\ch2-t3_0_Triangle.jpg shape=(224, 224, 3)
-  - 寫出二值: C:\Users\hiimd\Desktop\vscode\Peabody-Developmental-Motor-Scales\PDMS2_web\ch2-t3\ready\ch2-t3_0_Triangle_binary.jpg shape=(224, 224, 1)
-成功處理 Triangle (信心度: 0.47), 索引: 0
-
-總共成功處理 1 個圖形
-
-==分類圖形==
-
-
-[1m1/1[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 877ms/step
-[1m1/1[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m1s[0m 887ms/step
-C:\Users\hiimd\Desktop\vscode\Peabody-Developmental-Motor-Scales\PDMS2_web\ch2-t3\ready\ch2-t3_0_Triangle.jpg → cross (91.26%)
-1
-
-2026-02-25 15:43:37 - ERROR - 腳本錯誤輸出 (任務 d1e6370b-f9e4-4e88-8536-331768e4207c)：
-C:\Users\hiimd\miniconda3\envs\cnn39\lib\site-packages\keras\src\optimizers\base_optimizer.py:86: UserWarning: Argument `decay` is no longer supported and will be ignored.
-  warnings.warn(
-WARNING:absl:Compiled the loaded model, but the compiled metrics have yet to be built. `model.compile_metrics` will be empty until you train or evaluate the model.
-WARNING:absl:Error in loading the saved optimizer state. As a result, your model is starting with a freshly initialized optimizer.
-
-2026-02-25 15:43:37 - INFO - [DB] insert_score ok: uid=test1, task_id=Ch2-t3, date=2026-02-25
-2026-02-25 15:43:37 - INFO - 任務 d1e6370b-f9e4-4e88-8536-331768e4207c 完成：score=1
-2026-02-25 15:43:56 - INFO - 開始背景任務 14097a73-5a05-4ced-bc31-386cad727bac: uid=test1, task=ch2-t4
-2026-02-25 15:43:56 - INFO - 執行命令：C:\Users\hiimd\miniconda3\envs\cnn39\python.exe C:\Users\hiimd\Desktop\vscode\Peabody-Developmental-Motor-Scales\PDMS2_web\ch2-t4\main.py test1 ch2-t4 L
-2026-02-25 15:43:56 - INFO - 腳本輸出 (任務 14097a73-5a05-4ced-bc31-386cad727bac)：
-最遠點: (837, 472) 偏差 3.566 cm （60.9 px）
-偏離次數（任何偏離）：10 次
-嚴重偏離（> 1.2 cm）：8 次
-最大偏差: 3.566 cm
-得分: 0 分（最大偏差 ≥ 1.2 cm）
-✅ 已輸出結果圖：result\result_overlay.jpg
-完成結果圖： kid\test1\ch2-t4_result.jpg
-得分： 0
-
-2026-02-25 15:43:57 - INFO - [DB] insert_score ok: uid=test1, task_id=Ch2-t4, date=2026-02-25
-2026-02-25 15:43:57 - INFO - 任務 14097a73-5a05-4ced-bc31-386cad727bac 完成：score=0
-2026-02-25 15:44:24 - INFO - 開始背景任務 d8c883eb-1185-46ae-a1ad-eb79e021402e: uid=test1, task=ch2-t5
-2026-02-25 15:44:24 - INFO - 執行命令：C:\Users\hiimd\miniconda3\envs\cnn39\python.exe C:\Users\hiimd\Desktop\vscode\Peabody-Developmental-Motor-Scales\PDMS2_web\ch2-t5\main.py test1 ch2-t5 L
-2026-02-25 15:44:24 - INFO - 腳本輸出 (任務 d8c883eb-1185-46ae-a1ad-eb79e021402e)：
-[-] Processing: C:\Users\hiimd\Desktop\vscode\Peabody-Developmental-Motor-Scales\PDMS2_web\kid\test1\ch2-t5.jpg
-
-2026-02-25 15:44:24 - ERROR - 腳本錯誤輸出 (任務 d8c883eb-1185-46ae-a1ad-eb79e021402e)：
+2026-03-04 14:24:16 - INFO - [DB] insert_score ok: uid=test2, task_id=Ch4-t1, date=2026-03-04
+2026-03-04 14:24:16 - INFO - 任務 535dc009-7148-4f32-9f1c-bde7e77915bc 完成：score=0
+2026-03-04 14:25:37 - INFO - 開始背景任務 95429464-fe7c-487b-89db-1df4947d6690: uid=test2, task=ch4-t1
+2026-03-04 14:25:37 - INFO - 執行命令：C:\Users\hiimd\miniconda3\envs\cnn39\python.exe C:\Users\hiimd\Desktop\vscode\Peabody-Developmental-Motor-Scales\PDMS2_web\ch4-t1\main.py test2 ch4-t1
+2026-03-04 14:25:37 - ERROR - 腳本錯誤輸出 (任務 95429464-fe7c-487b-89db-1df4947d6690)：
 Traceback (most recent call last):
-  File "C:\Users\hiimd\Desktop\vscode\Peabody-Developmental-Motor-Scales\PDMS2_web\ch2-t5\main.py", line 79, in <module>
-    main()
-  File "C:\Users\hiimd\Desktop\vscode\Peabody-Developmental-Motor-Scales\PDMS2_web\ch2-t5\main.py", line 48, in main
-    y_top, y_bot = detect_horizontal_lines(warped)
-  File "C:\Users\hiimd\Desktop\vscode\Peabody-Developmental-Motor-Scales\PDMS2_web\ch2-t5\exceed_correct.py", line 60, in detect_horizontal_lines
-    grouped_y = group_lines_1d(candidates, gap=15)
-  File "C:\Users\hiimd\Desktop\vscode\Peabody-Developmental-Motor-Scales\PDMS2_web\ch2-t5\exceed_correct.py", line 6, in group_lines_1d
-    if not ylist: return []
-ValueError: The truth value of an array with more than one element is ambiguous. Use a.any() or a.all()
+  File "C:\Users\hiimd\Desktop\vscode\Peabody-Developmental-Motor-Scales\PDMS2_web\ch4-t1\main.py", line 205, in <module>
+    final_score = analyze_image(target_path, u_id, i_id)
+NameError: name 'analyze_image' is not defined
 
-2026-02-25 15:44:25 - INFO - [DB] insert_score ok: uid=test1, task_id=Ch2-t5, date=2026-02-25
-2026-02-25 15:44:25 - INFO - 任務 d8c883eb-1185-46ae-a1ad-eb79e021402e 完成：score=1
-2026-02-25 15:44:42 - INFO - 開始背景任務 ad147e0b-d100-4004-8a0c-2b840a1287aa: uid=test1, task=ch2-t6
-2026-02-25 15:44:42 - INFO - 執行命令：C:\Users\hiimd\miniconda3\envs\cnn39\python.exe C:\Users\hiimd\Desktop\vscode\Peabody-Developmental-Motor-Scales\PDMS2_web\ch2-t6\main.py test1 ch2-t6 L
-2026-02-25 15:44:42 - INFO - 腳本輸出 (任務 ad147e0b-d100-4004-8a0c-2b840a1287aa)：
-[-] Processing: C:\Users\hiimd\Desktop\vscode\Peabody-Developmental-Motor-Scales\PDMS2_web\kid\test1\ch2-t6.jpg
-[Success] 結果圖已儲存: C:\Users\hiimd\Desktop\vscode\Peabody-Developmental-Motor-Scales\PDMS2_web\kid\test1\ch2-t6_result.jpg
+2026-03-04 14:25:37 - INFO - [DB] insert_score ok: uid=test2, task_id=Ch4-t1, date=2026-03-04
+2026-03-04 14:25:37 - INFO - 任務 95429464-fe7c-487b-89db-1df4947d6690 完成：score=1
+2026-03-04 14:25:58 - INFO - 開始背景任務 a9ccc454-b9c4-4146-8fb4-454bb7bedda7: uid=test2, task=ch4-t1
+2026-03-04 14:25:58 - INFO - 執行命令：C:\Users\hiimd\miniconda3\envs\cnn39\python.exe C:\Users\hiimd\Desktop\vscode\Peabody-Developmental-Motor-Scales\PDMS2_web\ch4-t1\main.py test2 ch4-t1
+2026-03-04 14:26:03 - INFO - 腳本輸出 (任務 a9ccc454-b9c4-4146-8fb4-454bb7bedda7)：
+Score: 0
 
-2026-02-25 15:44:42 - INFO - [DB] insert_score ok: uid=test1, task_id=Ch2-t6, date=2026-02-25
-2026-02-25 15:44:42 - INFO - 任務 ad147e0b-d100-4004-8a0c-2b840a1287aa 完成：score=0
-2026-02-25 15:45:12 - INFO - 開始背景任務 71331ded-667d-47b2-8a9c-743b9118c225: uid=test1, task=ch3-t1
-2026-02-25 15:45:12 - INFO - 執行命令：C:\Users\hiimd\miniconda3\envs\cnn39\python.exe C:\Users\hiimd\Desktop\vscode\Peabody-Developmental-Motor-Scales\PDMS2_web\ch3-t1\main.py test1 ch3-t1 L
-2026-02-25 15:45:13 - INFO - 腳本輸出 (任務 71331ded-667d-47b2-8a9c-743b9118c225)：
+[提示] 檢視圖片後，按任意鍵關閉視窗並結束程式...
 
-正在處理圖片: kid\test1\ch3-t1.jpg
-====提取紙張區域====
-結果已儲存為 'ch3-t1\extracted\ch3-t1_extracted_paper.jpg'
-結果已儲存為 'ch3-t1
-esult/ch3-t1.png'
-ArUco中心到黃色邊框
-最短距離: 3.66cm, 最長距離: 4.19cm
-kid = 0.34, score = 2
+2026-03-04 14:26:03 - INFO - [DB] insert_score ok: uid=test2, task_id=Ch4-t1, date=2026-03-04
+2026-03-04 14:26:03 - INFO - 任務 a9ccc454-b9c4-4146-8fb4-454bb7bedda7 完成：score=0
+2026-03-04 14:31:22 - INFO - 開始背景任務 8d08762d-0463-48f6-aefb-dfa7cba6e554: uid=test2, task=ch4-t1
+2026-03-04 14:31:22 - INFO - 執行命令：C:\Users\hiimd\miniconda3\envs\cnn39\python.exe C:\Users\hiimd\Desktop\vscode\Peabody-Developmental-Motor-Scales\PDMS2_web\ch4-t1\main.py test2 ch4-t1
+2026-03-04 14:31:27 - INFO - 腳本輸出 (任務 8d08762d-0463-48f6-aefb-dfa7cba6e554)：
+Score: 0
 
-2026-02-25 15:45:13 - INFO - [DB] insert_score ok: uid=test1, task_id=Ch3-t1, date=2026-02-25
-2026-02-25 15:45:13 - INFO - 任務 71331ded-667d-47b2-8a9c-743b9118c225 完成：score=2
-2026-02-25 15:45:28 - INFO - 開始背景任務 3a013bbe-1acb-47be-a29d-63c5b07cff2a: uid=test1, task=ch3-t2
-2026-02-25 15:45:28 - INFO - 執行命令：C:\Users\hiimd\miniconda3\envs\cnn39\python.exe C:\Users\hiimd\Desktop\vscode\Peabody-Developmental-Motor-Scales\PDMS2_web\ch3-t2\main.py test1 ch3-t2 L
-2026-02-25 15:45:28 - INFO - 腳本輸出 (任務 3a013bbe-1acb-47be-a29d-63c5b07cff2a)：
+[提示] 檢視圖片後，按任意鍵關閉視窗並結束程式...
 
-正在處理圖片: kid\test1\ch3-t2.jpg
-====提取紙張區域====
-檢測到紙張區域，面積: 64835.0
-紙張輪廓點數: 4
-結果已儲存為 'ch3-t2/extracted/ch3-t2_extracted_paper.jpg'
-按任意鍵關閉視窗...
-黑框四角座標：
-Corner 1: x=49.5, y=60.5
-Corner 2: x=177.5, y=64.5
-Corner 3: x=173.5, y=192.5
-Corner 4: x=45.5, y=188.5
-結果已儲存為 'ch3-t2/Draw_square/ch3-t2/extracted/ch3-t2.png'
-內凹方向的最大最短距離: 0.14
-紅框四角到黃框線之最短的最長距離: 0.15
-最長距離線段與方框、最大輪廓邊緣已畫出並存檔於 ch3-t2/result/ch3-t2/extracted/ch3-t2_max_dist.png
-kid = 0.15, score = 2
+2026-03-04 14:31:28 - INFO - [DB] insert_score ok: uid=test2, task_id=Ch4-t1, date=2026-03-04
+2026-03-04 14:31:28 - INFO - 任務 8d08762d-0463-48f6-aefb-dfa7cba6e554 完成：score=0
+2026-03-04 14:31:38 - INFO - 開始背景任務 2aa089cb-56d7-48a7-a99c-25d71f26d4c0: uid=test2, task=ch4-t1
+2026-03-04 14:31:38 - INFO - 執行命令：C:\Users\hiimd\miniconda3\envs\cnn39\python.exe C:\Users\hiimd\Desktop\vscode\Peabody-Developmental-Motor-Scales\PDMS2_web\ch4-t1\main.py test2 ch4-t1
+2026-03-04 14:31:48 - INFO - 腳本輸出 (任務 2aa089cb-56d7-48a7-a99c-25d71f26d4c0)：
+Score: 0
 
-2026-02-25 15:45:28 - INFO - [DB] insert_score ok: uid=test1, task_id=Ch3-t2, date=2026-02-25
-2026-02-25 15:45:28 - INFO - 任務 3a013bbe-1acb-47be-a29d-63c5b07cff2a 完成：score=2
-2026-02-25 15:45:42 - INFO - 開始背景任務 c1b1c773-f226-454f-9838-f31ecba9271f: uid=test1, task=ch3-t3
-2026-02-25 15:45:42 - INFO - 執行命令：C:\Users\hiimd\miniconda3\envs\cnn39\python.exe C:\Users\hiimd\Desktop\vscode\Peabody-Developmental-Motor-Scales\PDMS2_web\ch3-t3\main.py test1 ch3-t3 L
-2026-02-25 15:45:43 - INFO - 腳本輸出 (任務 c1b1c773-f226-454f-9838-f31ecba9271f)：
-============================================================
-Peabody 發展性動作量表 - 單張處理模式
-處理檔案: ch3-t3.jpg
-============================================================
+[提示] 檢視圖片後，按任意鍵關閉視窗並結束程式...
 
-[Step 1] 檢測紙張輪廓...
-檢測到紙張輪廓，包含 775 個輪廓點
-結果已保存到: result\step1_ch3-t3.jpg
-  ✓ 成功檢測輪廓 (775 個點)
-
-[Step 2] 檢測ArUco標記與比例尺...
-ArUco中心點: (439.8, 302.0)
-ArUco像素邊長: 47.3 pixels
-比例尺: 16.88 pixels/cm
-1/4 A4尺寸: 177 x 250 pixels
-✓ 成功檢測ArUco並繪製1/4 A4矩形
-結果已保存到: result\step2_ch3-t3.jpg
-  ✓ 檢測到ArUco，比例尺: 16.88 pixels/cm
-
-[Step 3] 計算偏差距離...
-  [快速模式] 處理圖片: ch3-t3.jpg
-檢測到紙張輪廓，包含 775 個輪廓點
-    輪廓簡化: 775 -> 4 點
-ArUco中心點: (439.8, 302.0)
-ArUco像素邊長: 47.3 pixels
-比例尺: 16.88 pixels/cm
-1/4 A4尺寸: 177 x 250 pixels
-✓ 成功檢測ArUco並繪製1/4 A4矩形
-    最大邊線距離: 2.59cm
-    最大角點距離: 2.59cm
-    結果已保存到: result\fast_step3_ch3-t3.jpg
-  ✓ 距離計算完成
-    邊線最大距離: ['2.59cm', '2.59cm', '2.04cm', '0.30cm']
-    角點距離:     ['0.21cm', '2.59cm', '2.04cm', '0.09cm']
-
-[Step 4] 進行自動評分...
-  [快速評分] 處理: ch3-t3.jpg
-    檢測到 1 個ArUco標記
-  [快速模式] 處理圖片: ch3-t3.jpg
-檢測到紙張輪廓，包含 775 個輪廓點
-    輪廓簡化: 775 -> 4 點
-ArUco中心點: (439.8, 302.0)
-ArUco像素邊長: 47.3 pixels
-比例尺: 16.88 pixels/cm
-1/4 A4尺寸: 177 x 250 pixels
-✓ 成功檢測ArUco並繪製1/4 A4矩形
-    最大邊線距離: 2.59cm
-    最大角點距離: 2.59cm
-ArUco中心點: (439.8, 302.0)
-ArUco像素邊長: 47.3 pixels
-比例尺: 16.88 pixels/cm
-1/4 A4尺寸: 177 x 250 pixels
-✓ 成功檢測ArUco並繪製1/4 A4矩形
-    總體最大距離: 2.59cm
-    評分: 1/2 - 剪紙完成但不夠精確，最大間距 2.59cm > 1.2cm
-    結果已保存到: result\fast_scored_ch3-t3.jpg
-------------------------------
-【最終評分】: 1 / 2
-【評分原因】: 剪紙完成但不夠精確，最大間距 2.59cm > 1.2cm
-------------------------------
-
-2026-02-25 15:45:43 - INFO - [DB] insert_score ok: uid=test1, task_id=Ch3-t3, date=2026-02-25
-2026-02-25 15:45:43 - INFO - 任務 c1b1c773-f226-454f-9838-f31ecba9271f 完成：score=1
-2026-02-25 15:45:57 - INFO - 開始背景任務 5c6afe58-6743-4558-a9c1-409084b5160e: uid=test1, task=ch3-t4
-2026-02-25 15:45:57 - INFO - 執行命令：C:\Users\hiimd\miniconda3\envs\cnn39\python.exe C:\Users\hiimd\Desktop\vscode\Peabody-Developmental-Motor-Scales\PDMS2_web\ch3-t4\main.py test1 ch3-t4 L
-2026-02-25 15:45:57 - INFO - 腳本輸出 (任務 5c6afe58-6743-4558-a9c1-409084b5160e)：
-警告：找不到矩形物體，可能反光嚴重或紙張變形，使用最大輪廓代替。
---- 詳細數據 ---
-面積: 17858
-比例: 0.08
-判定: Score 1 (8.2%)
-
-2026-02-25 15:45:58 - INFO - [DB] insert_score ok: uid=test1, task_id=Ch3-t4, date=2026-02-25
-2026-02-25 15:45:58 - INFO - 任務 5c6afe58-6743-4558-a9c1-409084b5160e 完成：score=1
-2026-02-25 15:46:37 - INFO - Flask 應用程式已關閉
+2026-03-04 14:31:48 - INFO - [DB] insert_score ok: uid=test2, task_id=Ch4-t1, date=2026-03-04
+2026-03-04 14:31:48 - INFO - 任務 2aa089cb-56d7-48a7-a99c-25d71f26d4c0 完成：score=0
+2026-03-04 14:40:21 - INFO - Flask 應用程式已關閉
