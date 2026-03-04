@@ -1,283 +1,392 @@
+// admin.js (權限分離版：Level 2 個資 / Level 3 成績)
 (function () {
-  const LS_KEY = 'admin-demo-records';
+  const state = {
+    userLevel: 0, 
+    currentUid: '',
+    currentName: '',
+    rows: [],
+    usersList: [],
+    sortKey: 'test_date',
+    sortAsc: false,
+    selUserId: '',
+    selLevel: '',
+    allLevels: []
+  };
 
-  // ===== 使用者權限 =====
-  let userLevel = 0; // 1: 家長(唯讀), 2: 醫療人員, 3: 主管
-
-  async function ensureAuth() {
-    try {
-      const r = await fetch('/api/auth/whoami');
-      const js = await r.json();
-      if (!js.ok || !js.logged_in) {
-        location.href = '/html/login.html';
-        return false;
-      }
-      userLevel = Number(js.user.level || 0);
-
-      // Level 1：家長 → 隱藏「新增」按鈕
-      if (userLevel === 1) {
-        const addBtn = document.querySelector('[data-action="new"]');
-        if (addBtn) addBtn.style.display = 'none';
-      }
-      return true;
-    } catch (e) {
-      console.error('whoami error:', e);
-      location.href = '/html/login.html';
-      return false;
-    }
-  }
-
-  // ============ 資料轉換 ============
-  function toCanonical(input) {
-    const arr = Array.isArray(input)
-      ? input
-      : (input && typeof input === 'object'
-        ? (input.data || input.results || input.records || [input])
-        : []);
-    return arr.map((raw, idx) => {
-      const entries = Object.entries(raw || {});
-      const norm = {};
-      for (const [k, v] of entries) {
-        const k2 = String(k).trim();
-        const k3 = k2.toLowerCase();
-        norm[k2] = v;
-        norm[k3] = v;
-      }
-      const id =
-        norm['userId'] || norm['userid'] || norm['uid'] || norm['user_id'] ||
-        norm['id'] || `u-${idx + 1}`;
-      const name =
-        norm['name'] || norm['username'] || norm['nickname'] ||
-        `使用者${idx + 1}`;
-      const tasks = {};
-      for (const [origKey, val] of entries) {
-        const keyTrim = String(origKey).trim();
-        const keyLow = keyTrim.toLowerCase();
-        const isMetaKey =
-          keyLow === 'name' ||
-          keyLow === 'userid' || keyLow === 'user_id' || keyLow === 'uid' ||
-          keyLow === 'id';
-        if (isMetaKey) continue;
-        if (val && typeof val === 'object' && ('score' in val)) {
-          tasks[keyTrim] = {
-            score: Number(val.score ?? 0),
-            updatedAt: val.updatedAt || val.time || null
-          };
-        } else if (typeof val === 'number') {
-          tasks[keyTrim] = { score: Number(val), updatedAt: null };
-        }
-      }
-      return { id: String(id), userId: String(id), name: String(name), tasks };
-    });
-  }
-
-  function fromCanonical(list) {
-    return list.map(u => {
-      const obj = { name: u.name, userId: u.userId };
-      for (const [lvl, info] of Object.entries(u.tasks)) {
-        obj[lvl] = { score: info.score, updatedAt: info.updatedAt || new Date().toISOString() };
-      }
-      return obj;
-    });
-  }
-
-  async function loadInitial() {
-    try {
-      const ls = localStorage.getItem(LS_KEY);
-      if (ls) return JSON.parse(ls);
-    } catch { }
-    try {
-      const res = await fetch('./data/result_copy.json');
-      if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
-      const j = await res.json();
-      return toCanonical(j);
-    } catch (err) {
-      console.warn('[load] 無法載入 result copy.json：', err);
-      const $tbody = document.querySelector('[data-role="tbody"]');
-      if ($tbody) $tbody.innerHTML =
-        `<tr><td colspan="5" class="empty">讀取失敗：${String(err).replace(/[<>&]/g, '')}</td></tr>`;
-      return [];
-    }
-  }
-  function saveLS(list) { try { localStorage.setItem(LS_KEY, JSON.stringify(list)); } catch { } }
-
-  // 狀態與 DOM
-  const state = { list: [], sortKey: 'userId', sortAsc: true, selUserId: '', selLevel: '' };
-
-  const $tbody = document.querySelector('[data-role="tbody"]');
-  const $selName = document.querySelector('[data-role="sel-name"]');
-  const $selLvl = document.querySelector('[data-role="sel-level"]');
-  const $dialog = document.querySelector('[data-role="dialog"]');
+  const $tbody = document.getElementById('tbody');
+  const $selName = document.getElementById('sel-name');
+  const $selLvl = document.getElementById('sel-level');
+  
+  // Dialog 相關元素
+  const $dialog = document.getElementById('edit-dialog');
   const $f_userId = $dialog.querySelector('[data-field="userId"]');
   const $f_name = $dialog.querySelector('[data-field="name"]');
   const $f_level = $dialog.querySelector('[data-field="level"]');
   const $f_score = $dialog.querySelector('[data-field="score"]');
   const $f_scoreText = $dialog.querySelector('[data-field="score-text"]');
+  const $f_testDate = $dialog.querySelector('[data-field="test_date"]');
+  const $scoreSection = document.getElementById('score-fields');
+  
+  let editingRowKey = null;
 
-  function rebuildSelects() {
-    const seenU = new Set();
-    const optsU = ['<option value="">（請選擇姓名）</option>'];
-    state.list.forEach(u => {
-      if (seenU.has(u.userId)) return;
-      seenU.add(u.userId);
-      optsU.push(`<option value="${u.userId}">${u.userId} - ${u.name}</option>`);
-    });
-    $selName.innerHTML = optsU.join('');
-    if (state.selUserId) $selName.value = state.selUserId;
+  async function init() {
+    try {
+      const r = await fetch('/api/auth/whoami');
+      const js = await r.json();
+      if (!js.ok || !js.logged_in) { alert("請先登入"); window.location.href = '/'; return; }
 
-    const seenL = new Set();
-    const optsL = ['<option value="">（請選擇關卡）</option>'];
-    state.list.forEach(u => {
-      Object.keys(u.tasks).forEach(lvl => {
-        if (!seenL.has(lvl)) { seenL.add(lvl); optsL.push(`<option value="${lvl}">${lvl}</option>`); }
-      });
-    });
-    $selLvl.innerHTML = optsL.join('');
-    if (state.selLevel) $selLvl.value = state.selLevel;
+      const user = js.user;
+      state.currentUid = user.account;
+      state.userLevel = parseInt(user.level) || 0;
+      state.currentName = user.name || user.account;
+
+      let roleName = '家長';
+      if (state.userLevel === 2) roleName = '管理員';
+      if (state.userLevel >= 3) roleName = '超級管理員';
+
+      const infoEl = document.getElementById('current-user-info');
+      if(infoEl) infoEl.textContent = `目前登入: ${state.currentName} (${roleName})`;
+
+      // === 設定權限 Class ===
+      document.body.classList.remove('is-admin', 'is-super-admin');
+      
+      // Level 2 以上 (包含 Level 3) 視為 Admin
+      if (state.userLevel >= 2) {
+        document.body.classList.add('is-admin');
+      }
+      
+      // Level 3 以上視為 Super Admin
+      if (state.userLevel >= 3) {
+        document.body.classList.add('is-super-admin');
+      }
+
+      await loadData();
+      // 只有管理員需要載入使用者清單
+      if (state.userLevel >= 2) await loadAllUsers();
+      
+      rebuildSelects();
+      
+      if (state.userLevel === 1) {
+        state.selUserId = state.currentUid;
+        $selName.value = state.currentUid;
+        $selName.disabled = true;
+      }
+      render();
+
+    } catch (e) {
+      console.error('Init failed', e);
+      alert('初始化失敗，請檢查後端連線');
+    }
   }
 
-  function buildRows() {
-    const rows = [];
-    state.list.forEach(u => {
-      if (state.selUserId && u.userId !== state.selUserId) return;
-      for (const [lvl, info] of Object.entries(u.tasks)) {
-        if (state.selLevel && lvl !== state.selLevel) continue;
-        rows.push({
-          rowId: `${u.userId}__${lvl}`,
-          userId: u.userId,
-          name: u.name,
-          level: lvl,
-          score: Number(info.score ?? 0)
-        });
+  async function loadAllUsers() {
+      try {
+          const r = await fetch('/users');
+          const js = await r.json();
+          if (js.ok) state.usersList = js.users;
+      } catch (e) { console.warn("載入使用者名單失敗", e); }
+  }
+
+  async function loadData() {
+    const $loading = document.getElementById('tbody');
+    if ($loading) $loading.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:20px">資料讀取中...</td></tr>';
+
+    try {
+      let payload = {};
+      if (state.userLevel === 1) payload.uid = state.currentUid;
+
+      const r = await fetch('/api/search-scores', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      
+      const js = await r.json();
+      if (js.success) {
+        state.rows = js.data;
+        const lvlSet = new Set();
+        state.rows.forEach(r => lvlSet.add(r.task_id));
+        state.allLevels = Array.from(lvlSet).sort();
+      } else {
+        alert("資料載入錯誤: " + (js.error || '未知錯誤'));
+        state.rows = [];
       }
+    } catch (e) {
+      console.warn('Load data error', e);
+      state.rows = [];
+    }
+  }
+
+  function rebuildSelects() {
+    $selName.innerHTML = '';
+    
+    if (state.userLevel === 1) {
+      const opt = document.createElement('option');
+      opt.value = state.currentUid;
+      opt.textContent = `${state.currentName} (${state.currentUid})`;
+      opt.selected = true;
+      $selName.appendChild(opt);
+    } else {
+      const def = document.createElement('option');
+      def.value = '';
+      def.textContent = '（所有小朋友）';
+      $selName.appendChild(def);
+
+      const sourceList = (state.usersList.length > 0) ? state.usersList : [];
+      // 簡單的 dedupe 邏輯
+      const uidMap = new Map();
+      sourceList.forEach(u => uidMap.set(u.uid, u.name));
+      state.rows.forEach(r => { if (!uidMap.has(r.uid)) uidMap.set(r.uid, r.name || r.uid); });
+
+      Array.from(uidMap.keys()).sort().forEach(uid => {
+          const opt = document.createElement('option');
+          opt.value = uid;
+          opt.textContent = uidMap.get(uid) || uid;
+          $selName.appendChild(opt);
+      });
+    }
+
+    $selLvl.innerHTML = '<option value="">（所有關卡）</option>';
+    const standardLevels = ['Ch1-t1', 'Ch1-t2', 'Ch1-t3', 'Ch1-t4', 'Ch2-t1', 'Ch2-t2', 'Ch2-t3', 'Ch2-t4', 'Ch2-t5', 'Ch2-t6', 'Ch3-t1', 'Ch3-t2', 'Ch3-t3', 'Ch3-t4', 'Ch4-t1', 'Ch4-t2', 'Ch5-t1'];
+    const levelsToShow = new Set([...standardLevels, ...state.allLevels]);
+    Array.from(levelsToShow).sort().forEach(lvl => {
+      const opt = document.createElement('option');
+      opt.value = lvl;
+      opt.textContent = lvl;
+      $selLvl.appendChild(opt);
     });
-    rows.sort((a, b) => {
-      const A = a[state.sortKey], B = b[state.sortKey];
-      let cmp = 0;
-      if (typeof A === 'number' && typeof B === 'number') cmp = A - B;
-      else cmp = String(A).localeCompare(String(B));
-      return state.sortAsc ? cmp : -cmp;
-    });
-    return rows;
   }
 
   function render() {
-    const rows = buildRows();
-    if (rows.length === 0) {
-      $tbody.innerHTML = '<tr><td colspan="5" class="empty">沒有符合條件的資料</td></tr>';
+    let displayRows = state.rows.filter(r => {
+      const matchUser = !state.selUserId || r.uid === state.selUserId;
+      const matchLevel = !state.selLevel || r.task_id === state.selLevel;
+      return matchUser && matchLevel;
+    });
+
+    displayRows.sort((a, b) => {
+      let valA = a[state.sortKey] || '';
+      let valB = b[state.sortKey] || '';
+      if (state.sortKey === 'score') {
+        valA = parseFloat(valA) || 0;
+        valB = parseFloat(valB) || 0;
+      }
+      if (valA < valB) return state.sortAsc ? -1 : 1;
+      if (valA > valB) return state.sortAsc ? 1 : -1;
+      return 0;
+    });
+
+    document.querySelectorAll('th[data-sort]').forEach(th => {
+        th.classList.remove('sort-asc', 'sort-desc');
+        if (th.dataset.sort === state.sortKey) {
+            th.classList.add(state.sortAsc ? 'sort-asc' : 'sort-desc');
+        }
+    });
+
+    if (displayRows.length === 0) {
+      $tbody.innerHTML = `<tr><td colspan="8" class="empty">沒有符合的資料</td></tr>`;
       return;
     }
-    $tbody.innerHTML = rows.map(r => {
-      // Level 1 沒有編輯/刪除按鈕
-      const opTd = (userLevel >= 2)
-        ? `<button class="btn btn-edit" data-action="edit">✏️ 修改</button>
-           <button class="btn btn-delete" data-action="del">🗑️ 刪除</button>`
-        : '';
+
+    $tbody.innerHTML = displayRows.map(r => {
+      let imgCell = '<span class="muted" style="color:#ccc">無圖片</span>';
+      if (r.result_img_path) {
+          let thumbSrc = r.result_img_path;
+          if (!thumbSrc.startsWith('/')) thumbSrc = '/' + thumbSrc;
+          const linkUrl = r.compare_url || thumbSrc;
+          imgCell = `
+            <div style="display:flex; align-items:center; gap:10px;">
+                <div style="width:40px; height:40px; background:#eee; border-radius:4px; overflow:hidden;">
+                    <img src="${thumbSrc}" style="width:100%; height:100%; object-fit:cover;" onerror="this.style.display='none'">
+                </div>
+                <a href="${linkUrl}" target="_blank" class="btn btn-sm" style="text-decoration:none;">檢視</a>
+            </div>
+          `;
+      }
+
+      // ★★★ 只有 Level 3 (Super Admin) 才有刪除按鈕 ★★★
+      let adminBtns = '';
+      if (state.userLevel >= 3) {
+        adminBtns = `
+          <td class="admin-col">
+             <button class="btn btn-sm btn-delete" onclick="deleteScore('${r.row_key}')">刪除</button>
+          </td>
+        `;
+      } else if (state.userLevel === 2) {
+         // Level 2 保留空白格，維持排版
+         adminBtns = `<td class="admin-col"></td>`;
+      } else {
+         adminBtns = `<td class="admin-col"></td>`;
+      }
+
       return `
-        <tr data-key="${r.rowId}">
-          <td class="ta-right">${opTd}</td>
-          <td>${r.userId}</td>
-          <td>${r.name}</td>
-          <td>${r.level}</td>
-          <td>${r.score}</td>
-        </tr>`;
+        <tr>
+          <td>${r.uid}</td>
+          <td>${r.name || '—'}</td>
+          <td>${r.task_name || r.task_id}</td>
+          <td><span class="badge ${r.score === null ? 'gray' : ''}">${r.score !== null ? r.score : '—'}</span></td>
+          <td>${r.test_date}</td>
+          <td>${r.time || ''}</td>
+          <td>${imgCell}</td>
+          ${adminBtns}
+        </tr>
+      `;
     }).join('');
   }
 
-  $selName.addEventListener('change', () => { state.selUserId = $selName.value || ''; render(); });
-  $selLvl.addEventListener('change', () => { state.selLevel = $selLvl.value || ''; render(); });
+  // ★★★ 全域事件監聽 ★★★
+  document.addEventListener('click', e => {
+      const target = e.target.closest('button');
+      if (!target) return;
+      const action = target.dataset.action;
 
-  document.addEventListener('click', (e) => {
-    const a = e.target.closest('[data-action]'); if (!a) return;
-    const act = a.dataset.action;
-
-    if (act === 'reset') {
-      if (userLevel < 2) {
-        alert('⚠️ 只有醫療人員可操作此功能');
-        return;
+      if (action === 'reset') {
+          if (state.userLevel === 1) {
+              state.selLevel = '';
+              $selLvl.value = '';
+          } else {
+              state.selUserId = '';
+              $selName.value = '';
+              state.selLevel = '';
+              $selLvl.value = '';
+          }
+          render();
+      }
+      
+      // 新增紀錄 (只有 Super Admin 能觸發，HTML 已隱藏，這裡做雙重防護)
+      else if (action === 'new') {
+          if (state.userLevel < 3) { alert("權限不足"); return; }
+          
+          editingRowKey = null;
+          $dialog.querySelector('.dlg-title').textContent = "新增測試紀錄";
+          $scoreSection.style.display = 'block';
+          
+          $f_userId.value = state.selUserId || '';
+          $f_name.value = '';
+          $f_level.value = '';
+          $f_score.value = 0;
+          $f_scoreText.textContent = 0;
+          $f_testDate.valueAsDate = new Date();
+          
+          $dialog.showModal();
       }
 
-      state.selUserId = '';
-      state.selLevel = '';
-      $selName.value = '';
-      $selLvl.value = '';
-      $tbody.innerHTML = '<tr><td colspan="5" class="empty">（已清空）</td></tr>';
-    }
+      // 管理使用者 (Admin & Super Admin 皆可)
+      else if (action === 'manage-users') {
+          if (state.userLevel < 2) return;
 
+          editingRowKey = 'USER_MODE';
+          $dialog.querySelector('.dlg-title').textContent = "管理使用者 (新增/修改)";
+          $scoreSection.style.display = 'none';
+          
+          $f_userId.value = '';
+          $f_name.value = '';
+          $dialog.close();
+          
+          const uid = prompt("請輸入使用者的 UID (必填):", "");
+          if (!uid) return;
+          const name = prompt("請輸入使用者姓名:", "");
+          const birth = prompt("請輸入生日 (格式: YYYY-MM-DD) 作為密碼:", "2020-01-01");
+          
+          if (uid && birth) {
+              saveUser(uid, name, birth);
+          }
+      }
 
-    if (act === 'new') {
-      if (userLevel < 2) return; // 前端再保護一次
-      $f_userId.value = ''; $f_name.value = ''; $f_level.value = ''; $f_score.value = '0'; $f_scoreText.textContent = '0';
-      $dialog.showModal(); $dialog.dataset.mode = 'create'; $dialog.dataset.key = '';
-    }
+      else if (action === 'save') {
+          e.preventDefault();
+          const uid = $f_userId.value.trim();
+          const name = $f_name.value.trim();
+          if (!uid) { alert("UID 為必填"); return; }
+          
+          if (editingRowKey === null) {
+              const level = $f_level.value.trim();
+              const score = $f_score.value;
+              const date = $f_testDate.value;
+              
+              if (!level) { alert("關卡代號為必填"); return; }
+              saveScore(uid, name, level, score, date);
+          }
+      }
   });
 
-  const $tbodyEl = document.querySelector('[data-role="tbody"]');
-  $tbodyEl.addEventListener('click', (e) => {
-    const btn = e.target.closest('button'); if (!btn) return;
-    const tr = e.target.closest('tr'); const key = tr?.getAttribute('data-key'); if (!key) return;
-    const [userId, level] = key.split('__');
-    const user = state.list.find(u => u.userId === userId);
+  $dialog.addEventListener('close', () => {});
+  $f_score.addEventListener('input', e => { $f_scoreText.textContent = e.target.value; });
 
-    if (btn.dataset.action === 'del') {
-      if (userLevel < 2) return;
-      if (!confirm('確定要刪除此分數紀錄？')) return;
-      if (user && user.tasks[level]) { delete user.tasks[level]; saveLS(state.list); rebuildSelects(); render(); }
-      return;
-    }
+  // --- API ---
 
-    if (btn.dataset.action === 'edit') {
-      if (userLevel < 2) return;
-      $f_userId.value = userId;
-      $f_name.value = user?.name || '';
-      $f_level.value = level;
-      const score = user?.tasks?.[level]?.score ?? 0;
-      $f_score.value = String(score);
-      $f_scoreText.textContent = String(score);
-      $dialog.showModal(); $dialog.dataset.mode = 'edit'; $dialog.dataset.key = key;
-    }
-  });
+  async function saveUser(uid, name, birthday) {
+      try {
+          const r = await fetch('/api/user/upsert', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ uid, name, birthday })
+          });
+          const js = await r.json();
+          if (js.ok) {
+              alert("使用者儲存成功！");
+              await loadAllUsers();
+              rebuildSelects();
+          } else {
+              alert("失敗: " + js.msg);
+          }
+      } catch (e) { alert("連線錯誤"); }
+  }
 
-  $f_score.addEventListener('input', () => { $f_scoreText.textContent = $f_score.value; });
+  async function saveScore(uid, name, task_id, score, test_date) {
+      try {
+          // 如果有填姓名，Level 3 也可以順便更新個資
+          if (name) {
+              await fetch('/api/user/upsert', {
+                  method: 'POST',
+                  headers: {'Content-Type': 'application/json'},
+                  body: JSON.stringify({ uid, name, birthday: null })
+              });
+          }
 
-  $dialog.querySelector('[data-action="save"]').addEventListener('click', (ev) => {
-    ev.preventDefault();
-    if (userLevel < 2) return;
+          const r = await fetch('/scores/upsert', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ uid, task_id, score, test_date })
+          });
+          
+          const js = await r.json();
+          if (js.ok) {
+              alert("紀錄新增成功！");
+              $dialog.close();
+              await loadData();
+              render();
+          } else {
+              alert("失敗: " + js.msg);
+          }
+      } catch (e) { console.error(e); alert("儲存失敗"); }
+  }
 
-    const userId = $f_userId.value.trim();
-    const name = $f_name.value.trim();
-    const level = $f_level.value.trim();
-    const score = Number($f_score.value);
-    if (!userId || !name || !level) { alert('請填寫 uid / 姓名 / 關卡'); return; }
-
-    let user = state.list.find(u => u.userId === userId);
-    if (!user) {
-      user = { id: userId, userId, name, tasks: {} };
-      state.list.push(user);
-    } else {
-      user.name = name;
-    }
-    user.tasks[level] = { score, updatedAt: new Date().toISOString() };
-
-    saveLS(state.list); rebuildSelects(); render(); $dialog.close();
-  });
-
-  document.querySelectorAll('[data-sort]').forEach(el => {
-    el.addEventListener('click', () => {
-      const key = el.dataset.sort;
-      if (state.sortKey === key) { state.sortAsc = !state.sortAsc; }
-      else { state.sortKey = key; state.sortAsc = (key === 'userId'); }
+  $selName.addEventListener('change', e => { state.selUserId = e.target.value; render(); });
+  $selLvl.addEventListener('change', e => { state.selLevel = e.target.value; render(); });
+  
+  document.querySelectorAll('th[data-sort]').forEach(th => {
+    th.addEventListener('click', () => {
+      const key = th.dataset.sort;
+      if (state.sortKey === key) state.sortAsc = !state.sortAsc;
+      else { state.sortKey = key; state.sortAsc = true; }
       render();
     });
   });
 
-  (async function init() {
-    const ok = await ensureAuth(); // 先確認登入 & 取得 userLevel
-    if (!ok) return;
+  document.getElementById('btn-logout')?.addEventListener('click', async () => {
+      if(confirm('確定要登出嗎？')) { await fetch('/api/auth/logout', { method: 'POST' }); window.location.href = '/'; }
+  });
 
-    state.list = await loadInitial();
-    saveLS(state.list);
-    rebuildSelects();
-    render();
-  })();
+  window.deleteScore = async function(rowKey) {
+      if(state.userLevel < 3) { alert("權限不足：只有超級管理員可以刪除"); return; }
+      if(!confirm('確定要刪除這筆紀錄嗎？此動作無法復原。')) return;
+      try {
+          const r = await fetch(`/scores?row_key=${encodeURIComponent(rowKey)}`, { method: 'DELETE' });
+          const js = await r.json();
+          if(js.ok) { alert('刪除成功'); loadData().then(rebuildSelects).then(render); } else { alert('刪除失敗: ' + js.msg); }
+      } catch(e) { console.error(e); alert('刪除失敗'); }
+  };
+
+  init();
 })();

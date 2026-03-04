@@ -1,70 +1,74 @@
+# main.py (修正版：支援中文路徑、正確存檔)
+# -*- coding: utf-8 -*-
+import sys
 import cv2
 import numpy as np
-import glob
 import os
 from pathlib import Path
+
+# 引用模組
 from get_cm1 import auto_crop_paper, auto_crop_wood_board
 from correct import analyze_image
-import sys
-import json
 
+# 設定根目錄
+ROOT = Path(__file__).resolve().parent.parent
 
-def return_score(score):
-    sys.exit(int(score))
+def main():
+    # 1. 接收參數
+    if len(sys.argv) < 3:
+        print("Usage: python main.py [uid] [task_id]")
+        sys.exit(0)
 
+    uid = sys.argv[1]
+    img_id = sys.argv[2] 
 
-if __name__ == "__main__":
-    if len(sys.argv) > 2:
-        # 使用傳入的 uid 和 id 作為圖片路徑
-        uid = sys.argv[1]
-        img_id = sys.argv[2]
-        # uid = "lull222"
-        # img_id = "ch3-t1"
-        image_path = Path(rf"kid\{uid}\{img_id}.jpg")
-    # === 以這支 .py 所在資料夾為基準，避免工作目錄不同造成找不到檔案 ===
-    # BASE = Path(__file__).resolve().parent
-    # img = 1  # 你要處理的圖片編號
+    # 來源: kid/UID/Ch2-t6.jpg
+    src_path = ROOT / "kid" / uid / f"{img_id}.jpg"
+    # 結果: kid/UID/Ch2-t6_result.jpg
+    res_path = ROOT / "kid" / uid / f"{img_id}_result.jpg"
 
-    # === 乾淨的輸入/輸出路徑（不要把中途資料夾夾到檔名裡）===
-    # image_path = rf"kid\{uid}\{img_id}.jpg"        # e.g. .../ch2-t6/image/6.jpg
-    output_dir = Path(rf"PDMS2_web\ch2-t6\new")  # e.g. .../ch2-t6/new/
-    # output_dir.mkdir(exist_ok=True)
-    out_path = output_dir / f"new{img_id}.jpg"  # e.g. .../ch2-t6/new/new6.jpg
+    print(f"[-] Processing: {src_path}")
 
-    # === 讀圖 ===
-    image = cv2.imread(str(image_path))
-    if image is None:
-        print(f"無法讀取：{image_path}")
-        return_score(0)  # 或者 sys.exit(1)
+    if not src_path.exists():
+        print(f"[Error] 檔案不存在: {src_path}")
+        sys.exit(0)
 
-    # === 木板偵測：失敗就用原圖（你說「不一定要偵測木板」）===
+    # 2. 讀取圖片 (支援中文路徑)
+    img = cv2.imdecode(np.fromfile(str(src_path), dtype=np.uint8), cv2.IMREAD_COLOR)
+    if img is None:
+        print("[Error] 圖片讀取失敗")
+        sys.exit(0)
+
+    # 3. 影像前處理 (木板偵測 + 裁紙)
     try:
-        board = auto_crop_wood_board(image, debug=False)
-    except Exception:
-        print(f"⚠️ {image_path.name} 木板偵測失敗 → 改用原圖裁紙")
-        board = image
-
-    # === 裁紙（透視校正）===
-    try:
+        board = auto_crop_wood_board(img, debug=False)
         paper = auto_crop_paper(board, trim=12, debug=False)
     except Exception as e:
-        print(f"裁紙失敗：{e}")
-        return_score(0)
+        print(f"[Warning] 裁切失敗，使用原圖: {e}")
+        paper = img
 
-    # === 先寫檔，成功才做 analyze ===
-    ok = cv2.imwrite(out_path, paper)
-    if not ok:
-        print(f"⚠️ 影像儲存失敗：{out_path}")
-        return_score(0)
-
-    print(f"{image_path.name} → {out_path.name}")
-
-    # === 呼叫分析（傳「絕對路徑」最穩）===
+    # 4. 分析連線
     try:
-        score, result_img = analyze_image(str(out_path), dot_distance_cm=10.0)
-        result_path = rf"kid\{uid}\{img_id}_result.jpg"
-        print("得分：", score)
-        return_score(score)
+        score, result_img = analyze_image(paper, dot_distance_cm=10.0)
     except Exception as e:
-        print(f"分析失敗：{e}")
-        return_score(0)
+        print(f"[Error] 分析失敗: {e}")
+        score = 0
+        result_img = paper
+
+    # 5. 儲存結果圖
+    try:
+        is_success, buffer = cv2.imencode(".jpg", result_img)
+        if is_success:
+            with open(str(res_path), "wb") as f:
+                f.write(buffer)
+            print(f"[Success] 結果圖已儲存: {res_path}")
+        else:
+            print("[Error] 圖片編碼失敗")
+    except Exception as e:
+        print(f"[Error] 寫入檔案失敗: {e}")
+
+    # 6. 回傳分數
+    sys.exit(score)
+
+if __name__ == "__main__":
+    main()

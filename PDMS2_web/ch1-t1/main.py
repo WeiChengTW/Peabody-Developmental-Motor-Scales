@@ -52,7 +52,7 @@ def detect_blocks_mask(frame, CONF=0.5):
             if cls_id == 0:  # 方塊類別
                 boxes.append((x1, y1, x2, y2))
                 if r.masks is not None:
-                    # 注意: masks 數據需要與當前幀的尺寸匹配
+                    # masks 數據需要與當前幀的尺寸匹配
                     mask = r.masks.data.cpu().numpy()[i]
                     masks.append(mask)
     return boxes, masks, results
@@ -163,7 +163,6 @@ def score_from_image(img_path, conf=CONF):
     # ===== 新增: 中心裁剪 75% 區域 =====
     img = crop_center(img, CROP_RATIO)
     # ==================================
-
     display_frame = img.copy()
 
     # 灰階 + 模糊
@@ -190,7 +189,6 @@ def score_from_image(img_path, conf=CONF):
 
     # 骨架化
     skeleton = extract_line_skeleton(binary_masked)
-
     # 檢查每個方塊是否靠近骨架
     is_correct = []
     correct_num = 0
@@ -210,7 +208,6 @@ def score_from_image(img_path, conf=CONF):
     # 將單通道的二值圖轉為三通道才能繪製彩色標記
     binary_bgr = cv2.cvtColor(binary_masked, cv2.COLOR_GRAY2BGR)
     binary_with_markers = draw_block_markers(binary_bgr, boxes, masks, is_correct)
-
     # 骨架圖 (GRAY/BGR)
     skeleton_bgr = cv2.cvtColor(skeleton, cv2.COLOR_GRAY2BGR)
     skeleton_with_markers = draw_block_markers(skeleton_bgr, boxes, masks, is_correct)
@@ -235,7 +232,6 @@ def score_from_image(img_path, conf=CONF):
         score = 1
     else:
         score = 0
-
     cv2.waitKey(0)
     cv2.destroyAllWindows()
 
@@ -247,7 +243,12 @@ if __name__ == "__main__":
         # 使用傳入的 uid 和 id 作為圖片路徑
         uid = sys.argv[1]
         img_id = sys.argv[2]
+
+        # print(f"UID : {uid}\nimg_id : {img_id}")
         image_path = rf"kid\{uid}\{img_id}.jpg"
+        # for i, name in enumerate(sys.argv):
+        #     print(f"{i} : {name}")
+        # print(f"img_path : {image_path}")
     else:
         # 測試圖片路徑 (請替換為實際測試路徑)
         print("請提供 uid 和 img_id 參數或在程式碼中設定測試路徑。")
@@ -255,6 +256,7 @@ if __name__ == "__main__":
 
     # image_path = r"ch1-t1.jpg"  # 讀取圖片
     score, num, result_img = score_from_image(image_path)
+    # print(f"result: kid\{uid}\{img_id}_result.jpg")
     cv2.imwrite(rf"kid\{uid}\{img_id}_result.jpg", result_img)
     # score, num = score_from_image(test_img)
     print("score =", score)

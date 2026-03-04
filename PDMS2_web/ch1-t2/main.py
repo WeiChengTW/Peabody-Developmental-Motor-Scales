@@ -342,6 +342,8 @@ if __name__ == "__main__":
         
         SIDE_IMG_PATH = rf"kid\{uid}\{img_id}-side.jpg"
         TOP_IMG_PATH = rf"kid\{uid}\{img_id}-top.jpg"
+        print(f"SIDE_IMG_PATH:{SIDE_IMG_PATH}\nTOP_IMG_PATH:{TOP_IMG_PATH}")
+
         MODEL_PATH = r"ch1-t2/toybrick.pt"
     else:
         print("請提供 uid 和 img_id 參數")
@@ -360,7 +362,7 @@ if __name__ == "__main__":
         annotated_side, score_side = analyze_image_side(SIDE_IMG_PATH, yolo_model)
         print(f"側視圖 ({SIDE_IMG_PATH}) 得分: {score_side}")
         
-        # ✅ 儲存側視圖結果
+        # 儲存側視圖結果
         side_result_path = rf"kid\{uid}\{img_id}-side_result.jpg"
         cv2.imwrite(side_result_path, annotated_side)
         print(f"側視圖結果已儲存至: {side_result_path}")
@@ -384,7 +386,7 @@ if __name__ == "__main__":
         print(f"俯視圖 ({TOP_IMG_PATH}) 檢測結果: {summary}")
         print(f"俯視圖得分: {score_top}")
 
-        # ✅ 儲存俯視圖結果
+        # 儲存俯視圖結果
         top_result_path = rf"kid\{uid}\{img_id}-top_result.jpg"
         cv2.imwrite(top_result_path, analyzed_frame)
         print(f"俯視圖結果已儲存至: {top_result_path}")
