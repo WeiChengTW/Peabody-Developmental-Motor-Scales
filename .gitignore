@@ -1,3 +1,4 @@
+# ========== 模型與權重檔 ==========
 # 不要把模型檔 (.h5) 放進 Git
 *.h5
 
@@ -5,3 +6,25 @@
 PDMS2_web/ch2-t1/model/
 PDMS2_web/ch2-t2/model/
 PDMS2_web/ch2-t3/model/
+
+# ========== Python 系統暫存檔 ==========
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# ========== 系統日誌 ==========
+console.txt
+PDMS2_web/console.txt
+
+# ========== 測試影片與多媒體檔案 ==========
+*.mp4
+PDMS2_web/video/
+PDMS2_web/recordings/
+
+# ========== 受測者資料與分析結果 (保護隱私與避免專案肥大) ==========
+PDMS2_web/kid/
+PDMS2_web/result/
+
+# ========== 本機端測試專用腳本 ==========
+PDMS2_web/run_user.py
