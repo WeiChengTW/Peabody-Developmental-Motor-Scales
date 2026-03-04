@@ -18,14 +18,16 @@ class MaxAreaQuadFinder:
                     self.px2cm = default_px2cm
         except (FileNotFoundError, json.JSONDecodeError, OSError):
             self.px2cm = default_px2cm
+
         self.image_path = image_path
         self.img = cv2.imread(image_path)
         if self.img is None:
             raise FileNotFoundError(f"無法讀取影像: {image_path}")
+
         self.max_area = 0
         self.max_contour = None
-        self.ordered_pts = None  # (tl, tr, br, bl)
-        self.side_lengths = None  # dict
+        self.ordered_pts = None
+        self.side_lengths = None
 
     def find_max_area_quad(self):
         gray = cv2.cvtColor(self.img, cv2.COLOR_BGR2GRAY)
@@ -83,7 +85,6 @@ class MaxAreaQuadFinder:
         )
         if self.max_contour is not None:
             self.max_area = cv2.contourArea(self.max_contour)
-        if self.max_contour is not None:
             self.ordered_pts = self._order_points(self.max_contour.reshape(4, 2))
             self.side_lengths = self._compute_side_lengths(self.ordered_pts)
 
@@ -91,7 +92,6 @@ class MaxAreaQuadFinder:
     def _build_edge_map(gray):
         blurred = cv2.GaussianBlur(gray, (5, 5), 0)
 
-        # 輸入已經是邊緣圖（黑底白線）時，避免再次 Canny 導致斷邊
         binary_like_ratio = np.mean((gray <= 20) | (gray >= 235))
         if binary_like_ratio > 0.95:
             _, edges = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
@@ -114,17 +114,16 @@ class MaxAreaQuadFinder:
             cv2.drawContours(self.img, [contour_to_draw], -1, (0, 255, 0), 3)
             print("最大面積:", self.max_area)
             print("四個頂點座標:\n", self.max_contour.reshape(4, 2))
-            # 顯示四邊長於左上角
+
             if self.side_lengths:
                 print("邊長 :")
                 lines = []
-                for k in ["top", "right", "bottom", "left"]:
-                    v = self.side_lengths[k]
-                    lines.append(f"{k}: {(v / self.px2cm):.2f} cm")
-                    print(f"  {k}: {v:.2f} 像素, {(v / self.px2cm):.2f} cm")
-                # 標註邊長
+                for key in ["top", "right", "bottom", "left"]:
+                    px = self.side_lengths[key]
+                    lines.append(f"{key}: {(px / self.px2cm):.2f} cm")
+                    print(f"  {key}: {px:.2f} 像素, {(px / self.px2cm):.2f} cm")
+
                 self._annotate_lengths()
-                # 將四邊長資訊畫在左上角
                 x0, y0 = 10, 30
                 for i, text in enumerate(lines):
                     cv2.putText(
@@ -137,12 +136,14 @@ class MaxAreaQuadFinder:
                         2,
                         cv2.LINE_AA,
                     )
-            resized = cv2.resize(self.img, (0, 0), fx=0.5, fy=0.5)
-            # cv2.imshow("Max Area Quad", resized)
+
+            result_dir = BASE_DIR / "result"
+            result_dir.mkdir(parents=True, exist_ok=True)
             name = self.image_path.split("\\")[-1].split("_")[0]
-            print(rf"儲存結果到 ch4-t2\result\{name}_max_area_quad.jpg")
-            cv2.imwrite(rf"ch4-t2\result\{name}_max_area_quad.jpg", self.img)
-            # 找出與7.5差距最大的邊
+            out_path = result_dir / f"{name}_max_area_quad.jpg"
+            print(rf"儲存結果到 ch4-t1\result\{name}_max_area_quad.jpg")
+            cv2.imwrite(str(out_path), self.img)
+
             if self.side_lengths:
                 max_diff = 0
                 max_diff_side = None
@@ -159,14 +160,13 @@ class MaxAreaQuadFinder:
 
     @staticmethod
     def _order_points(pts):
-        # pts: (4,2)
         rect = np.zeros((4, 2), dtype="float32")
         s = pts.sum(axis=1)
-        rect[0] = pts[np.argmin(s)]  # tl
-        rect[2] = pts[np.argmax(s)]  # br
+        rect[0] = pts[np.argmin(s)]
+        rect[2] = pts[np.argmax(s)]
         diff = np.diff(pts, axis=1)
-        rect[1] = pts[np.argmin(diff)]  # tr
-        rect[3] = pts[np.argmax(diff)]  # bl
+        rect[1] = pts[np.argmin(diff)]
+        rect[3] = pts[np.argmax(diff)]
         return rect
 
     @staticmethod
@@ -196,7 +196,6 @@ class MaxAreaQuadFinder:
         }
         for name, (p1, p2) in pairs.items():
             mid = ((p1[0] + p2[0]) // 2, (p1[1] + p2[1]) // 2)
-            length = self.side_lengths[name]
             cv2.putText(
                 self.img,
                 f"{name}",
@@ -209,11 +208,9 @@ class MaxAreaQuadFinder:
             )
 
     def get_side_lengths(self):
-        """取得邊長 (像素) 字典，如果尚未計算或找不到四邊形則回傳 None"""
         return self.side_lengths
 
 
-# 使用範例
 if __name__ == "__main__":
     finder = MaxAreaQuadFinder("edges/4_edges_paper.jpg")
     finder.find_max_area_quad()

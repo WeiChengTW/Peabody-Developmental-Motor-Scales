@@ -60,7 +60,8 @@ if __name__ == "__main__":
                 if D_sq_path is not None:
 
                     analyzer = BoxDistanceAnalyzer(
-                        box1=black_corners_int, image_path=detector_path
+                        box1=black_corners_int,
+                        image_path=detector_path,
                     )
                     result_img, kid = analyzer.analyze(pixel_per_cm=pixel_per_cm)
                     result_path = rf"kid\{uid}\{img_id}_result.jpg"

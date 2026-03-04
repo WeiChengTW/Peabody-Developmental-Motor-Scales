@@ -4,7 +4,7 @@ import os
 
 class ScreenCapture:
     def __init__(self):
-        self.cap = cv2.VideoCapture(0)  # 使用預設攝影機
+        self.cap = cv2.VideoCapture(1)  # 使用預設攝影機
         self.index = 1
         self.setup_camera()
 

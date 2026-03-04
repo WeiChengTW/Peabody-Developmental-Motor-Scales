@@ -1,13 +1,18 @@
-// 共用 KEY；與你的其他頁一致
-const KEY = "kid-quest-progress-v1";
+// camera.js (修正跳轉邏輯：存檔後直接回主頁)
 
-// 讀 id（如 ch2-t3）
+const KEY = "kid-quest-progress-v1";
+const TOP = 2; 
+const SIDE = 1; 
+const waittime = 3;
+
+// 遊戲狀態輪詢變數
+let gameStateInterval = null;
+
 function getId(){
   const u = new URL(location.href);
   return u.searchParams.get("id");
 }
 
-// 改用後端 session 獲取 UID
 async function getUid(){
   try {
     const response = await fetch('/session/get-uid');
@@ -15,7 +20,6 @@ async function getUid(){
       const result = await response.json();
       return result.uid;
     } else {
-      // 降級到 localStorage
       const st = JSON.parse(localStorage.getItem(KEY) || "{}");
       return st.currentUid || null;
     }
@@ -26,18 +30,17 @@ async function getUid(){
   }
 }
 
-// 設置圖標
 function isImagePath(s){ return typeof s==="string" && (s.startsWith("/images/") || /\.(png|jpe?g|svg|webp|gif)$/i.test(s)); }
 function setIcon(el, src){
   if(!el) return;
   el.innerHTML = isImagePath(src) ? `<img class="icon-img" src="${src}" alt="">` : "";
 }
 
-// 任務元資料
 const ID_TO_META = {
   "ch1-t1": {icon:"/images/bridge.jpg",  title:"串積木：做成一條橋"},
   "ch1-t2": {icon:"/images/tower.jpg",   title:"疊城堡：蓋瞭望塔"},
   "ch1-t3": {icon:"/images/stairs.jpg",  title:"疊階梯：翻過高牆"},
+  "ch1-t4": {icon:"/images/wall.jpg",  title:"疊高牆：蓋出傳送門"},
   "ch2-t1": {icon:"/images/circle.jpg",  title:"畫圓：大圓圓魔法陣"},
   "ch2-t2": {icon:"/images/square.jpg",  title:"畫方：守護盾"},
   "ch2-t3": {icon:"/images/cross.jpg",   title:"畫十字：啟動魔法"},
@@ -51,76 +54,108 @@ const ID_TO_META = {
   "ch5-t1": {icon:"/images/beans.jpg", title:"豆豆裝罐子：完成任務"},
 };
 
-// DOM 元素
 const els = {
   taskIcon: document.getElementById("taskIcon"),
   taskTitle: document.getElementById("taskTitle"),
   cameraStream: document.getElementById("cameraStream"),
   placeholderText: document.getElementById("placeholderText"),
   statusInfo: document.getElementById("statusInfo"),
-  shotBtn: document.getElementById("shotBtn"),
+  shotBtn: document.getElementById("shotBtn"), 
+  stopBtn: document.getElementById("stopBtn"),
+  // Ch5-t1 專用元素
+  gameInfo: document.getElementById("gameInfo"),
+  beanCount: document.getElementById("beanCount"),
+  timeRemaining: document.getElementById("timeRemaining"),
 };
 
-// 狀態變量
 let cameraActive = false;
 let streamInterval = null;
-let currentPhoto = null;
 const id = getId();
 
-// 更新狀態信息
+// 統一跳回首頁的函數
+function goHome() {
+    window.location.href = "/html/index.html";
+}
+
 function updateStatus(message, type = 'info') {
   els.statusInfo.textContent = message;
   els.statusInfo.className = `status-info ${type}`;
 }
 
-// 初始化標題與小圖
+// 初始化標題
 (function initHeader(){
   const meta = ID_TO_META[id] || {icon:"", title:"拍照存證"};
   setIcon(els.taskIcon, meta.icon);
   if(meta.title) els.taskTitle.textContent = meta.title;
+  
+  if (els.stopBtn) {
+      els.stopBtn.style.display = 'none';
+  }
+  
+  if (id === "ch5-t1") {
+    // Ch5-t1 隱藏拍照按鈕（因為會自動開始）
+    els.shotBtn.style.display = 'none';
+    
+    // 顯示遊戲資訊區塊
+    if (els.gameInfo) {
+      els.gameInfo.style.display = 'block';
+    }
+    // 隱藏相機預覽區域
+    if (els.cameraStream) {
+      els.cameraStream.style.display = 'none';
+    }
+    if (els.placeholderText) {
+      els.placeholderText.textContent = '遊戲準備中...';
+    }
+  } else {
+      els.shotBtn.textContent = "🎞️ 拍照、存檔並回主頁"; 
+  }
 })();
 
 // 串流預覽
 function startVideoStream() {
   if (streamInterval) clearInterval(streamInterval);
-
   streamInterval = setInterval(async () => {
     try {
       const response = await fetch('/opencv-camera/frame');
       if (!response.ok) return;
-
       const data = await response.json();
       if (data.success) {
         els.cameraStream.src = "data:image/jpeg;base64," + data.image;
-      } else {
-        console.warn("相機畫面失敗:", data.error);
       }
     } catch (err) {
       console.error("獲取幀錯誤:", err);
     }
-  }, 60); // 約 60ms 更新一次
+  }, 30);
 }
 
-// 開啟 OpenCV 相機（預覽一律先用鏡頭 1）
+// 開啟相機
 async function openCamera() {
+  // Ch5-t1 不需要開啟相機預覽，直接自動開始遊戲
+  if (id === "ch5-t1") {
+    updateStatus('準備自動開始遊戲...', 'info');
+    // 延遲1秒後自動開始遊戲
+    setTimeout(() => {
+      autoStartGame();
+    }, 1000);
+    return;
+  }
+  
   try {
     updateStatus('正在開啟相機...', 'loading');
-
+    let CAM_INDEX = TOP;
+    if(["ch1-t2", "ch1-t3"].includes(id)) CAM_INDEX = SIDE;
+    
     const response = await fetch('/opencv-camera/start', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ task_id: id, camera_index: 1 })
+      body: JSON.stringify({ task_id: id, camera_index: CAM_INDEX })
     });
-
     if (!response.ok) throw new Error('無法開啟相機');
-
     const result = await response.json();
-
     if (result.success) {
       cameraActive = true;
-      updateStatus('相機已開啟，正在串流...', 'success');
-
-      // 開始串流
+      updateStatus('相機預覽已開啟，請準備！', 'success');
       els.placeholderText.style.display = 'none';
       els.cameraStream.style.display = 'block';
       els.shotBtn.disabled = false;
@@ -134,90 +169,260 @@ async function openCamera() {
   }
 }
 
-// === 新增：輔助函式（開指定鏡頭並拍一張，以 suffix 當檔名尾巴）===
-async function captureWithCamera(cameraIndex, fileSuffix, uid) {
-  // 切換鏡頭（或確保指定鏡頭已開）
-  const startRes = await fetch('/opencv-camera/start', {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({ task_id: id, camera_index: cameraIndex })
-  });
-  if (!startRes.ok) throw new Error('相機切換失敗');
-
-  // 稍等讓鏡頭穩定
-  await new Promise(r => setTimeout(r, 300));
-
-  // 依照後端規則：會用 task_id 直接當檔名 (task_id.jpg)
-  // 所以我們把 task_id 傳成 `${id}-side` / `${id}-top`（或 just id）
-  const capRes = await fetch('/opencv-camera/capture', {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({ task_id: fileSuffix, uid: uid })
-  });
-
-  if (!capRes.ok) throw new Error('拍照失敗');
-  const result = await capRes.json();
-  if (!result.success) throw new Error(result.error || '拍照失敗');
-
-  console.log(`已拍攝鏡頭 ${cameraIndex}: ${result.filename}`);
+// 輪詢遊戲狀態（Ch5-t1 專用）
+async function pollGameState(uid) {
+  console.log('[遊戲狀態] 開始輪詢，UID:', uid);
+  
+  if (gameStateInterval) {
+    clearInterval(gameStateInterval);
+  }
+  
+  gameStateInterval = setInterval(async () => {
+    try {
+      const response = await fetch(`/game-state/${uid}`);
+      if (!response.ok) {
+        console.warn('[遊戲狀態] 無法取得遊戲狀態，狀態碼:', response.status);
+        return;
+      }
+      
+      const data = await response.json();
+      console.log('[遊戲狀態] 收到資料:', data);
+      
+      if (data.success && data.state) {
+        const state = data.state;
+        
+        // 更新顯示
+        if (els.beanCount) {
+          els.beanCount.textContent = state.bean_count;
+          console.log('[遊戲狀態] 更新豆豆數量:', state.bean_count);
+        }
+        if (els.timeRemaining) {
+          els.timeRemaining.textContent = state.remaining_time;
+          console.log('[遊戲狀態] 更新剩餘時間:', state.remaining_time);
+        }
+        
+        // 警告提示
+        if (state.warning) {
+          updateStatus('⚠️ 注意：檢測到作弊行為！', 'error');
+        } else if (state.running) {
+          updateStatus(`遊戲進行中... 豆豆：${state.bean_count} | 剩餘：${state.remaining_time}秒`, 'loading');
+        }
+        
+        // 遊戲結束
+        if (state.game_over) {
+          console.log('[遊戲狀態] 遊戲結束，分數:', state.score);
+          clearInterval(gameStateInterval);
+          gameStateInterval = null;
+          
+          let resultMsg = '';
+          if (state.score === 2) {
+            resultMsg = '🎉 完美完成！';
+          } else if (state.score === 1) {
+            resultMsg = '👍 完成任務！';
+          } else {
+            resultMsg = '👍 完成任務！';
+          }
+          
+          updateStatus(`遊戲結束！${resultMsg}`, 'success');
+          
+          // 3秒後跳轉回主頁
+          setTimeout(() => {
+            goHome(); // <--- 修改這裡：跳轉回主頁
+          }, 3000);
+        }
+      }
+    } catch (error) {
+      console.error('[遊戲狀態] 輪詢錯誤:', error);
+    }
+  }, 500); // 每0.5秒更新一次
 }
 
-
-
-// === 修改後：只有 ch1-t2 / ch1-t3 拍兩張（1=side → 0=top），其他任務拍一張（1）===
-async function takeShot() {
+async function captureWithCamera(cameraIndex, fullTaskId, uid) {
   try {
-    const currentUid = await getUid() || 'default';
-
-    //SIDE = 側面攝影機號碼 TOP = 上面攝影機號碼
-    SIDE = 1;
-    TOP = 0;
-    //===================================//
-    if (["ch1-t2", "ch1-t3"].includes(id)) {
-      updateStatus('正在拍攝側面鏡頭...', 'loading');
-      await captureWithCamera(SIDE, `${id}-side`, currentUid);
-
-      updateStatus('側面完成，切換上方鏡頭...', 'loading');
-      await captureWithCamera(TOP, `${id}-top`, currentUid);
-    } else {
-      updateStatus('正在拍照（鏡頭 1）...', 'loading');
-      await captureWithCamera(SIDE, id, currentUid);
-    }
-
-    updateStatus('照片拍攝完成，開始分析...', 'success');
-
-    // 背景分析
-    const analysisResponse = await fetch('/run-python', {
+    const switchResponse = await fetch('/opencv-camera/start', {
       method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({ id: id })
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ camera_index: cameraIndex })
     });
-    const analysisResult = await analysisResponse.json();
-    if (analysisResult.success) {
-      console.log(`分析任務已在背景執行，task_id: ${analysisResult.task_id}`);
+    if (!switchResponse.ok) {
+      throw new Error('切換相機失敗');
     }
-
-    // 關閉相機
-    await closeCamera();
-
-    // 跳轉到下一個任務
-    const TASK_IDS = Object.keys(ID_TO_META);
-    const idx = TASK_IDS.indexOf(id);
-    const nextTaskId = (idx >= 0 && idx < TASK_IDS.length - 1) ? TASK_IDS[idx + 1] : null;
-
-    if (nextTaskId){
-      location.href = `/html/task.html?id=${nextTaskId}`;
-    } else {
-      location.href = "/html/index.html";
+    await new Promise(r => setTimeout(r, 500));
+    
+    const captureResponse = await fetch('/opencv-camera/capture', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        task_id: fullTaskId,
+        uid: uid 
+      })
+    });
+    if (!captureResponse.ok) {
+      throw new Error('拍照失敗');
     }
-
+    return await captureResponse.json();
   } catch (error) {
     console.error('拍照錯誤:', error);
-    updateStatus(`拍照失敗: ${error.message}`, 'error');
+    throw error;
   }
 }
 
-// 關閉相機
+async function triggerBackgroundAnalysis(taskId, uid) {
+  try {
+    let body_data = { 
+        id: taskId,
+        uid: uid 
+    };
+    
+    if (taskId === "ch5-t1") {
+        body_data.cam_index = SIDE; 
+    } else {
+        body_data.cam_index = TOP; 
+    }
+
+    const response = await fetch('/run-python', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body_data)
+    });
+    
+    if (!response.ok) {
+      console.warn('分析請求失敗');
+      return;
+    }
+    
+    const result = await response.json();
+    console.log('分析已觸發:', result);
+    return result.task_id;
+    
+  } catch (error) {
+    console.warn('觸發分析時發生錯誤:', error);
+  }
+}
+
+// 清空遊戲狀態的函數
+async function clearGameState(uid) {
+  try {
+    const response = await fetch('/clear-game-state', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ uid: uid })
+    });
+    
+    if (!response.ok) {
+      console.warn('清空遊戲狀態失敗');
+      return false;
+    }
+    
+    const result = await response.json();
+    console.log('遊戲狀態已清空:', result);
+    return true;
+  } catch (error) {
+    console.error('清空遊戲狀態錯誤:', error);
+    return false;
+  }
+}
+
+// 自動開始遊戲（Ch5-t1 專用）
+async function autoStartGame() {
+  try {
+    console.log('[自動開始] 準備開始遊戲...');
+    const currentUid = await getUid() || 'default';
+    
+    updateStatus('遊戲即將開始...', 'loading');
+    
+    // 清空遊戲狀態
+    await clearGameState(currentUid);
+    console.log('[自動開始] 狀態已清空');
+    
+    // 短暫延遲確保狀態已寫入
+    await new Promise(r => setTimeout(r, 300));
+    
+    updateStatus('遊戲開始！請開始收集豆豆...', 'loading');
+    
+    // 觸發後端遊戲程式
+    await triggerBackgroundAnalysis(id, currentUid);
+    console.log('[自動開始] 遊戲已啟動');
+    
+    // 開始輪詢遊戲狀態
+    pollGameState(currentUid);
+    
+  } catch (error) {
+    console.error('[自動開始] 錯誤:', error);
+    updateStatus(`自動開始失敗: ${error.message}`, 'error');
+  }
+}
+
+// 主函數（保留給其他任務使用）
+async function takeShot() {
+  try {
+    const currentUid = await getUid() || 'default';
+    els.shotBtn.disabled = true;
+    
+    if (id === "ch5-t1") {
+      // Ch5-t1 走自動流程，不應執行到此
+      console.log('[takeShot] Ch5-t1 應該使用自動開始，不應執行到此處');
+      return;
+      
+    } else if (["ch1-t2", "ch1-t3", "ch1-t4"].includes(id)) {
+      // === 針對需要拍兩張照片的任務 ===
+      await countdown(waittime);
+      await closeCamera();
+      
+      // 1. 拍側面
+      updateStatus('正在拍攝側面鏡頭...', 'loading');
+      await captureWithCamera(SIDE, `${id}-side`, currentUid);
+      
+      // 2. 拍上方
+      updateStatus('側面完成，切換上方鏡頭...', 'loading');
+      await captureWithCamera(TOP, `${id}-top`, currentUid);
+
+      // 3. 【新增】呼叫後端分析並存檔 (這是資料寫入資料庫的關鍵)
+      updateStatus('正在分析並寫入資料庫...', 'loading');
+      await triggerBackgroundAnalysis(id, currentUid);
+
+      // 4. 完成後才跳轉
+      updateStatus('存檔完成！準備回主頁...', 'success');
+      await new Promise(r => setTimeout(r, 800));
+      goHome();
+      
+    } else {
+      // === 一般單張照片任務 ===
+      await countdown(waittime);
+      await closeCamera();
+      
+      // 1. 拍上方
+      updateStatus('正在拍照（上方鏡頭）...', 'loading');
+      await captureWithCamera(TOP, id, currentUid);
+      
+      // 2. 【新增】呼叫後端分析並存檔
+      updateStatus('正在分析並寫入資料庫...', 'loading');
+      await triggerBackgroundAnalysis(id, currentUid);
+      
+      // 3. 完成後才跳轉
+      updateStatus('存檔完成！準備回主頁...', 'success');
+      await new Promise(r => setTimeout(r, 800));
+      goHome();
+    }
+    
+  } catch (error) {
+    console.error('操作錯誤:', error);
+    updateStatus(`操作失敗: ${error.message}`, 'error');
+    els.shotBtn.disabled = false;
+    // 如果失敗，重新開啟相機讓使用者重試
+    if (id !== "ch5-t1") {
+      await openCamera();
+    }
+  }
+}
+
+async function countdown(seconds) {
+  for (let i = seconds; i > 0; i--) {
+    updateStatus(`準備拍照... ${i}`, 'loading');
+    await new Promise(r => setTimeout(r, 1000));
+  }
+}
+
 async function closeCamera() {
   try {
     if (streamInterval) {
@@ -226,29 +431,37 @@ async function closeCamera() {
     }
     const response = await fetch('/opencv-camera/stop', { method: 'POST' });
     if (!response.ok) console.warn('無法通知後端關閉相機');
-
     cameraActive = false;
     els.shotBtn.disabled = true;
     els.placeholderText.style.display = 'block';
     els.cameraStream.style.display = 'none';
     els.cameraStream.src = "";
     updateStatus('相機已關閉', 'info');
-
   } catch (err) {
     console.error('關閉相機失敗:', err);
   }
 }
 
-// 綁定事件
-els.shotBtn.addEventListener("click", takeShot);
+function shotBtnClickHandler() {
+    takeShot(); 
+}
 
-// 進入畫面自動開鏡頭（先開 1 當預覽）
+els.shotBtn.addEventListener("click", shotBtnClickHandler);
+
 document.addEventListener("DOMContentLoaded", async () => {
   await openCamera();
 });
 
-// 頁面卸載時清理資源
-window.addEventListener("beforeunload", () => {
+// ✅ 新的寫法 (消除警告，且更穩定)
+window.addEventListener("pagehide", () => {
+  // 1. 清除計時器
   if (streamInterval) clearInterval(streamInterval);
-  if (cameraActive) closeCamera();
+  if (gameStateInterval) clearInterval(gameStateInterval);
+
+  // 2. 如果相機還開著，通知後端關閉
+  // 使用 sendBeacon 是因為頁面關閉時，一般的 fetch/await 容易被瀏覽器取消
+  if (cameraActive) {
+      // 這裡不需要 async/await，sendBeacon 是發後不理的
+      navigator.sendBeacon('/opencv-camera/stop');
+  }
 });

@@ -23,7 +23,7 @@ class PaperDetector_edges:
             out_dir.mkdir(parents=True, exist_ok=True)
             out_path = out_dir / f"{name}_edges_paper.jpg"
             cv2.imwrite(str(out_path), edges_img, [cv2.IMWRITE_JPEG_QUALITY, 100])
-            rel = Path("ch4-t2") / "edges" / f"{name}_edges_paper.jpg"
+            rel = Path("ch4-t1") / "edges" / f"{name}_edges_paper.jpg"
             rel_path = str(rel).replace("/", "\\")
             print(f"結果已儲存為 '{rel_path}'")
             return rel_path
@@ -55,7 +55,6 @@ class PaperDetector_edges:
 
         hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
 
-        # 1) 先抓白紙，建立 ROI，避免背景紋理進來
         white_mask = cv2.inRange(hsv, np.array([0, 0, 155]), np.array([180, 70, 255]))
         kernel5 = np.ones((5, 5), np.uint8)
         white_mask = cv2.morphologyEx(
@@ -67,16 +66,17 @@ class PaperDetector_edges:
         white_contours, _ = cv2.findContours(
             white_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
         )
+        image_area = float(image.shape[0] * image.shape[1])
         if white_contours:
             paper_contour = max(white_contours, key=cv2.contourArea)
-            if cv2.contourArea(paper_contour) > 8000:
+            paper_area = cv2.contourArea(paper_contour)
+            if paper_area > max(8000, image_area * 0.30):
                 paper_mask = np.zeros_like(white_mask)
                 cv2.drawContours(paper_mask, [paper_contour], -1, 255, thickness=-1)
                 roi_mask = cv2.dilate(
                     paper_mask, np.ones((41, 41), np.uint8), iterations=1
                 )
 
-        # 2) 任意顏色紙：用飽和度通道抓輪廓
         sat_blurred = cv2.GaussianBlur(hsv[:, :, 1], (9, 9), 0)
         edges = cv2.Canny(sat_blurred, 30, 120)
         kernel = np.ones((3, 3), np.uint8)
@@ -89,7 +89,6 @@ class PaperDetector_edges:
         contours, _ = cv2.findContours(edges, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
         contours = [cnt for cnt in contours if cv2.contourArea(cnt) > 300]
 
-        # 備援：若飽和度邊緣抓不到，再回到一般灰階邊緣
         if not contours:
             gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
             blurred = cv2.GaussianBlur(gray, (9, 9), 0)
