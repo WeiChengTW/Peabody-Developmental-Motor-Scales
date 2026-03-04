@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # 獵遲行動 - 兒童精細動作之 AI 檢測
 
 **專案名稱：** 獵遲行動-兒童精細動作之 AI 檢測  
@@ -294,3 +295,6 @@ https://ws.dgbas.gov.tw/001/Upload/463/relfile/11150/89262/110%E5%B9%B4%E7%99%BC
 [11]: 衛生福利部, "優化偏鄉醫療精進計畫第二期," 2024. [Online]. Available: https://share.google/2wvYmhQ713gsbjvCE
 
 [12]: Y. Y. Choo, P. Agarwal, C. H. How, and S. P. Yeleswarapu, "Developmental delay: identification and management at primary care level," Singapore Med J, vol. 60, no. 3, pp. 119–123, Mar 2019, doi: 10.11622/smedj.2019025.
+=======
+CGU
+>>>>>>> william

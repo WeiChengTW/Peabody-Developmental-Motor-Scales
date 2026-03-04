@@ -6,9 +6,11 @@ import os
 import json
 import cv2
 import sys
+from pathlib import Path
 from final import find_baseline_and_show_all
 
-PXCM_JSON = "px2cm.json"
+BASE_DIR = Path(__file__).resolve().parent
+PXCM_JSON = BASE_DIR.parent / "px2cm.json"
 
 
 def return_score(score: int):

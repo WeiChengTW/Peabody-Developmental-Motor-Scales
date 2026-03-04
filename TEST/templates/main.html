@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>攝影機串流</title>
+    <style>
+        .container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+        }
+
+        .video-container {
+            border: 2px solid #333;
+            border-radius: 8px;
+            overflow: hidden;
+            background-color: #000;
+        }
+
+        .video-container img {
+            display: block;
+            max-width: 100%;
+            height: auto;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="video-container">
+            <img src="{{ url_for('video_feed') }}" alt="Camera Stream">
+        </div>
+    </div>
+    <script>
+        // 內嵌 JavaScript 以避免靜態檔案問題
+        document.addEventListener('DOMContentLoaded', function () {
+            const videoImage = document.querySelector('.video-container img');
+            videoImage.onerror = function () {
+                console.error('影像串流載入失敗');
+            };
+            videoImage.onload = function () {
+                console.log('影像串流載入成功');
+            };
+        });
+    </script>
+</body>
+
+</html>

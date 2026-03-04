@@ -214,7 +214,7 @@ def main(img_path):
             pixel_per_cm = 47.4416628993705  # 預設值
         print(f"{img_path} pixel_per_cm = {pixel_per_cm}")
     except ValueError as e:
-        print(f"跳過 {img_path}：{e}")
+        print(f"⚠️ 跳過 {img_path}：{e}")
 
     # cm_per_pixel = 1 / pixel_per_cm
     # actual_length_cm = 7.5
