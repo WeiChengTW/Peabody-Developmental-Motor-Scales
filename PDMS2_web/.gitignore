@@ -21,6 +21,7 @@ Thumbs.db
 *.mp4
 *.avi
 *.mov
+*.jpg
 
 # B. 忽略小朋友的個資資料夾 (保護隱私)
 # 假設路徑是 PDMS2_web/kid，這下面所有東西都不會上傳
