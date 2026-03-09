@@ -4,9 +4,14 @@ import numpy as np
 import json
 import glob
 import os
+from pathlib import Path
+
+BASE_DIR = Path(__file__).resolve().parent
 
 CROP_FOLDER = r"PDMS2_web\ch2-t4\new"
-PXCM_JSON = "px2cm.json"  # 單一比例檔，內容：{"pixel_per_cm": 40.47...}
+PXCM_JSON = (
+    BASE_DIR.parent / "px2cm.json"
+)  # 單一比例檔，內容：{"pixel_per_cm": 40.47...}
 SHOW_SCALE = 0.7
 MARGIN = 40
 
@@ -81,7 +86,6 @@ def extract_trace_mask(img_bgr):
     trace = cv2.morphologyEx(trace, cv2.MORPH_OPEN,  np.ones((3, 3), np.uint8), 1)
     trace = cv2.dilate(trace, np.ones((3, 3), np.uint8), 1)
     return trace
-
 
 
 def fallback_baseline_from_projection(bw, prefer_band_px=6):

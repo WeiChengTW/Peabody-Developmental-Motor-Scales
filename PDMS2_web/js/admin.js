@@ -15,7 +15,7 @@
       if (roleDisplay) {
         const userName = js.user.name || js.user.account;
         const labels = { 1: "家長身分", 2: "醫療人員", 3: "系統主管" };
-        roleDisplay.innerHTML = `當前身分：${labels[userLevel] || '未確認'} ｜ 登入帳號：${userName}`;
+        roleDisplay.innerHTML = `當前身分：${labels[userLevel] || '未確認'} ｜ 登入帳號：${userName} <button class="text-link" style="margin-left: 12px; font-size: 13px;" data-action="edit-profile">✏️ 修改帳密</button>`;
       }
     } catch (e) {
       location.href = '/html/admin_login.html';
@@ -40,7 +40,8 @@
   const $tbody = document.querySelector('[data-role="tbody"]');
   const $selName = document.querySelector('[data-role="sel-name"]');
   const $selLvl = document.querySelector('[data-role="sel-level"]');
-  const $dialog = document.querySelector('[data-role="dialog"]');
+  const $dialog = document.getElementById('record-dialog');
+  const $imgDialog = document.getElementById('image-dialog');
   
   const $f_userId = $dialog?.querySelector('[data-field="userId"]');
   const $f_name = $dialog?.querySelector('[data-field="name"]');
@@ -100,7 +101,7 @@
     );
 
     if (filtered.length === 0) {
-      $tbody.innerHTML = '<tr><td colspan="6" class="empty">目前沒有符合條件的測驗紀錄</td></tr>';
+      $tbody.innerHTML = '<tr><td colspan="7" class="empty">目前沒有符合條件的測驗紀錄</td></tr>';
       return;
     }
     
@@ -112,6 +113,14 @@
            </div>` 
         : '<span style="color:#CCC;">無操作權限</span>';
         
+      const imgBtn = `<button class="btn btn-sm" style="background-color: #E3F2FD; color: #1565C0; border-color: #BBDEFB;" 
+                        data-action="view-images" 
+                        data-raw="${r.raw_image_url || ''}" 
+                        data-result="${r.result_image_url || ''}" 
+                        data-title="${r.uid} - ${r.task_id}">
+                        👀 查看結果圖
+                      </button>`;
+
       return `
         <tr data-key="${r.row_key}">
           <td>${opTd}</td>
@@ -119,15 +128,113 @@
           <td>${r.name || '未填寫'}</td>
           <td>${r.task_id || ''}</td>
           <td style="font-weight:700; color:#48CAE4;">${r.score ?? ''}</td>
+          <td>${imgBtn}</td>
           <td style="color:var(--text-muted);">${r.test_date ?? ''}</td>
         </tr>`;
     }).join('');
   }
 
+  // 統一處理畫面上的點擊事件
   document.addEventListener('click', async (e) => {
+    
+    // 🆕 修改密碼的眼睛圖示功能 (防呆強化版)
+    if (e.target.id === 'toggle-profile-pwd') {
+      const pwdInput = document.getElementById('profile-pwd');
+      if (pwdInput) {
+        const type = pwdInput.getAttribute('type') === 'password' ? 'text' : 'password';
+        pwdInput.setAttribute('type', type);
+        e.target.textContent = type === 'password' ? '👁️' : '🙈';
+      }
+      return;
+    }
+
     const btn = e.target.closest('[data-action]');
     if (!btn) return;
     const act = btn.dataset.action;
+
+    if (act === 'view-images') {
+      const rawUrl = btn.dataset.raw;
+      const resultUrl = btn.dataset.result;
+      
+      document.getElementById('img-dialog-title').textContent = btn.dataset.title;
+      
+      const rawImg = document.getElementById('raw-image');
+      const resultImg = document.getElementById('result-image');
+      const rawErr = document.getElementById('raw-image-error');
+      const resultErr = document.getElementById('result-image-error');
+
+      rawImg.style.display = 'inline-block';
+      resultImg.style.display = 'inline-block';
+      rawErr.style.display = 'none';
+      resultErr.style.display = 'none';
+
+      rawImg.src = rawUrl;
+      resultImg.src = resultUrl;
+
+      rawImg.onerror = () => { rawImg.style.display = 'none'; rawErr.style.display = 'block'; };
+      resultImg.onerror = () => { resultImg.style.display = 'none'; resultErr.style.display = 'block'; };
+
+      const $imgDialog = document.getElementById('image-dialog');
+      if($imgDialog) $imgDialog.showModal();
+    }
+
+    // 🆕 呼叫修改密碼對話框 (防呆強化版)
+    if (act === 'edit-profile') {
+      const $profileDialog = document.getElementById('profile-dialog');
+      
+      // 如果找不到 HTML，直接彈出警告！
+      if (!$profileDialog) {
+        alert('❌ 系統提示：找不到彈出視窗的程式碼！請確認是否有將 <dialog id="profile-dialog"> 的區塊存進 admin.html 中，並且已經強制重新整理網頁。');
+        return;
+      }
+
+      const accInput = document.getElementById('profile-acc');
+      const pwdInput = document.getElementById('profile-pwd');
+      const eyeBtn = document.getElementById('toggle-profile-pwd');
+
+      if (accInput) accInput.value = '';
+      if (pwdInput) {
+        pwdInput.value = '';
+        pwdInput.setAttribute('type', 'password');
+      }
+      if (eyeBtn) eyeBtn.textContent = '👁️';
+      
+      $profileDialog.showModal();
+    }
+
+    if (act === 'save-profile') {
+      e.preventDefault();
+      const newAcc = document.getElementById('profile-acc').value.trim();
+      const newPwd = document.getElementById('profile-pwd').value.trim();
+      
+      if (!newAcc || !newPwd) return alert('系統提示：新帳號與新密碼不可為空');
+
+      const btnSave = e.target;
+      const originalText = btnSave.textContent;
+      btnSave.textContent = '處理中...';
+      btnSave.disabled = true;
+
+      try {
+        const r = await fetch('/api/auth/update_profile', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ new_account: newAcc, new_password: newPwd })
+        });
+        const js = await r.json().catch(() => ({}));
+        
+        if (js.ok) {
+          alert('✅ 修改成功！請使用新帳號密碼重新登入。');
+          location.href = '/html/admin_login.html';
+        } else {
+          alert('❌ 修改失敗：' + (js.msg || '未知錯誤'));
+        }
+      } catch (err) {
+        alert('網路連線異常，請檢查網路狀態後再試。');
+      } finally {
+        btnSave.textContent = originalText;
+        btnSave.disabled = false;
+      }
+    }
 
     if (act === 'new') {
       const taskFields = document.getElementById('task-fields');

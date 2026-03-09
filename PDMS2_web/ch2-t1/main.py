@@ -213,7 +213,7 @@ def main(img_path):
         )
         print(f"{img_path} pixel_per_cm = {pixel_per_cm}")
     except ValueError as e:
-        print(f"⚠️ 跳過 {img_path}：{e}")
+        print(f"跳過 {img_path}：{e}")
 
     # 裁切圖形
     print("\n==裁切圖形==")
@@ -256,11 +256,12 @@ def main(img_path):
     for url, u_type in result.items():
         if u_type == "circle_or_oval":
             px, result_img = cp.check_point(url)
+            offset = px / pixel_per_cm
+            cv2.putText(result_img, f"Offset : {float(offset):.2f} cm", (20, 50), cv2.FONT_HERSHEY_COMPLEX, 0.8, (0, 255, 0), 1)
             if px == 0.0:
                 print(f"{url} : Perfect!")
                 return 2, result_img
             else:
-                offset = px / pixel_per_cm
                 print(f"{url} : {offset}cm")
                 if offset <= 1.2:
                     return 2, result_img
@@ -274,6 +275,7 @@ def main(img_path):
             cv2.putText(
                 img, "Other !", (30, 50), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2
             )
+            
             # cv2.imshow('Other', img)
             print(f"{url} is {result[url]}!")
             return 0, img

@@ -23,7 +23,6 @@ body {
   padding: 0;
 }
 
-/* 頂部導覽列 */
 .header {
   background-color: var(--bg-card);
   border-bottom: 3px solid var(--border-color);
@@ -33,178 +32,94 @@ body {
   align-items: center;
   box-shadow: 0 4px 15px rgba(255, 159, 67, 0.05);
 }
-.header .brand {
-  font-size: 20px;
-  font-weight: 700;
-  color: #FF8A65;
-  letter-spacing: 1px;
+.header .brand { font-size: 20px; font-weight: 700; color: #FF8A65; letter-spacing: 1px; }
+.header .user-info { font-size: 14px; color: var(--text-muted); display: flex; align-items: center; gap: 20px; font-weight: 500; }
+
+.wrap { max-width: 1100px; margin: 40px auto; padding: 0 24px; }
+.card { background-color: var(--bg-card); border-radius: 20px; box-shadow: 0 8px 20px rgba(0,0,0,0.03); border: 3px solid var(--border-color); margin-bottom: 30px; overflow: hidden; }
+.toolbar { padding: 20px 24px; background-color: #FFFAF5; border-bottom: 3px solid var(--border-color); display: flex; gap: 15px; align-items: center; flex-wrap: wrap; }
+
+/* 🆕 加入了 input[type="password"]，讓密碼框也能套用一樣的樣式 */
+select, input[type="text"], input[type="password"], input[type="date"], input[type="number"] { 
+  padding: 10px 16px; 
+  border: 2px solid var(--border-color); 
+  border-radius: 12px; 
+  font-size: 15px; 
+  outline: none; 
+  background-color: #FAFAFA; 
+  color: var(--text-main); 
+  font-family: inherit; 
+  transition: all 0.3s ease; 
 }
-.header .user-info {
-  font-size: 14px;
-  color: var(--text-muted);
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  font-weight: 500;
+select:focus, input:focus { 
+  border-color: var(--primary); 
+  background-color: #FFF; 
+  box-shadow: 0 0 0 4px rgba(255, 159, 67, 0.15); 
 }
 
-/* 佈局與卡片 */
-.wrap {
-  max-width: 1100px;
-  margin: 40px auto;
-  padding: 0 24px;
-}
-.card {
-  background-color: var(--bg-card);
-  border-radius: 20px;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.03);
-  border: 3px solid var(--border-color);
-  margin-bottom: 30px;
-  overflow: hidden;
-}
-.toolbar {
-  padding: 20px 24px;
-  background-color: #FFFAF5;
-  border-bottom: 3px solid var(--border-color);
-  display: flex;
-  gap: 15px;
-  align-items: center;
-  flex-wrap: wrap;
-}
-
-/* 表單與輸入框 */
-select, input[type="text"], input[type="date"], input[type="number"] {
-  padding: 10px 16px;
-  border: 2px solid var(--border-color);
-  border-radius: 12px;
-  font-size: 15px;
-  outline: none;
-  background-color: #FAFAFA;
-  color: var(--text-main);
-  font-family: inherit;
-  transition: all 0.3s ease;
-}
-select:focus, input:focus {
-  border-color: var(--primary);
-  background-color: #FFF;
-  box-shadow: 0 0 0 4px rgba(255, 159, 67, 0.15);
-}
 .form-group { margin-bottom: 20px; }
-.form-group label {
-  display: block;
-  font-size: 14px;
-  font-weight: 700;
-  margin-bottom: 8px;
-  color: #796A6A;
+.form-group label { display: block; font-size: 14px; font-weight: 700; margin-bottom: 8px; color: #796A6A; }
+
+/* 🆕 密碼區塊與顯示/隱藏眼睛圖示樣式 */
+.password-container {
+  position: relative;
+}
+.password-container input {
+  padding-right: 45px; /* 右側預留空間給眼睛圖示 */
+}
+.toggle-pwd-btn {
+  position: absolute;
+  top: 50%;
+  right: 14px;
+  transform: translateY(-50%);
+  cursor: pointer;
+  font-size: 18px;
+  user-select: none;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+}
+.toggle-pwd-btn:hover {
+  opacity: 1;
 }
 
-/* 童趣積木按鈕 */
-.btn {
-  padding: 10px 20px;
-  border-radius: 16px;
-  font-size: 15px;
-  font-weight: 700;
-  cursor: pointer;
-  border: 2px solid var(--border-color);
-  background-color: #FFF;
-  color: var(--text-main);
-  transition: all 0.2s;
-  font-family: inherit;
-}
+.btn { padding: 10px 20px; border-radius: 16px; font-size: 15px; font-weight: 700; cursor: pointer; border: 2px solid var(--border-color); background-color: #FFF; color: var(--text-main); transition: all 0.2s; font-family: inherit; }
 .btn:hover { background-color: #FFF8EE; border-color: #FFDAB9; }
 .btn:active { transform: translateY(2px); }
 
-.btn.primary {
-  background-color: var(--primary);
-  color: #fff;
-  border: none;
-  box-shadow: 0 4px 0 #E27D22;
-}
+.btn.primary { background-color: var(--primary); color: #fff; border: none; box-shadow: 0 4px 0 #E27D22; }
 .btn.primary:hover { background-color: var(--primary-hover); }
 .btn.primary:active { transform: translateY(4px); box-shadow: none; }
 
-.btn.danger {
-  color: #fff;
-  background-color: var(--danger);
-  border: none;
-  box-shadow: 0 4px 0 #E05B77;
-}
+.btn.danger { color: #fff; background-color: var(--danger); border: none; box-shadow: 0 4px 0 #E05B77; }
 .btn.danger:hover { background-color: var(--danger-hover); }
 .btn.danger:active { transform: translateY(4px); box-shadow: none; }
 
-.btn-sm { padding: 6px 14px; font-size: 13px; border-radius: 12px; }
+.btn-sm { padding: 6px 14px; font-size: 13px; border-radius: 12px; box-shadow: 0 2px 0 var(--border-color); }
+.btn-sm:active { box-shadow: none; transform: translateY(2px); }
+
 .text-link { color: var(--secondary); cursor: pointer; text-decoration: none; border:none; background:none; padding:0; font-size: 15px; font-weight:700;}
 .text-link:hover { color: #00B4D8; }
 
-/* 圓潤表格 */
-.table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 15px;
-}
-.table th, .table td {
-  padding: 16px 24px;
-  text-align: left;
-  border-bottom: 2px solid #F9F6F0;
-}
-.table th {
-  background-color: #FFFAF5;
-  font-weight: 700;
-  color: #8C7A7A;
-}
+.table { width: 100%; border-collapse: collapse; font-size: 15px; }
+.table th, .table td { padding: 16px 24px; text-align: left; border-bottom: 2px solid #F9F6F0; vertical-align: middle; }
+.table th { background-color: #FFFAF5; font-weight: 700; color: #8C7A7A; }
 .table tr:last-child td { border-bottom: none; }
 .table tr:hover { background-color: #FFFDF8; }
 .table .empty { text-align: center; padding: 40px; color: var(--text-muted); font-weight: 500;}
 
-/* 彈出對話框 */
-dialog {
-  border: 3px solid var(--border-color);
-  border-radius: 24px;
-  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
-  padding: 0;
-  width: 100%;
-  max-width: 450px;
-  background: #FFF;
-}
+dialog { border: 3px solid var(--border-color); border-radius: 24px; box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1); padding: 0; width: 100%; max-width: 450px; background: #FFF; }
 dialog::backdrop { background-color: rgba(92, 78, 78, 0.4); backdrop-filter: blur(3px); }
-.dialog-header {
-  padding: 20px 24px;
-  background-color: #FFFAF5;
-  border-bottom: 2px solid var(--border-color);
-  font-size: 18px;
-  font-weight: 700;
-  color: #FF8A65;
-}
+.dialog-header { padding: 20px 24px; background-color: #FFFAF5; border-bottom: 2px solid var(--border-color); font-size: 18px; font-weight: 700; color: #FF8A65; }
 .dialog-body { padding: 24px; }
-.dialog-footer {
-  padding: 20px 24px;
-  background-color: #FAFAFA;
-  border-top: 2px solid var(--border-color);
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-}
+.dialog-footer { padding: 20px 24px; background-color: #FAFAFA; border-top: 2px solid var(--border-color); display: flex; justify-content: flex-end; gap: 12px; }
 
-/* 分數拉條美化 */
-input[type=range] {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 100%;
-  background: transparent;
-  border: none;
-}
-input[type=range]::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  height: 24px; width: 24px;
-  border-radius: 50%;
-  background: var(--primary);
-  cursor: pointer;
-  margin-top: -8px;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-}
-input[type=range]::-webkit-slider-runnable-track {
-  width: 100%; height: 8px;
-  cursor: pointer;
-  background: var(--border-color);
-  border-radius: 4px;
-}
+input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; background: transparent; border: none; }
+input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 24px; width: 24px; border-radius: 50%; background: var(--primary); cursor: pointer; margin-top: -8px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 8px; cursor: pointer; background: var(--border-color); border-radius: 4px; }
+
+#image-dialog { max-width: 900px; }
+.image-container { display: flex; flex-direction: column; gap: 20px; }
+@media (min-width: 768px) { .image-container { flex-direction: row; justify-content: center; } }
+.img-box { flex: 1; padding: 16px; background: #FFF; border-radius: 16px; border: 2px dashed var(--border-color); }
+.img-box img { max-width: 100%; max-height: 400px; border-radius: 8px; object-fit: contain; }
+.img-error { display: none; color: var(--danger); padding: 40px 20px; font-weight: 700; background: #FFF5F5; border-radius: 8px; border: 1px solid #FFE3E3; }

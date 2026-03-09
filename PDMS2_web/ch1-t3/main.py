@@ -167,8 +167,13 @@ def analyze_image_top(frame, model, initial_get_point=2):
     else:
         color = (0, 0, 0)
 
-    cv2.putText(cropped, summary, (230, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, color, 3)
+    cv2.putText(cropped, summary, (230, 50), cv2.FONT_HERSHEY_SIMPLEX, 0.75, color, 3)
 
+    # ========== 顯示得分 ==========
+    score_text = f"Score: {GET_POINT}/2"
+    cv2.putText(cropped, score_text, (10, cropped.shape[0] - 20), 
+               cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0, 255, 255), 2)
+    
     return cropped, summary, GET_POINT
 
 
@@ -177,7 +182,7 @@ def analyze_image_top(frame, model, initial_get_point=2):
 # ====================================================================
 
 
-CONF_SIDE = 0.8
+CONF_SIDE = 0.6
 GAP_THRESHOLD_RATIO = 1.05
 
 def analyze_image_side(IMG_PATH, model):
@@ -186,9 +191,13 @@ def analyze_image_side(IMG_PATH, model):
     返回: (annotated_frame, score_side)
     """
     frame = cv2.imread(IMG_PATH)
+    # == 左右翻面 == #
+    frame = cv2.flip(frame, 1)
     if frame is None:
         raise ValueError(f"讀不到圖片：{IMG_PATH}")
 
+    
+    frame = cv2.convertScaleAbs(frame, alpha=1.4, beta=10)
     annotated_frame = frame.copy()
 
     results = model.predict(source=frame, conf=CONF_SIDE, verbose=False)
@@ -197,7 +206,7 @@ def analyze_image_side(IMG_PATH, model):
     masks = r0.masks.data.cpu().numpy() if r0.masks is not None else []
     boxes = r0.boxes.xyxy.cpu().numpy() if r0.boxes is not None else np.empty((0, 4))
     
-    # ✅ 修正：直接從 boxes 計算質心，確保座標一致
+    # 修正：直接從 boxes 計算質心，確保座標一致
     centroids = []
     for box in boxes:
         x1, y1, x2, y2 = box
@@ -232,7 +241,7 @@ def analyze_image_side(IMG_PATH, model):
 
         # ========== 繪製空隙 ==========
         if gap_pairs:
-            IS_GAP = len(gap_pairs) // 2 == 3
+            IS_GAP = True
             print(f"偵測到空隙: {len(gap_pairs) // 2} 組")
             
             try:
@@ -268,7 +277,7 @@ def analyze_image_side(IMG_PATH, model):
                 SCORE = 1
 
     # 分層並做模式判定
-    grouper = LayerGrouping(layer_ratio=0.2)
+    grouper = LayerGrouping(layer_ratio=0.3)
     layers = grouper.group_by_y(centroids, boxes=boxes)
 
     # ========== 繪製分層（同時繪製質心）==========
@@ -326,7 +335,7 @@ def analyze_image_side(IMG_PATH, model):
     # ========== 顯示得分 ==========
     score_text = f"Score: {SCORE}/2"
     cv2.putText(annotated_frame, score_text, (10, annotated_frame.shape[0] - 20), 
-               cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 255, 255), 2)
+               cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0, 255, 255), 2)
 
     return annotated_frame, SCORE
 
@@ -358,9 +367,14 @@ if __name__ == "__main__":
     score_side = -1
     try:
         annotated_side, score_side = analyze_image_side(SIDE_IMG_PATH, yolo_model)
+       
         print(f"側視圖 ({SIDE_IMG_PATH}) 得分: {score_side}")
         
-        # ✅ 儲存側視圖結果
+        # 顯示側視圖結果
+        # cv2.namedWindow('Side View Analysis', cv2.WINDOW_NORMAL)
+        # cv2.imshow('Side View Analysis', annotated_side)
+
+        # 儲存側視圖結果
         side_result_path = rf"kid\{uid}\{img_id}-side_result.jpg"
         cv2.imwrite(side_result_path, annotated_side)
         print(f"側視圖結果已儲存至: {side_result_path}")
@@ -378,21 +392,30 @@ if __name__ == "__main__":
             raise ValueError("讀取俯視圖失敗")
 
         initial_score = 2
-        analyzed_frame, summary, score_top = analyze_image_top(
+        analyzed_top, summary, score_top = analyze_image_top(
             frame_top, yolo_model, initial_score
         )
         print(f"俯視圖 ({TOP_IMG_PATH}) 檢測結果: {summary}")
         print(f"俯視圖得分: {score_top}")
+        # 顯示俯視圖結果
+        # cv2.namedWindow('Top View Analysis', cv2.WINDOW_NORMAL)
+        # cv2.imshow('Top View Analysis', analyzed_top)
 
-        # ✅ 儲存俯視圖結果
+        # 儲存俯視圖結果
         top_result_path = rf"kid\{uid}\{img_id}-top_result.jpg"
-        cv2.imwrite(top_result_path, analyzed_frame)
+        cv2.imwrite(top_result_path, analyzed_top)
         print(f"俯視圖結果已儲存至: {top_result_path}")
 
     except ValueError as e:
         print(f"俯視圖分析失敗: {e}")
     except Exception as e:
         print(f"俯視圖分析時發生錯誤: {e}")
+
+     # --- 等待按鍵並關閉 ---
+    # print("\n[提示] 按下任意鍵以關閉預覽視窗並輸出分數...")
+    # cv2.waitKey(0)  # 這行會讓視窗卡住，直到你按鍵
+    # cv2.destroyAllWindows()
+
 
     # --- 3. 輸出最低得分 ---
     if score_side == 0 or score_top == 0:

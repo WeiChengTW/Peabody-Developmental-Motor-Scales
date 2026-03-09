@@ -55,6 +55,12 @@
     .form-group {
       margin-bottom: 20px;
     }
+    
+    /* 🆕 密碼區塊的相對定位 */
+    .password-container {
+      position: relative;
+    }
+    
     input {
       width: 100%;
       box-sizing: border-box;
@@ -65,7 +71,30 @@
       color: var(--text-main);
       background-color: #FAFAFA;
       transition: all 0.3s ease;
+      font-family: inherit;
     }
+    
+    /* 🆕 預留右側空間給眼睛圖示，避免文字重疊 */
+    .password-container input {
+      padding-right: 45px;
+    }
+
+    /* 🆕 眼睛圖示的樣式 */
+    .toggle-pwd-btn {
+      position: absolute;
+      top: 50%;
+      right: 14px;
+      transform: translateY(-50%);
+      cursor: pointer;
+      font-size: 18px;
+      user-select: none;
+      opacity: 0.6;
+      transition: opacity 0.2s;
+    }
+    .toggle-pwd-btn:hover {
+      opacity: 1;
+    }
+
     input:focus {
       outline: none;
       border-color: var(--primary);
@@ -86,6 +115,7 @@
       cursor: pointer;
       transition: all 0.2s ease;
       box-shadow: 0 4px 0 #E27D22;
+      font-family: inherit;
     }
     button:active {
       transform: translateY(4px);
@@ -113,8 +143,10 @@
     <div class="form-group">
       <input id="acc" type="text" placeholder="帳號 (家長請輸入小朋友 UID)" autocomplete="username">
     </div>
-    <div class="form-group">
+    
+    <div class="form-group password-container">
       <input id="pwd" type="password" placeholder="密碼 (預設為小朋友生日)" autocomplete="current-password">
+      <span id="toggle-pwd" class="toggle-pwd-btn" title="顯示/隱藏密碼">👁️</span>
     </div>
     
     <button id="btn">進入系統</button>
@@ -126,6 +158,16 @@
     const pwd = document.getElementById('pwd');
     const btn = document.getElementById('btn');
     const msg = document.getElementById('msg');
+    const togglePwd = document.getElementById('toggle-pwd'); // 🆕 取得眼睛圖示元素
+
+    // 🆕 顯示/隱藏密碼的功能
+    togglePwd.addEventListener('click', function() {
+      // 判斷目前的 input 類型
+      const type = pwd.getAttribute('type') === 'password' ? 'text' : 'password';
+      pwd.setAttribute('type', type);
+      // 切換圖示：顯示密碼時變 🙈，隱藏密碼時變 👁️
+      this.textContent = type === 'password' ? '👁️' : '🙈';
+    });
 
     function showMessage(text, type) {
       msg.textContent = text;

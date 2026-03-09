@@ -199,7 +199,7 @@ class check_point:
                 # 在骨架圖上也畫端點和連線
                 for (x, y) in endpoints:
                     cv2.circle(skeleton_bgr, (x, y), 3, (0, 0, 255), -1)
-
+            
                 # 顯示結果
                 
                 img = cv2.resize(img, (0, 0), fx=self.SCALE, fy=self.SCALE)
@@ -208,7 +208,9 @@ class check_point:
                 # cv2.imshow('binary_with_endpoints', binary_bgr)  # 在二值化圖像上顯示
                 skeleton_bgr = cv2.resize(skeleton_bgr, (0, 0), fx=self.SCALE, fy=self.SCALE)
                 # cv2.imshow('skeleton_with_endpoints', skeleton_bgr)  # 在骨架圖像上顯示
-        
+
+                
+
                 cv2.waitKey(0)
                 cv2.destroyAllWindows()
                 return float(dist_specific), skeleton_bgr

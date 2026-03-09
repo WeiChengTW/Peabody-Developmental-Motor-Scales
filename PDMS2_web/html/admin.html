@@ -39,11 +39,12 @@
             <th>受測者姓名</th>
             <th>測驗項目</th>
             <th>獲得分數</th>
+            <th>測試照片</th>
             <th>測驗日期</th>
           </tr>
         </thead>
         <tbody data-role="tbody">
-          <tr><td colspan="6" class="empty">系統資料載入中，請稍候...</td></tr>
+          <tr><td colspan="7" class="empty">系統資料載入中，請稍候...</td></tr>
         </tbody>
       </table>
     </div>
@@ -84,6 +85,46 @@
     <div class="dialog-footer">
       <button class="btn" onclick="document.getElementById('record-dialog').close()">取消返回</button>
       <button class="btn primary" data-action="save">確認並儲存</button>
+    </div>
+  </dialog>
+
+  <dialog id="image-dialog" data-role="image-dialog">
+    <div class="dialog-header">
+      查看測驗照片 - <span id="img-dialog-title" style="color: var(--secondary);"></span>
+      <button class="text-link" style="float: right; color: var(--text-muted); font-size: 14px;" onclick="document.getElementById('image-dialog').close()">✖ 關閉</button>
+    </div>
+    <div class="dialog-body" style="text-align: center; background-color: #FAFAFA;">
+      <div class="image-container">
+        <div class="img-box">
+          <h4 style="margin-top: 0; margin-bottom: 12px; color: var(--text-main);">原始測驗圖</h4>
+          <img id="raw-image" src="" alt="原始測驗圖">
+          <div id="raw-image-error" class="img-error">找不到原始照片</div>
+        </div>
+        <div class="img-box">
+          <h4 style="margin-top: 0; margin-bottom: 12px; color: var(--text-main);">AI 分析結果圖</h4>
+          <img id="result-image" src="" alt="AI 分析結果圖">
+          <div id="result-image-error" class="img-error">找不到分析結果照片</div>
+        </div>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog id="profile-dialog" data-role="profile-dialog">
+    <div class="dialog-header">修改登入帳密</div>
+    <div class="dialog-body">
+      <div class="form-group">
+        <label>設定新帳號 <span style="color:var(--danger)">*</span></label>
+        <input type="text" id="profile-acc" placeholder="請輸入新帳號">
+      </div>
+      <div class="form-group password-container">
+        <label>設定新密碼 <span style="color:var(--danger)">*</span></label>
+        <input type="password" id="profile-pwd" placeholder="請輸入新密碼">
+        <span id="toggle-profile-pwd" class="toggle-pwd-btn" title="顯示/隱藏密碼">👁️</span>
+      </div>
+    </div>
+    <div class="dialog-footer">
+      <button class="btn" onclick="document.getElementById('profile-dialog').close()">取消返回</button>
+      <button class="btn primary" data-action="save-profile">確認修改</button>
     </div>
   </dialog>
 

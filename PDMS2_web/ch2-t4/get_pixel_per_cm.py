@@ -4,12 +4,16 @@ import numpy as np
 import json
 import glob
 import os
+from pathlib import Path
 
-ORIG_FOLDER = rf"PDMS2_web\ch2-t4\images"   # 原始圖片
-CROP_FOLDER = rf"PDMS2_web\ch2-t4\new"      # 裁切輸出
-PXCM_JSON   = "px2cm.json"  # << 只讀這個比例 {"pixel_per_cm": ...}
+BASE_DIR = Path(__file__).resolve().parent
+
+ORIG_FOLDER = rf"PDMS2_web\ch2-t4\images"  # 原始圖片
+CROP_FOLDER = rf"PDMS2_web\ch2-t4\new"  # 裁切輸出
+PXCM_JSON = BASE_DIR.parent / "px2cm.json"  # << 只讀這個比例 {"pixel_per_cm": ...}
 
 os.makedirs(CROP_FOLDER, exist_ok=True)
+
 
 def order_points(pts):
     rect = np.zeros((4, 2), dtype="float32")

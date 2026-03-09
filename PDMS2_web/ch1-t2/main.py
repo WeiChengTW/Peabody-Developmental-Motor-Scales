@@ -167,8 +167,12 @@ def analyze_image_top(frame, model, initial_get_point=2):
     else:
         color = (0, 0, 0)
 
-    cv2.putText(cropped, summary, (230, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, color, 3)
+    cv2.putText(cropped, summary, (230, 50), cv2.FONT_HERSHEY_SIMPLEX, 0.7, color, 2)
 
+    # ========== 顯示得分 ==========
+    score_text = f"Top - Score: {GET_POINT}/2"
+    cv2.putText(cropped, score_text, (10, cropped.shape[0] - 20), 
+               cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 255), 2)
     return cropped, summary, GET_POINT
 
 
@@ -197,7 +201,7 @@ def analyze_image_side(IMG_PATH, model):
     masks = r0.masks.data.cpu().numpy() if r0.masks is not None else []
     boxes = r0.boxes.xyxy.cpu().numpy() if r0.boxes is not None else np.empty((0, 4))
     
-    # ✅ 修正：直接從 boxes 計算質心，確保座標一致
+    # 修正：直接從 boxes 計算質心，確保座標一致
     centroids = []
     for box in boxes:
         x1, y1, x2, y2 = box
@@ -268,7 +272,7 @@ def analyze_image_side(IMG_PATH, model):
                 SCORE = 1
 
     # 分層並做模式判定
-    grouper = LayerGrouping(layer_ratio=0.2)
+    grouper = LayerGrouping(layer_ratio=0.3)
     layers = grouper.group_by_y(centroids, boxes=boxes)
 
     # ========== 繪製分層（同時繪製質心）==========
@@ -320,11 +324,11 @@ def analyze_image_side(IMG_PATH, model):
             SCORE = 0
         
         # 顯示金字塔檢測結果
-        cv2.putText(annotated_frame, f"Pyramid: {pyramid_msg}", (10, 30), 
-                   cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 255), 2)
+        cv2.putText(annotated_frame, f"Pyramid: {pyramid_msg}", (10, 50), 
+                   cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0, 0, 0), 2)
 
     # ========== 顯示得分 ==========
-    score_text = f"Score: {SCORE}/2"
+    score_text = f"Side - Score: {SCORE}/2"
     cv2.putText(annotated_frame, score_text, (10, annotated_frame.shape[0] - 20), 
                cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 255, 255), 2)
 
@@ -342,6 +346,8 @@ if __name__ == "__main__":
         
         SIDE_IMG_PATH = rf"kid\{uid}\{img_id}-side.jpg"
         TOP_IMG_PATH = rf"kid\{uid}\{img_id}-top.jpg"
+        print(f"SIDE_IMG_PATH:{SIDE_IMG_PATH}\nTOP_IMG_PATH:{TOP_IMG_PATH}")
+
         MODEL_PATH = r"ch1-t2/toybrick.pt"
     else:
         print("請提供 uid 和 img_id 參數")
@@ -359,8 +365,11 @@ if __name__ == "__main__":
     try:
         annotated_side, score_side = analyze_image_side(SIDE_IMG_PATH, yolo_model)
         print(f"側視圖 ({SIDE_IMG_PATH}) 得分: {score_side}")
+        # 顯示側視圖結果
+        # cv2.namedWindow('Side View Analysis', cv2.WINDOW_NORMAL)
+        # cv2.imshow('Side View Analysis', annotated_side)
         
-        # ✅ 儲存側視圖結果
+        # 儲存側視圖結果
         side_result_path = rf"kid\{uid}\{img_id}-side_result.jpg"
         cv2.imwrite(side_result_path, annotated_side)
         print(f"側視圖結果已儲存至: {side_result_path}")
@@ -378,21 +387,29 @@ if __name__ == "__main__":
             raise ValueError("讀取俯視圖失敗")
 
         initial_score = 2
-        analyzed_frame, summary, score_top = analyze_image_top(
+        analyzed_top, summary, score_top = analyze_image_top(
             frame_top, yolo_model, initial_score
         )
         print(f"俯視圖 ({TOP_IMG_PATH}) 檢測結果: {summary}")
         print(f"俯視圖得分: {score_top}")
+        # 顯示俯視圖結果
+        # cv2.namedWindow('Top View Analysis', cv2.WINDOW_NORMAL)
+        # cv2.imshow('Top View Analysis', analyzed_top)
 
-        # ✅ 儲存俯視圖結果
+        # 儲存俯視圖結果
         top_result_path = rf"kid\{uid}\{img_id}-top_result.jpg"
-        cv2.imwrite(top_result_path, analyzed_frame)
+        cv2.imwrite(top_result_path, analyzed_top)
         print(f"俯視圖結果已儲存至: {top_result_path}")
 
     except ValueError as e:
         print(f"俯視圖分析失敗: {e}")
     except Exception as e:
         print(f"俯視圖分析時發生錯誤: {e}")
+
+    # --- 等待按鍵並關閉 ---
+    # print("\n[提示] 按下任意鍵以關閉預覽視窗並輸出分數...")
+    # cv2.waitKey(0)  # 這行會讓視窗卡住，直到你按鍵
+    # cv2.destroyAllWindows()
 
     # --- 3. 輸出最低得分 ---
     if score_side == 0 or score_top == 0:

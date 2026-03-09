@@ -19,7 +19,7 @@ DB = dict(
     port=3306,
     user="yplab",
     password="brain0918",
-    database="tested",
+    database="testPDMS",
     charset="utf8mb4",
     cursorclass=pymysql.cursors.DictCursor,
     autocommit=True,
@@ -181,7 +181,21 @@ def list_scores():
                 yield r
         
         rows = list(_date_to_str(all_rows_raw))
-        for r in rows: r["row_key"] = make_row_key(r.get("uid") or "", r.get("task_id") or "", r.get("test_date") or "")
+        for r in rows: 
+            r["row_key"] = make_row_key(r.get("uid") or "", r.get("task_id") or "", r.get("test_date") or "")
+            
+            # 🆕 新增：根據規則自動組合兩張圖的網址
+            uid = r.get("uid")
+            task_id = r.get("task_id", "")
+            if uid and task_id:
+                # 把關卡名稱轉小寫 (例如 Ch2-t1 變成 ch2-t1)
+                task_lower = task_id.lower()
+                r["raw_image_url"] = f"http://100.117.109.112/PDMS/{uid}/{task_lower}.jpg"
+                r["result_image_url"] = f"http://100.117.109.112/PDMS/{uid}/{task_lower}_result.jpg"
+            else:
+                r["raw_image_url"] = None
+                r["result_image_url"] = None
+
         rows.sort(key=lambda r: (r.get("test_date") or "", r.get("uid") or "", r.get("task_id") or ""), reverse=True)
         return jsonify(rows)
     except Exception as e: return jsonify({"success": False, "error": str(e)}), 500

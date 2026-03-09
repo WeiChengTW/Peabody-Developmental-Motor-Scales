@@ -22,42 +22,28 @@ class CrossScorer:
         os.makedirs(self.OUT_DIR, exist_ok=True)
 
     # ---------- UI ----------
-    def put_panel_top_left_autofit(
+    def put_text_top_left(
         self,
         img,
         lines,
-        org=(10, 10),
-        k=0.0022,
-        max_wf=0.72,
-        max_hf=0.55,
-        bg_alpha=0.65,
+        org=(10, 120), # 稍微往下移一點，避免貼邊
+        k=0.0015,     # 稍微調小字體係數
     ):
         H, W = img.shape[:2]
         font = cv2.FONT_HERSHEY_SIMPLEX
-        fs = max(0.35, min(2.0, H * k))
-        for _ in range(20):
-            thick = max(1, int(1 + fs * 1.3))
-            pad = max(6, int(8 + fs * 6))
-            vgap = max(2, int(4 + fs * 4))
-            sizes = [cv2.getTextSize(t, font, fs, thick)[0] for t in lines]
-            box_w = (max((s[0] for s in sizes), default=0)) + 2 * pad
-            line_h = (max((s[1] for s in sizes), default=0)) + vgap
-            box_h = line_h * len(lines) + 2 * pad
-            if box_w <= W * max_wf and box_h <= H * max_hf:
-                break
-            fs *= 0.9
-        x1, y1 = org
-        x2, y2 = int(x1 + box_w), int(y1 + box_h)
-        overlay = img.copy()
-        cv2.rectangle(overlay, (x1, y1), (x2, y2), (0, 0, 0), -1)
-        cv2.addWeighted(overlay, bg_alpha, img, 1 - bg_alpha, 0, img)
-        y = y1 + pad
+        
+        # 根據圖片高度自動計算字體大小與粗細
+        fs = max(0.5, H * k) * 0.5
+        thick = max(1, int(fs * 2))
+        vgap = int(60 * fs) # 行距
+        
+        y = org[1]
         for t in lines:
-            (w, h), _ = cv2.getTextSize(t, font, fs, thick)
-            p = (x1 + pad, y + h)
-            cv2.putText(img, t, p, font, fs, (0, 0, 0), thick + 2, cv2.LINE_AA)
-            cv2.putText(img, t, p, font, fs, (255, 255, 255), thick, cv2.LINE_AA)
-            y += h + vgap
+            # 繪製文字描邊（黑色），增加可視度
+            cv2.putText(img, t, (org[0], y), font, fs, (0, 0, 0), thick + 2, cv2.LINE_AA)
+            # 繪製主文字（白色）
+            cv2.putText(img, t, (org[0], y), font, fs, (255, 255, 255), thick, cv2.LINE_AA)
+            y += vgap
 
     # ---------- 幾何小工具 ----------
     @staticmethod
@@ -321,7 +307,7 @@ class CrossScorer:
             )
             panel.append(f"Spread: {spread_px_str}")
 
-        self.put_panel_top_left_autofit(vis, panel, org=(8, 8), k=0.0022, bg_alpha=0.65)
+        self.put_text_top_left(vis, panel)
 
         # 填結果
         result["score"] = int(score)

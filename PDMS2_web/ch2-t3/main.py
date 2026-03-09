@@ -18,6 +18,7 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent
 target_dir = BASE_DIR.parent / "ch2-t3"
 MODEL_PATH = BASE_DIR.parent / "ch2-t3" / "model" / "cross_final.h5"
+PXCM_JSON = BASE_DIR.parent / "px2cm.json"
 
 
 def return_score(score):
@@ -114,7 +115,7 @@ def get_pixel_per_cm_from_a4(
         print(f"A4區域已儲存至: {cropped_path}")
 
     # 儲存像素比例資料
-    json_path = "PDMS2_web/px2cm.json"
+    json_path = PXCM_JSON
     # data = {
     #     "pixel_per_cm": pixel_per_cm,
     #     "image_path": image_path,
@@ -204,7 +205,7 @@ def main(img_path):
             output_folder=target_dir / "cropped_a4",
         )
         try:
-            with open("PDMS2_web/px2cm.json", "r") as f:
+            with open(PXCM_JSON, "r", encoding="utf-8") as f:
                 data = json.load(f)
                 pixel_per_cm = data["pixel_per_cm"]
         except FileNotFoundError:
