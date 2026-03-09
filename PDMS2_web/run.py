@@ -107,6 +107,7 @@ def task_id_to_table(task_id: str) -> str:
         return TASK_MAP[task_id]
     raise ValueError(f"未知的 task_id: {task_id}")
 
+# 修改後的 insert_task_payload
 def insert_task_payload(
     task_id: str,
     uid: str,
@@ -114,10 +115,12 @@ def insert_task_payload(
     score: int,
     result_img_path: str,
     data1: Optional[str] = None,
+    custom_time: Optional[str] = None, # <--- 1. 新增這個參數
 ) -> None:
     table = task_id_to_table(task_id)
-    # 獲取當前時間
-    current_time = datetime.now().strftime("%H:%M:%S")
+    
+    # <--- 2. 修改時間邏輯：有傳入固定時間就用，沒有才自己抓
+    current_time = custom_time if custom_time else datetime.now().strftime("%H:%M:%S")
 
     sql = f"""
         INSERT INTO `{table}` (uid, test_date, time, score, result_img_path, data1)
@@ -149,24 +152,26 @@ def ensure_task(task_id: str):
 
 
 
+# 修改後的 insert_score
 def insert_score(
     uid: str,
     task_id: str,
     test_date: Optional[date] = None,
+    custom_time: Optional[str] = None, # <--- 1. 新增這個參數
 ) -> date:
 
     if not user_exists(uid):
         write_to_console(f"[DB] insert_score: UID 不存在 -> {uid}", "WARN")
-        # 丟一個明確的錯誤，讓呼叫的人去決定要怎麼回應前端
         raise ValueError("USER_NOT_FOUND")
 
-    # task 邏輯照舊（如果你希望只有管理者能新增 task，也可以之後再改 ensure_task）
     ensure_task(task_id)
 
+    # <--- 2. 修改日期邏輯：確保每次執行時才抓今天日期
     if test_date is None:
         test_date = date.today()
 
-    current_time = datetime.now().strftime("%H:%M:%S")
+    # <--- 3. 修改時間邏輯：有傳入固定時間就用
+    current_time = custom_time if custom_time else datetime.now().strftime("%H:%M:%S")
 
     db_exec(
         """
@@ -408,9 +413,12 @@ def test_score():
 
         score = 3  # 你目前先寫死 3 分
 
+        # <--- 1. 新增：拍一張時間快照
+        fixed_time = datetime.now().strftime("%H:%M:%S")
+
         try:
             # 這裡可能會因為 UID 不存在而丟 ValueError("USER_NOT_FOUND")
-            test_date = insert_score(uid=uid, task_id=task_id)
+            test_date = insert_score(uid=uid, task_id=task_id, custom_time=fixed_time)
         except ValueError as e:
             if str(e) == "USER_NOT_FOUND":
                 return jsonify({
@@ -428,6 +436,7 @@ def test_score():
             score=score,
             result_img_path="",
             data1=None,
+            custom_time=fixed_time
         )
         return jsonify({
             "success": True,
@@ -512,16 +521,19 @@ def run_analysis_in_background(task_id, uid, img_id, script_path, stair_type=Non
         task_id_std = normalize_task_id(img_id)
         uid_eff = uid or "unknown"
         test_date = None
+
+        # <--- 1. 新增：拍一張時間快照
+        fixed_time = datetime.now().strftime("%H:%M:%S")
         
         try:
-            test_date = insert_score(uid_eff, task_id_std)
+            test_date = insert_score(uid_eff, task_id_std, custom_time=fixed_time)
         except Exception as e:
             write_to_console(f"寫入 score_list 失敗：{e}", "ERROR")
 
         if (test_date is not None) and (not is_game):
             try:
                 current_img_path = f"kid/{uid_eff}/{img_id}.jpg"
-                insert_task_payload(task_id=task_id_std, uid=uid_eff, test_date=test_date, score=score, result_img_path=current_img_path, data1=None)
+                insert_task_payload(task_id=task_id_std, uid=uid_eff, test_date=test_date, score=score, result_img_path=current_img_path, data1=None,custom_time=fixed_time)
             except Exception as e:
                 write_to_console(f"寫入任務子表失敗: {e}", "ERROR")
 
