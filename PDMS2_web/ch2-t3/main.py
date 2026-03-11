@@ -190,8 +190,6 @@ def main(img_path):
 
     classifier = ImageClassifier(MODEL_PATH, CLASS_NAMES)
 
-    
-
     # 初始化空間
     segmenter = Analyze_graphics()
     segmenter.initialize_workspace()
@@ -214,12 +212,12 @@ def main(img_path):
     except ValueError as e:
         print(f"⚠️ 跳過 {img_path}：{e}")
         return SCORE
-    
+
     # 參數要改
     cs = CrossScorer(
         cm_per_pixel=pixel_per_cm, angle_min=70.0, angle_max=110.0, max_spread_cm=0.6
     )
-    
+
     # 單張處理
     print(f"\n=== 處理 {img_path} ===\n")
 
@@ -270,11 +268,11 @@ if __name__ == "__main__":
         # 使用傳入的 uid 和 id 作為圖片路徑
         uid = sys.argv[1]
         img_id = sys.argv[2]
-        image_path = rf"kid\{uid}\{img_id}.jpg"
+        image_path = os.path.join("kid", uid, f"{img_id}.jpg")
     # img_path = r'S__75628564.jpg'
     # image_path = r'ch2-t3.jpg'
     score, result_img = main(image_path)
-    cv2.imwrite(rf"kid\{uid}\{img_id}_result.jpg", result_img)
+    cv2.imwrite(os.path.join("kid", uid, f"{img_id}_result.jpg"), result_img)
     # cv2.imwrite(rf"result.jpg", result_img)
     print(score)
     return_score(score)

@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 import json
+import os
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -139,9 +140,12 @@ class MaxAreaQuadFinder:
                     )
             resized = cv2.resize(self.img, (0, 0), fx=0.5, fy=0.5)
             # cv2.imshow("Max Area Quad", resized)
-            name = self.image_path.split("\\")[-1].split("_")[0]
-            print(rf"儲存結果到 ch4-t2\result\{name}_max_area_quad.jpg")
-            cv2.imwrite(rf"ch4-t2\result\{name}_max_area_quad.jpg", self.img)
+            name = self.image_path.split(os.sep)[-1].split("_")[0]
+            result_dir = Path(__file__).resolve().parent / "result"
+            result_dir.mkdir(parents=True, exist_ok=True)
+            out_path = result_dir / f"{name}_max_area_quad.jpg"
+            print(f"儲存結果到 {out_path}")
+            cv2.imwrite(str(out_path), self.img)
             # 找出與7.5差距最大的邊
             if self.side_lengths:
                 max_diff = 0

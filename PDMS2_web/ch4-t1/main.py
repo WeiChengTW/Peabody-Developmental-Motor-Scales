@@ -1,6 +1,7 @@
 from PaperDetector_edge import PaperDetector_edges
 from find_max_area import MaxAreaQuadFinder
 import cv2
+import os
 import sys
 
 
@@ -33,7 +34,7 @@ if __name__ == "__main__":
     if len(sys.argv) > 2:
         uid = sys.argv[1]
         img_id = sys.argv[2]
-        image_path = rf"kid\{uid}\{img_id}.jpg"
+        image_path = os.path.join("kid", uid, f"{img_id}.jpg")
 
         score = 0
         detector = PaperDetector_edges(image_path)
@@ -46,7 +47,7 @@ if __name__ == "__main__":
 
             if draw_result is not None:
                 result_img, _ = draw_result
-                result_path = rf"kid\{uid}\{img_id}_result.jpg"
+                result_path = os.path.join("kid", uid, f"{img_id}_result.jpg")
                 cv2.imwrite(result_path, result_img)
 
                 side_lengths = finder.get_side_lengths()

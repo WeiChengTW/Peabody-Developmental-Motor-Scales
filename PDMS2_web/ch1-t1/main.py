@@ -2,13 +2,29 @@ import cv2
 import numpy as np
 from ultralytics import YOLO
 import sys
+import os
+from pathlib import Path
 
 # ================== 裁剪設定 ==================
 CROP_RATIO = 0.85
 
 # ================== YOLO 模型 ==================
-model = YOLO(r"ch1-t1/toybrick.pt")
+BASE_DIR = Path(__file__).resolve().parent
+MODEL_PATH = BASE_DIR / "toybrick.pt"
+
+print(f"[DEBUG] 模型路徑：{MODEL_PATH}", flush=True)
+print(f"[DEBUG] 模型是否存在：{MODEL_PATH.exists()}", flush=True)
+
+try:
+    print("[DEBUG] 開始加載 YOLO 模型...", flush=True)
+    model = YOLO(str(MODEL_PATH))
+    print("[DEBUG] YOLO 模型加載完成", flush=True)
+except Exception as e:
+    print(f"[ERROR] 模型加載失敗：{e}", flush=True)
+    sys.exit(1)
+
 CONF = 0.5
+
 
 def return_score(score):
     sys.exit(int(score))
@@ -66,7 +82,7 @@ def remove_blocks_with_mask(binary, masks, extra_px=10):
     for mask in masks:
         # 調整 mask 大小以符合 binary 影像
         mask_resized = cv2.resize(mask, (w, h), interpolation=cv2.INTER_NEAREST)
-        
+
         # 膨脹：讓遮擋範圍往外擴張 extra_px 距離
         # 先轉成 uint8 (0 或 1)，再進行膨脹
         mask_binary = (mask_resized > 0).astype(np.uint8)
@@ -141,17 +157,18 @@ def draw_block_markers(frame, boxes, masks, is_correct):
             mask_resized = cv2.resize(mask, (w, h), interpolation=cv2.INTER_NEAREST)
             # 只要 mask > 0 的地方，就填上顏色
             overlay[mask_resized > 0] = color
-        
+
         # --- 繪製中心點與 Bounding Box ---
         center = ((x1 + x2) // 2, (y1 + y2) // 2)
         cv2.circle(frame, center, radius=10, color=color, thickness=-1)
         # cv2.rectangle(frame, (x1, y1), (x2, y2), color, 2)
 
     # 將繪製了 Mask 的圖層與原圖依照比例混合 (0.4 是透明度)
-    alpha = 0.4 
+    alpha = 0.4
     cv2.addWeighted(overlay, alpha, frame, 1 - alpha, 0, frame)
 
     return frame
+
 
 # ================== 封裝：讀取 img_path 並回傳 score ==================
 def score_from_image(img_path, conf=CONF):
@@ -226,30 +243,33 @@ def score_from_image(img_path, conf=CONF):
 
     # 計算分數 (沿用您的計分邏輯)
     correct_num_for_score = correct_num
-    
+
     if correct_num_for_score >= 2:  # 有 2 個是基礎
         correct_num_for_score -= 2
-    
-    if correct_num_for_score == 4:
+
+    if correct_num_for_score >= 2:
         score = 2
-    elif correct_num_for_score == 3:
+    elif correct_num_for_score >= 1:
         score = 1
     else:
         score = 0
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
 
     return score, correct_num, display_frame_with_markers
 
 
 if __name__ == "__main__":
+    print("[DEBUG] ch1-t1 main.py 開始執行", flush=True)
+
     if len(sys.argv) > 2:
         # 使用傳入的 uid 和 id 作為圖片路徑
         uid = sys.argv[1]
         img_id = sys.argv[2]
 
         # print(f"UID : {uid}\nimg_id : {img_id}")
-        image_path = rf"kid\{uid}\{img_id}.jpg"
+        image_path = os.path.join("kid", uid, f"{img_id}.jpg")
+        print(f"[DEBUG] 圖片路徑：{image_path}", flush=True)
+        print(f"[DEBUG] 圖片是否存在：{os.path.exists(image_path)}", flush=True)
+
         # for i, name in enumerate(sys.argv):
         #     print(f"{i} : {name}")
         # print(f"img_path : {image_path}")
@@ -259,10 +279,17 @@ if __name__ == "__main__":
         sys.exit(0)
 
     # image_path = r"ch1-t1.jpg"  # 讀取圖片
+    print("[DEBUG] 開始分析圖片", flush=True)
     score, num, result_img = score_from_image(image_path)
+    print(f"[DEBUG] 分析完成，score={score}, num={num}", flush=True)
+
     # print(f"result: kid\{uid}\{img_id}_result.jpg")
-    cv2.imwrite(rf"kid\{uid}\{img_id}_result.jpg", result_img)
+    result_path = os.path.join("kid", uid, f"{img_id}_result.jpg")
+    print(f"[DEBUG] 儲存結果到：{result_path}", flush=True)
+    cv2.imwrite(result_path, result_img)
+
     # score, num = score_from_image(test_img)
     print("score =", score)
     print("num =", num)
+    print("[DEBUG] ch1-t1 main.py 執行完成", flush=True)
     return_score(score)

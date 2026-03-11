@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 import json
+import os
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -139,9 +140,9 @@ class MaxAreaQuadFinder:
 
             result_dir = BASE_DIR / "result"
             result_dir.mkdir(parents=True, exist_ok=True)
-            name = self.image_path.split("\\")[-1].split("_")[0]
+            name = self.image_path.split(os.sep)[-1].split("_")[0]
             out_path = result_dir / f"{name}_max_area_quad.jpg"
-            print(rf"儲存結果到 ch4-t1\result\{name}_max_area_quad.jpg")
+            print(f"儲存結果到 {out_path}")
             cv2.imwrite(str(out_path), self.img)
 
             if self.side_lengths:

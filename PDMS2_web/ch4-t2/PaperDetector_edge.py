@@ -23,10 +23,8 @@ class PaperDetector_edges:
             out_dir.mkdir(parents=True, exist_ok=True)
             out_path = out_dir / f"{name}_edges_paper.jpg"
             cv2.imwrite(str(out_path), edges_img, [cv2.IMWRITE_JPEG_QUALITY, 100])
-            rel = Path("ch4-t2") / "edges" / f"{name}_edges_paper.jpg"
-            rel_path = str(rel).replace("/", "\\")
-            print(f"結果已儲存為 '{rel_path}'")
-            return rel_path
+            print(f"結果已儲存為 '{out_path}'")
+            return str(out_path)
 
         def filter_components(binary_img, min_pixels=120, max_components=8):
             num_labels, labels, stats, _ = cv2.connectedComponentsWithStats(

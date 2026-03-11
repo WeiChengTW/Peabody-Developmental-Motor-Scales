@@ -1,6 +1,6 @@
 {
-  "datetime": "2026-03-04 15:49:52",
-  "pixel_per_cm": 17.007400512695312,
-  "image_path": "kid\\test4\\ch2-t1.jpg",
-  "cropped_path": "C:\\Users\\hiimd\\Desktop\\vscode\\Peabody-Developmental-Motor-Scales\\PDMS2_web\\ch2-t1\\cropped_a4\\ch2-t1_a4_cropped.jpg"
+  "datetime": "2026-03-11 13:44:09",
+  "pixel_per_cm": 17.039731979370117,
+  "image_path": "kid/test5/ch2-t1.jpg",
+  "cropped_path": "/Users/yplab/Desktop/AI-based_Early_Screening_System_for_Fine_Motor_Developmental_Delay_Identification/PDMS2_web/ch2-t1/cropped_a4/ch2-t1_a4_cropped.jpg"
 }
