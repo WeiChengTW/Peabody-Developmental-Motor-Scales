@@ -2,6 +2,9 @@
 # -*- coding: utf-8 -*-
 import os, cv2, math, numpy as np
 from skimage.morphology import skeletonize
+from pathlib import Path
+
+BASE_DIR = Path(__file__).resolve().parent
 
 __all__ = ["SquareGapAnalyzer"]
 
@@ -22,8 +25,11 @@ class SquareGapAnalyzer:
         # —— 是否強制用形態學骨架（避免 ximgproc 差異）——
         force_morph: bool = False,
         # —— 輸出資料夾 ——
-        out_dir: str = "PDMS2_web\\ch2-t2\\output",
+        out_dir: str | None = None,
     ):
+        if out_dir is None:
+            out_dir = str(BASE_DIR / "output")
+
         # 輸出資料夾
         self.OUT_DIR = out_dir
         os.makedirs(self.OUT_DIR, exist_ok=True)
@@ -382,7 +388,7 @@ class SquareGapAnalyzer:
 # ===================== 最底下跑流程（示例） =====================
 if __name__ == "__main__":
     image_path = r"cropped_a4\S__75472904_0_a4_cropped.jpg"
-    analyzer = SquareGapAnalyzer(out_dir="PDMS2_web\\ch2-t2\\output")
+    analyzer = SquareGapAnalyzer(out_dir=str(BASE_DIR / "output"))
     res = analyzer.process_image(image_path)
 
     if not res.get("ok", False):

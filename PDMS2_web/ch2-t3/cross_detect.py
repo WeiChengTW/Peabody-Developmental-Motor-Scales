@@ -1,5 +1,8 @@
 import cv2, glob, os, math, numpy as np
 from skimage.morphology import skeletonize
+from pathlib import Path
+
+BASE_DIR = Path(__file__).resolve().parent
 
 
 class CrossScorer:
@@ -10,9 +13,12 @@ class CrossScorer:
         angle_min=70.0,
         angle_max=110.0,
         max_spread_cm=0.6,  # 只有在 cm_per_pixel 有值時才會使用
-        out_dir="PDMS2_web\ch2-t3\output",
+        out_dir=None,
         output_jpg_quality=95,
     ):
+        if out_dir is None:
+            out_dir = str(BASE_DIR / "output")
+
         self.cm_per_pixel = cm_per_pixel
         self.ANGLE_MIN = angle_min
         self.ANGLE_MAX = angle_max
@@ -26,23 +32,27 @@ class CrossScorer:
         self,
         img,
         lines,
-        org=(10, 120), # 稍微往下移一點，避免貼邊
-        k=0.0015,     # 稍微調小字體係數
+        org=(10, 120),  # 稍微往下移一點，避免貼邊
+        k=0.0015,  # 稍微調小字體係數
     ):
         H, W = img.shape[:2]
         font = cv2.FONT_HERSHEY_SIMPLEX
-        
+
         # 根據圖片高度自動計算字體大小與粗細
         fs = max(0.5, H * k) * 0.5
         thick = max(1, int(fs * 2))
-        vgap = int(60 * fs) # 行距
-        
+        vgap = int(60 * fs)  # 行距
+
         y = org[1]
         for t in lines:
             # 繪製文字描邊（黑色），增加可視度
-            cv2.putText(img, t, (org[0], y), font, fs, (0, 0, 0), thick + 2, cv2.LINE_AA)
+            cv2.putText(
+                img, t, (org[0], y), font, fs, (0, 0, 0), thick + 2, cv2.LINE_AA
+            )
             # 繪製主文字（白色）
-            cv2.putText(img, t, (org[0], y), font, fs, (255, 255, 255), thick, cv2.LINE_AA)
+            cv2.putText(
+                img, t, (org[0], y), font, fs, (255, 255, 255), thick, cv2.LINE_AA
+            )
             y += vgap
 
     # ---------- 幾何小工具 ----------
@@ -349,7 +359,11 @@ if __name__ == "__main__":
 
     # 2) 若要公分版，改成：
     scorer = CrossScorer(
-        cm_per_pixel=0.02079, angle_min=70.0, angle_max=110.0, max_spread_cm=0.6
+        cm_per_pixel=0.02079,
+        angle_min=70.0,
+        angle_max=110.0,
+        max_spread_cm=0.6,
+        out_dir=str(BASE_DIR / "output"),
     )
 
     # results = scorer.score_folder("image", r"realtest")#"img*.jpg"
